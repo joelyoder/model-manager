@@ -32,6 +32,7 @@ func main() {
 		apiGroup.POST("/sync/:id", api.SyncCivitModelByID)
 		apiGroup.POST("/sync/version/:versionId", api.SyncVersionByID)
 		apiGroup.GET("/model/:id/versions", api.GetModelVersions)
+		apiGroup.DELETE("/versions/:id", api.DeleteVersion)
 	}
 
 	// Vue SPA fallback for all other routes (no wildcard)

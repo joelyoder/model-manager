@@ -8,9 +8,19 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"strings"
 )
 
 func DownloadFile(url, destDir, filename string) (string, error) {
+	token := os.Getenv("CIVIT_API_KEY")
+	if token != "" {
+		if strings.Contains(url, "?") {
+			url += "&token=" + token
+		} else {
+			url += "?token=" + token
+		}
+	}
+
 	resp, err := http.Get(url)
 	if err != nil {
 		return "", err
