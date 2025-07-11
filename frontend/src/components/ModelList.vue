@@ -38,9 +38,9 @@
         v-if="model.imagePath"
         :src="'/images/' + model.type + '/' + model.imagePath.split('/').pop()"
       />
+      <p v-if="model.tags">Tags: {{ model.tags.split(',').join(', ') }}</p>
+      <p v-if="model.versions.length">File: {{ model.versions[0].filePath.split('/').pop() }}</p>
       <p>Type: {{ model.type }}</p>
-      <p>Description: {{ model.description }}</p>
-      <p>NSFW: {{ model.nsfw }}</p>
       <p>Created: {{ model.createdAt }}</p>
       <p>Updated: {{ model.updatedAt }}</p>
 

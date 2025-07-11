@@ -3,12 +3,13 @@ package models
 import "gorm.io/gorm"
 
 type Model struct {
-	gorm.Model
-	CivitID     int    `gorm:"uniqueIndex" json:"civitId"`
-	Name        string `json:"name"`
-	Type        string `json:"type"`
-	Nsfw        bool   `gorm:"column:nsfw" json:"nsfw"`
-	Description string `json:"description"`
+        gorm.Model
+        CivitID     int    `gorm:"uniqueIndex" json:"civitId"`
+        Name        string `json:"name"`
+        Type        string `json:"type"`
+        Tags        string `json:"tags"`
+        Nsfw        bool   `gorm:"column:nsfw" json:"nsfw"`
+        Description string `json:"description"`
 	CreatedAt   string `json:"createdAt"`
 	UpdatedAt   string `json:"updatedAt"`
 
