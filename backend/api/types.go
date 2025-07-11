@@ -39,3 +39,13 @@ type ModelImage struct {
 	URL      string `json:"url"`
 	URLSmall string `json:"urlSmall"`
 }
+
+// VersionInfo represents a simplified view of a model version returned to the frontend.
+// It contains the basic fields required for display and selection when downloading
+// a specific model version.
+type VersionInfo struct {
+	ID        int     `json:"id"`
+	Name      string  `json:"name"`
+	BaseModel string  `json:"baseModel"`
+	SizeKB    float64 `json:"sizeKB"`
+}

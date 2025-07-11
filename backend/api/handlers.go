@@ -67,22 +67,39 @@ func GetModelVersions(c *gin.Context) {
 	apiKey := os.Getenv("CIVIT_API_KEY")
 	modelID := c.Param("id")
 
-	url := fmt.Sprintf("https://civitai.com/api/v1/models/%s", modelID)
-	req, _ := http.NewRequest("GET", url, nil)
-	req.Header.Add("Authorization", "Bearer "+apiKey)
+	id, err := strconv.Atoi(modelID)
+	if err != nil {
+		c.JSON(400, gin.H{"error": "Invalid model ID"})
+		return
+	}
 
-	resp, err := http.DefaultClient.Do(req)
-	if err != nil || resp.StatusCode != 200 {
+	model, err := FetchCivitModel(apiKey, id)
+	if err != nil {
 		c.JSON(500, gin.H{"error": "Failed to fetch model"})
 		return
 	}
-	defer resp.Body.Close()
 
-	var model CivitModel
-	body, _ := io.ReadAll(resp.Body)
-	json.Unmarshal(body, &model)
+	var versions []VersionInfo
+	for _, vs := range model.ModelVersions {
+		ver, err := FetchModelVersion(apiKey, vs.ID)
+		if err != nil {
+			continue
+		}
 
-	c.JSON(200, model.ModelVersions)
+		sizeKB := 0.0
+		if len(ver.ModelFiles) > 0 {
+			sizeKB = ver.ModelFiles[0].SizeKB
+		}
+
+		versions = append(versions, VersionInfo{
+			ID:        ver.ID,
+			Name:      ver.Name,
+			BaseModel: ver.BaseModel,
+			SizeKB:    sizeKB,
+		})
+	}
+
+	c.JSON(200, versions)
 }
 
 func SyncVersionByID(c *gin.Context) {
