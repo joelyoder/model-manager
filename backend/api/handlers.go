@@ -134,6 +134,7 @@ func SyncVersionByID(c *gin.Context) {
 			Name:        modelData.Name,
 			Nsfw:        modelData.Nsfw,
 			Type:        modelData.Type,
+			Tags:        strings.Join(modelData.Tags, ","),
 			Description: modelData.Description,
 			CreatedAt:   modelData.Created,
 			UpdatedAt:   modelData.Updated,
@@ -142,6 +143,7 @@ func SyncVersionByID(c *gin.Context) {
 	}
 
 	var filePath, imagePath string
+	var imgW, imgH int
 	if len(verData.ModelFiles) > 0 {
 		filePath, _ = DownloadFile(verData.ModelFiles[0].DownloadURL, "./backend/downloads/"+model.Type, verData.ModelFiles[0].Name)
 	}
@@ -153,8 +155,19 @@ func SyncVersionByID(c *gin.Context) {
 		}
 		if imageURL != "" {
 			imagePath, _ = DownloadFile(imageURL, "./backend/images/"+model.Type, fmt.Sprintf("%d.jpg", verData.ID))
+			imgW, imgH, _ = GetImageDimensions(imagePath)
 		}
 	}
+
+	if model.ImagePath == "" && imagePath != "" {
+		model.ImagePath = imagePath
+		model.ImageWidth = imgW
+		model.ImageHeight = imgH
+	}
+	if model.FilePath == "" && filePath != "" {
+		model.FilePath = filePath
+	}
+	database.DB.Save(&model)
 
 	database.DB.Create(&models.Version{
 		ModelID:              model.ID,
@@ -182,6 +195,7 @@ func processModels(items []CivitModel, apiKey string) {
 				Name:        item.Name,
 				Nsfw:        item.Nsfw,
 				Type:        item.Type,
+				Tags:        strings.Join(item.Tags, ","),
 				Description: item.Description,
 				CreatedAt:   item.Created,
 				UpdatedAt:   item.Updated,
@@ -202,6 +216,7 @@ func processModels(items []CivitModel, apiKey string) {
 			}
 
 			var filePath, imagePath string
+			var imgW, imgH int
 			if len(verData.ModelFiles) > 0 {
 				fileURL := verData.ModelFiles[0].DownloadURL
 				fileName := verData.ModelFiles[0].Name
@@ -214,6 +229,7 @@ func processModels(items []CivitModel, apiKey string) {
 				}
 				if imageURL != "" {
 					imagePath, _ = DownloadFile(imageURL, "./backend/images/"+item.Type, fmt.Sprintf("%d.jpg", verData.ID))
+					imgW, imgH, _ = GetImageDimensions(imagePath)
 				}
 			}
 
@@ -229,6 +245,16 @@ func processModels(items []CivitModel, apiKey string) {
 				ImagePath:            imagePath,
 				FilePath:             filePath,
 			})
+
+			if existing.ImagePath == "" && imagePath != "" {
+				existing.ImagePath = imagePath
+				existing.ImageWidth = imgW
+				existing.ImageHeight = imgH
+			}
+			if existing.FilePath == "" && filePath != "" {
+				existing.FilePath = filePath
+			}
+			database.DB.Save(&existing)
 		}
 	}
 }

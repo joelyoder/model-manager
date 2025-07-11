@@ -1,6 +1,9 @@
 package api
 
 import (
+	"image"
+	_ "image/jpeg"
+	_ "image/png"
 	"io"
 	"net/http"
 	"os"
@@ -25,4 +28,18 @@ func DownloadFile(url, destDir, filename string) (string, error) {
 
 	_, err = io.Copy(out, resp.Body)
 	return fullPath, err
+}
+
+func GetImageDimensions(path string) (int, int, error) {
+	file, err := os.Open(path)
+	if err != nil {
+		return 0, 0, err
+	}
+	defer file.Close()
+
+	cfg, _, err := image.DecodeConfig(file)
+	if err != nil {
+		return 0, 0, err
+	}
+	return cfg.Width, cfg.Height, nil
 }
