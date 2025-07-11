@@ -129,16 +129,16 @@ func SyncVersionByID(c *gin.Context) {
 	database.DB.Where("civit_id = ?", verData.ModelID).First(&model)
 	if model.ID == 0 {
 		modelData, _ := FetchCivitModel(apiKey, verData.ModelID)
-               model = models.Model{
-                       CivitID:     modelData.ID,
-                       Name:        modelData.Name,
-                       Nsfw:        modelData.Nsfw,
-                       Type:        modelData.Type,
-                       Tags:        strings.Join(modelData.Tags, ","),
-                       Description: modelData.Description,
-                       CreatedAt:   modelData.Created,
-                       UpdatedAt:   modelData.Updated,
-               }
+		model = models.Model{
+			CivitID:     modelData.ID,
+			Name:        modelData.Name,
+			Nsfw:        modelData.Nsfw,
+			Type:        modelData.Type,
+			Tags:        strings.Join(modelData.Tags, ","),
+			Description: modelData.Description,
+			CreatedAt:   modelData.Created,
+			UpdatedAt:   modelData.Updated,
+		}
 		database.DB.Create(&model)
 	}
 
@@ -156,6 +156,14 @@ func SyncVersionByID(c *gin.Context) {
 			imagePath, _ = DownloadFile(imageURL, "./backend/images/"+model.Type, fmt.Sprintf("%d.jpg", verData.ID))
 		}
 	}
+
+	if model.ImagePath == "" && imagePath != "" {
+		model.ImagePath = imagePath
+	}
+	if model.FilePath == "" && filePath != "" {
+		model.FilePath = filePath
+	}
+	database.DB.Save(&model)
 
 	database.DB.Create(&models.Version{
 		ModelID:              model.ID,
@@ -177,17 +185,17 @@ func processModels(items []CivitModel, apiKey string) {
 	for _, item := range items {
 		var existing models.Model
 		database.DB.Where("civit_id = ?", item.ID).First(&existing)
-               if existing.ID == 0 {
-                       existing = models.Model{
-                               CivitID:     item.ID,
-                               Name:        item.Name,
-                               Nsfw:        item.Nsfw,
-                               Type:        item.Type,
-                               Tags:        strings.Join(item.Tags, ","),
-                               Description: item.Description,
-                               CreatedAt:   item.Created,
-                               UpdatedAt:   item.Updated,
-                       }
+		if existing.ID == 0 {
+			existing = models.Model{
+				CivitID:     item.ID,
+				Name:        item.Name,
+				Nsfw:        item.Nsfw,
+				Type:        item.Type,
+				Tags:        strings.Join(item.Tags, ","),
+				Description: item.Description,
+				CreatedAt:   item.Created,
+				UpdatedAt:   item.Updated,
+			}
 			database.DB.Create(&existing)
 		}
 
@@ -231,6 +239,14 @@ func processModels(items []CivitModel, apiKey string) {
 				ImagePath:            imagePath,
 				FilePath:             filePath,
 			})
+
+			if existing.ImagePath == "" && imagePath != "" {
+				existing.ImagePath = imagePath
+			}
+			if existing.FilePath == "" && filePath != "" {
+				existing.FilePath = filePath
+			}
+			database.DB.Save(&existing)
 		}
 	}
 }
