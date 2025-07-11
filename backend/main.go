@@ -27,6 +27,7 @@ func main() {
 	apiGroup := r.Group("/api")
 	{
 		apiGroup.GET("/models", api.GetModels)
+		apiGroup.DELETE("/models/:id", api.DeleteModel)
 		apiGroup.POST("/sync", api.SyncCivitModels)
 		apiGroup.POST("/sync/:id", api.SyncCivitModelByID)
 		apiGroup.GET("/model/:id/versions", api.GetModelVersions)

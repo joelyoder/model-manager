@@ -259,3 +259,39 @@ func processModels(items []CivitModel, apiKey string) {
 		}
 	}
 }
+
+// DeleteModel removes a model and its versions from the database. It also deletes any associated files and images stored on disk.
+func DeleteModel(c *gin.Context) {
+	idStr := c.Param("id")
+	id, err := strconv.Atoi(idStr)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid model ID"})
+		return
+	}
+
+	var model models.Model
+	if err := database.DB.Preload("Versions").First(&model, id).Error; err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "Model not found"})
+		return
+	}
+
+	if model.FilePath != "" {
+		os.Remove(model.FilePath)
+	}
+	if model.ImagePath != "" {
+		os.Remove(model.ImagePath)
+	}
+	for _, v := range model.Versions {
+		if v.FilePath != "" {
+			os.Remove(v.FilePath)
+		}
+		if v.ImagePath != "" {
+			os.Remove(v.ImagePath)
+		}
+	}
+
+	database.DB.Where("model_id = ?", model.ID).Delete(&models.Version{})
+	database.DB.Delete(&model)
+
+	c.JSON(http.StatusOK, gin.H{"message": "Model deleted"})
+}
