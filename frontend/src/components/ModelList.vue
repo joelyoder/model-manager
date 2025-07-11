@@ -15,7 +15,7 @@
       <option disabled value="">Select version</option>
       <option v-for="v in versions" :value="v.id" :key="v.id">
         {{ v.name }} | {{ v.baseModel }} |
-        {{ v.sizeKB?.toFixed(0) || "N/A" }} KB
+        {{ ((v.sizeKB || 0) / 1024).toFixed(2) }} MB
       </option>
     </select>
 
@@ -33,29 +33,32 @@
   <div v-if="models.length === 0">No models found.</div>
 
   <div class="model-grid">
-    <div v-for="model in filteredModels" :key="model.id" class="card">
-      <h3>{{ model.name }}</h3>
+    <div v-for="card in versionCards" :key="card.version.id" class="card">
+      <h3>{{ card.model.name }} - {{ card.version.name }}</h3>
       <img
-        v-if="model.imageUrl"
-        :src="model.imageUrl"
-        :width="model.imageWidth"
-        :height="model.imageHeight"
+        v-if="card.imageUrl"
+        :src="card.imageUrl"
+        :width="card.model.imageWidth"
+        :height="card.model.imageHeight"
       />
-      <p v-if="model.tags">Tags: {{ model.tags.split(",").join(", ") }}</p>
-      <p v-if="model.versions.length">
-        File: {{ model.versions[0].filePath.split("/").pop() }}
+      <p v-if="card.model.tags">
+        Tags: {{ card.model.tags.split(",").join(", ") }}
       </p>
-      <p>Type: {{ model.type }}</p>
-      <p>Created: {{ model.createdAt }}</p>
-      <p>Updated: {{ model.updatedAt }}</p>
-
-      <h4>Versions:</h4>
-      <ul>
-        <li v-for="version in model.versions" :key="version.id">
-          {{ version.name }} | {{ version.baseModel }} |
-          {{ version.sizeKB.toFixed(0) }} KB
-        </li>
-      </ul>
+      <p v-if="card.version.filePath">
+        File: {{ card.version.filePath.split("/").pop() }}
+      </p>
+      <p>Type: {{ card.model.type }}</p>
+      <p>Base Model: {{ card.version.baseModel }}</p>
+      <p
+        v-if="
+          card.version.trainedWordsArr && card.version.trainedWordsArr.length
+        "
+      >
+        Trained Words: {{ card.version.trainedWordsArr.join(", ") }}
+      </p>
+      <p v-if="card.version.sizeKB">
+        Size: {{ (card.version.sizeKB / 1024).toFixed(2) }} MB
+      </p>
     </div>
   </div>
 </template>
@@ -77,9 +80,15 @@ const fetchModels = async () => {
     const imageUrl = model.imagePath
       ? model.imagePath.replace(/^.*\/backend\/images/, "/images")
       : null;
+    const versions = (model.versions || []).map((v) => {
+      const vImage = v.imagePath
+        ? v.imagePath.replace(/^.*\/backend\/images/, "/images")
+        : null;
+      return { ...v, imageUrl: vImage };
+    });
     return {
       ...model,
-      versions: model.versions || [],
+      versions,
       imageUrl,
     };
   });
@@ -91,6 +100,22 @@ const filteredModels = computed(() => {
   if (!search.value) return models.value;
   return models.value.filter((m) =>
     m.name.toLowerCase().includes(search.value.toLowerCase()),
+  );
+});
+
+const versionCards = computed(() => {
+  return filteredModels.value.flatMap((model) =>
+    model.versions.map((v) => {
+      let trained = v.trainedWords;
+      if (typeof trained === "string") {
+        trained = trained ? trained.split(",") : [];
+      }
+      return {
+        model,
+        version: { ...v, trainedWordsArr: trained },
+        imageUrl: v.imageUrl || model.imageUrl,
+      };
+    }),
   );
 });
 

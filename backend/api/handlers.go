@@ -92,10 +92,11 @@ func GetModelVersions(c *gin.Context) {
 		}
 
 		versions = append(versions, VersionInfo{
-			ID:        ver.ID,
-			Name:      ver.Name,
-			BaseModel: ver.BaseModel,
-			SizeKB:    sizeKB,
+			ID:           ver.ID,
+			Name:         ver.Name,
+			BaseModel:    ver.BaseModel,
+			SizeKB:       sizeKB,
+			TrainedWords: ver.TrainedWords,
 		})
 	}
 
