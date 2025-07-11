@@ -37,7 +37,7 @@
       <h3>{{ model.name }}</h3>
       <img
         v-if="model.imagePath"
-        :src="'/images/' + model.type + '/' + model.imagePath.split('/').pop()"
+        :src="'file://' + model.imagePath"
         :width="model.imageWidth"
         :height="model.imageHeight"
       />
@@ -163,6 +163,8 @@ button {
   box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1);
 }
 img {
+  max-width: 100%;
+  height: auto;
   object-fit: cover;
   border-radius: 4px;
   margin-bottom: 0.5rem;

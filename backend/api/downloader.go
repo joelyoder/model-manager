@@ -19,15 +19,19 @@ func DownloadFile(url, destDir, filename string) (string, error) {
 
 	os.MkdirAll(destDir, os.ModePerm)
 	fullPath := filepath.Join(destDir, filename)
+	absPath, err := filepath.Abs(fullPath)
+	if err != nil {
+		return "", err
+	}
 
-	out, err := os.Create(fullPath)
+	out, err := os.Create(absPath)
 	if err != nil {
 		return "", err
 	}
 	defer out.Close()
 
 	_, err = io.Copy(out, resp.Body)
-	return fullPath, err
+	return absPath, err
 }
 
 func GetImageDimensions(path string) (int, int, error) {
