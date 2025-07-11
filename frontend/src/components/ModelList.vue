@@ -36,8 +36,8 @@
     <div v-for="model in filteredModels" :key="model.id" class="card">
       <h3>{{ model.name }}</h3>
       <img
-        v-if="model.imagePath"
-        :src="'file://' + model.imagePath"
+        v-if="model.imageUrl"
+        :src="model.imageUrl"
         :width="model.imageWidth"
         :height="model.imageHeight"
       />
@@ -73,10 +73,16 @@ const loading = ref(false);
 
 const fetchModels = async () => {
   const res = await axios.get("/api/models");
-  models.value = res.data.map((model) => ({
-    ...model,
-    versions: model.versions || [],
-  }));
+  models.value = res.data.map((model) => {
+    const imageUrl = model.imagePath
+      ? model.imagePath.replace(/^.*\/backend\/images/, "/images")
+      : null;
+    return {
+      ...model,
+      versions: model.versions || [],
+      imageUrl,
+    };
+  });
 };
 
 onMounted(fetchModels);
