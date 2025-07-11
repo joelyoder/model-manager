@@ -4,14 +4,14 @@ import "gorm.io/gorm"
 
 type Version struct {
 	gorm.Model
-	ModelID              uint
-	VersionID            int    `gorm:"uniqueIndex"`
-	Name                 string
-	BaseModel            string
-	CreatedAt            string
-	EarlyAccessTimeFrame int
-	SizeKB               float64
-	TrainedWords         string
-	ImagePath            string
-	FilePath             string
+	ModelID              uint    `json:"modelId"`
+	VersionID            int     `gorm:"uniqueIndex" json:"versionId"`
+	Name                 string  `json:"name"`
+	BaseModel            string  `json:"baseModel"`
+	CreatedAt            string  `json:"createdAt"`
+	EarlyAccessTimeFrame int     `json:"earlyAccessTimeFrame"`
+	SizeKB               float64 `json:"sizeKB"`
+	TrainedWords         string  `json:"trainedWords"`
+	ImagePath            string  `json:"imagePath"`
+	FilePath             string  `json:"filePath"`
 }
