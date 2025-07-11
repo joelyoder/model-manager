@@ -59,6 +59,7 @@
       <p v-if="card.version.sizeKB">
         Size: {{ (card.version.sizeKB / 1024).toFixed(2) }} MB
       </p>
+      <button @click="deleteModel(card.model.ID)">🗑 Delete</button>
     </div>
   </div>
 </template>
@@ -161,6 +162,12 @@ const downloadSelectedVersion = async () => {
     selectedVersionId.value = "";
     loading.value = false;
   }
+};
+
+const deleteModel = async (id) => {
+  if (!confirm('Delete this model and all files?')) return;
+  await axios.delete(`/api/models/${id}`);
+  await fetchModels();
 };
 </script>
 

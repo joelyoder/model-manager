@@ -120,14 +120,14 @@ func SyncVersionByID(c *gin.Context) {
 	}
 
 	var existingVersion models.Version
-	database.DB.Where("version_id = ?", id).First(&existingVersion)
+	database.DB.Unscoped().Where("version_id = ?", id).First(&existingVersion)
 	if existingVersion.ID > 0 {
 		c.JSON(200, gin.H{"message": "Version already exists"})
 		return
 	}
 
 	var model models.Model
-	database.DB.Where("civit_id = ?", verData.ModelID).First(&model)
+	database.DB.Unscoped().Where("civit_id = ?", verData.ModelID).First(&model)
 	if model.ID == 0 {
 		modelData, _ := FetchCivitModel(apiKey, verData.ModelID)
 		model = models.Model{
@@ -211,7 +211,7 @@ func processModels(items []CivitModel, apiKey string) {
 			}
 
 			var versionExists models.Version
-			database.DB.Where("version_id = ?", verData.ID).First(&versionExists)
+			database.DB.Unscoped().Where("version_id = ?", verData.ID).First(&versionExists)
 			if versionExists.ID > 0 {
 				continue
 			}
@@ -258,4 +258,40 @@ func processModels(items []CivitModel, apiKey string) {
 			database.DB.Save(&existing)
 		}
 	}
+}
+
+// DeleteModel removes a model and its versions from the database. It also deletes any associated files and images stored on disk.
+func DeleteModel(c *gin.Context) {
+	idStr := c.Param("id")
+	id, err := strconv.Atoi(idStr)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid model ID"})
+		return
+	}
+
+	var model models.Model
+	if err := database.DB.Preload("Versions").First(&model, id).Error; err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "Model not found"})
+		return
+	}
+
+	if model.FilePath != "" {
+		os.Remove(model.FilePath)
+	}
+	if model.ImagePath != "" {
+		os.Remove(model.ImagePath)
+	}
+	for _, v := range model.Versions {
+		if v.FilePath != "" {
+			os.Remove(v.FilePath)
+		}
+		if v.ImagePath != "" {
+			os.Remove(v.ImagePath)
+		}
+	}
+
+	database.DB.Unscoped().Where("model_id = ?", model.ID).Delete(&models.Version{})
+	database.DB.Unscoped().Delete(&model)
+
+	c.JSON(http.StatusOK, gin.H{"message": "Model deleted"})
 }
