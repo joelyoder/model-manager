@@ -295,3 +295,47 @@ func DeleteModel(c *gin.Context) {
 
 	c.JSON(http.StatusOK, gin.H{"message": "Model deleted"})
 }
+
+// DeleteVersion removes a single model version and associated files from the database.
+func DeleteVersion(c *gin.Context) {
+	idStr := c.Param("id")
+	id, err := strconv.Atoi(idStr)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid version ID"})
+		return
+	}
+
+	var version models.Version
+	if err := database.DB.First(&version, id).Error; err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "Version not found"})
+		return
+	}
+
+	if version.FilePath != "" {
+		os.Remove(version.FilePath)
+	}
+	if version.ImagePath != "" {
+		os.Remove(version.ImagePath)
+	}
+
+	database.DB.Unscoped().Delete(&models.Version{}, version.ID)
+
+	var remaining int64
+	database.DB.Model(&models.Version{}).Where("model_id = ?", version.ModelID).Count(&remaining)
+	if remaining == 0 {
+		var model models.Model
+		if err := database.DB.First(&model, version.ModelID).Error; err == nil {
+			if model.FilePath != "" && model.FilePath == version.FilePath {
+				os.Remove(model.FilePath)
+				model.FilePath = ""
+			}
+			if model.ImagePath != "" && model.ImagePath == version.ImagePath {
+				os.Remove(model.ImagePath)
+				model.ImagePath = ""
+			}
+			database.DB.Save(&model)
+		}
+	}
+
+	c.JSON(http.StatusOK, gin.H{"message": "Version deleted"})
+}

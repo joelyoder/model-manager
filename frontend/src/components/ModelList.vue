@@ -33,7 +33,7 @@
   <div v-if="models.length === 0">No models found.</div>
 
   <div class="model-grid">
-    <div v-for="card in versionCards" :key="card.version.id" class="card">
+    <div v-for="card in versionCards" :key="card.version.ID" class="card">
       <h3>{{ card.model.name }} - {{ card.version.name }}</h3>
       <img
         v-if="card.imageUrl"
@@ -59,7 +59,7 @@
       <p v-if="card.version.sizeKB">
         Size: {{ (card.version.sizeKB / 1024).toFixed(2) }} MB
       </p>
-      <button @click="deleteModel(card.model.ID)">🗑 Delete</button>
+      <button @click="deleteVersion(card.version.ID)">🗑 Delete</button>
     </div>
   </div>
 </template>
@@ -164,9 +164,9 @@ const downloadSelectedVersion = async () => {
   }
 };
 
-const deleteModel = async (id) => {
-  if (!confirm('Delete this model and all files?')) return;
-  await axios.delete(`/api/models/${id}`);
+const deleteVersion = async (id) => {
+  if (!confirm("Delete this version and all files?")) return;
+  await axios.delete(`/api/versions/${id}`);
   await fetchModels();
 };
 </script>
