@@ -4,15 +4,17 @@ import "gorm.io/gorm"
 
 type Model struct {
 	gorm.Model
-	CivitID     int `gorm:"uniqueIndex"`
-	Name        string
-	Type        string
-	Nsfw        bool `gorm:"column:nsfw"`
-	Description string
-	CreatedAt   string
-	UpdatedAt   string
+	CivitID     int    `gorm:"uniqueIndex" json:"civitId"`
+	Name        string `json:"name"`
+	Type        string `json:"type"`
+	Nsfw        bool   `gorm:"column:nsfw" json:"nsfw"`
+	Description string `json:"description"`
+	CreatedAt   string `json:"createdAt"`
+	UpdatedAt   string `json:"updatedAt"`
 
 	// Local paths
-	ImagePath string
-	FilePath  string
+	ImagePath string `json:"imagePath"`
+	FilePath  string `json:"filePath"`
+
+	Versions []Version `json:"versions"`
 }
