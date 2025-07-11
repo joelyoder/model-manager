@@ -59,7 +59,7 @@
       <p v-if="card.version.sizeKB">
         Size: {{ (card.version.sizeKB / 1024).toFixed(2) }} MB
       </p>
-      <button @click="deleteModel(card.model.id)">🗑 Delete</button>
+      <button @click="deleteModel(card.model.ID)">🗑 Delete</button>
     </div>
   </div>
 </template>

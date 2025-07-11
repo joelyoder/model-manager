@@ -1,9 +1,9 @@
 package database
 
 import (
-	"model-manager/backend/models"
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
+	"model-manager/backend/models"
 )
 
 var DB *gorm.DB
