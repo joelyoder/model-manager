@@ -3,3 +3,4 @@
 /backend/.env
 /backend/downloads/*
 /backend/images/*
+/backend/models.db

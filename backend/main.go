@@ -1,6 +1,9 @@
 package main
 
 import (
+	"log"
+	"os"
+
 	"model-manager/backend/api"
 	"model-manager/backend/database"
 
@@ -13,24 +16,31 @@ func main() {
 	database.ConnectDatabase()
 
 	r := gin.Default()
+	r.SetTrustedProxies(nil) // safe for local dev
 
+	// Serve static assets
 	r.Static("/images", "./backend/images")
 	r.Static("/downloads", "./backend/downloads")
 	r.Static("/assets", "./frontend/dist/assets")
 
-	// Model Versions
-	r.GET("/api/model/:id/versions", api.GetModelVersions)
-	r.POST("/api/sync/version/:versionId", api.SyncVersionByID)
-
 	// API routes
-	r.GET("/api/models", api.GetModels)
-	r.POST("/api/sync", api.SyncCivitModels)
-	r.POST("/api/sync/:id", api.SyncCivitModelByID)
+	apiGroup := r.Group("/api")
+	{
+		apiGroup.GET("/models", api.GetModels)
+		apiGroup.POST("/sync", api.SyncCivitModels)
+		apiGroup.POST("/sync/:id", api.SyncCivitModelByID)
+		apiGroup.GET("/model/:id/versions", api.GetModelVersions)
+	}
 
-	// Serve Vue SPA
+	// Vue SPA fallback for all other routes (no wildcard)
 	r.NoRoute(func(c *gin.Context) {
 		c.File("./frontend/dist/index.html")
 	})
 
-	r.Run(":8080")
+	port := os.Getenv("PORT")
+	if port == "" {
+		port = "8080"
+	}
+	log.Printf("Server started on port %s", port)
+	r.Run(":" + port)
 }
