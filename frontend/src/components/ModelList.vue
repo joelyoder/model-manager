@@ -1,17 +1,35 @@
 <template>
-  <div class="controls">
-    <input v-model="search" placeholder="Search models..." />
+  <div class="flex flex-wrap gap-2 p-4 items-center">
+    <input
+      v-model="search"
+      placeholder="Search models..."
+      class="p-2 flex-1 min-w-[200px] border rounded"
+    />
 
-    <button @click="fetchModels">🔄 Refresh</button>
+    <button @click="fetchModels" class="px-4 py-2 bg-gray-200 rounded">
+      🔄 Refresh
+    </button>
 
     <!-- Paste URL and fetch versions -->
-    <input v-model="modelUrl" placeholder="Paste CivitAI model URL" />
-    <button @click="loadVersions" :disabled="loading || !modelUrl">
+    <input
+      v-model="modelUrl"
+      placeholder="Paste CivitAI model URL"
+      class="p-2 flex-1 min-w-[200px] border rounded"
+    />
+    <button
+      @click="loadVersions"
+      :disabled="loading || !modelUrl"
+      class="px-4 py-2 bg-gray-200 rounded disabled:opacity-50"
+    >
       🔍 Load Versions
     </button>
 
     <!-- Version selector -->
-    <select v-if="versions.length" v-model="selectedVersionId">
+    <select
+      v-if="versions.length"
+      v-model="selectedVersionId"
+      class="p-2 flex-1 min-w-[200px] border rounded"
+    >
       <option disabled value="">Select version</option>
       <option v-for="v in versions" :value="v.id" :key="v.id">
         {{ v.name }} | {{ v.baseModel }} |
@@ -24,6 +42,7 @@
       v-if="selectedVersionId"
       @click="downloadSelectedVersion"
       :disabled="loading"
+      class="px-4 py-2 bg-blue-500 text-white rounded disabled:opacity-50"
     >
       <span v-if="loading">⏳ Downloading...</span>
       <span v-else>📥 Download Selected</span>
@@ -32,14 +51,15 @@
 
   <div v-if="models.length === 0">No models found.</div>
 
-  <div class="model-grid">
-    <div v-for="card in versionCards" :key="card.version.ID" class="card">
+  <div class="grid gap-4 p-4 grid-cols-[repeat(auto-fill,minmax(320px,_1fr))]">
+    <div v-for="card in versionCards" :key="card.version.ID" class="bg-white p-4 rounded shadow">
       <h3>{{ card.model.name }} - {{ card.version.name }}</h3>
       <img
         v-if="card.imageUrl"
         :src="card.imageUrl"
         :width="card.model.imageWidth"
         :height="card.model.imageHeight"
+        class="w-full h-auto object-cover rounded mb-2"
       />
       <p v-if="card.model.tags">
         Tags: {{ card.model.tags.split(",").join(", ") }}
@@ -59,10 +79,13 @@
       <p v-if="card.version.sizeKB">
         Size: {{ (card.version.sizeKB / 1024).toFixed(2) }} MB
       </p>
-      <button @click="deleteVersion(card.version.ID)">🗑 Delete</button>
+      <button @click="deleteVersion(card.version.ID)" class="px-2 py-1 bg-red-500 text-white rounded">
+        🗑 Delete
+      </button>
       <button
         v-if="card.version.filePath"
         @click="goToModel(card.model.ID, card.version.ID)"
+        class="px-2 py-1 bg-blue-500 text-white rounded"
       >
         ℹ️ More details
       </button>
@@ -183,40 +206,3 @@ const goToModel = (modelId, versionId) => {
 };
 </script>
 
-<style scoped>
-.controls {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.5rem;
-  padding: 1rem;
-  align-items: center;
-}
-input,
-select {
-  padding: 0.5rem;
-  flex: 1;
-  min-width: 200px;
-}
-button {
-  padding: 0.5rem 1rem;
-}
-.model-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-  gap: 1rem;
-  padding: 1rem;
-}
-.card {
-  background: #fff;
-  padding: 1rem;
-  border-radius: 8px;
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1);
-}
-img {
-  max-width: 100%;
-  height: auto;
-  object-fit: cover;
-  border-radius: 4px;
-  margin-bottom: 0.5rem;
-}
-</style>
