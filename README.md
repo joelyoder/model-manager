@@ -22,3 +22,5 @@ This is a simple desktop application to download and manage models for local ima
     - Filter by base model
     - Add tag to multiple models at once
     - Remove tag from multiple models at once
+- Cleanup
+    - Remove createdAt and updatedAt fields from the application
