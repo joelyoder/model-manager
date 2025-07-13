@@ -60,12 +60,16 @@
         Size: {{ (card.version.sizeKB / 1024).toFixed(2) }} MB
       </p>
       <button @click="deleteVersion(card.version.ID)">🗑 Delete</button>
+      <button v-if="card.version.filePath" @click="goToModel(card.model.ID)">
+        ℹ️ More details
+      </button>
     </div>
   </div>
 </template>
 
 <script setup>
 import { ref, computed, onMounted } from "vue";
+import { useRouter } from "vue-router";
 import axios from "axios";
 
 const models = ref([]);
@@ -74,6 +78,7 @@ const modelUrl = ref("");
 const versions = ref([]);
 const selectedVersionId = ref("");
 const loading = ref(false);
+const router = useRouter();
 
 const fetchModels = async () => {
   const res = await axios.get("/api/models");
@@ -168,6 +173,10 @@ const deleteVersion = async (id) => {
   if (!confirm("Delete this version and all files?")) return;
   await axios.delete(`/api/versions/${id}`);
   await fetchModels();
+};
+
+const goToModel = (id) => {
+  router.push(`/model/${id}`);
 };
 </script>
 
