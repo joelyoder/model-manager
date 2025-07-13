@@ -1,12 +1,12 @@
 <template>
-  <div class="flex flex-wrap gap-2 p-4 items-center">
+  <div class="flex flex-wrap gap-2 p-4 items-center bg-gray-800 rounded-lg mb-4">
     <input
       v-model="search"
       placeholder="Search models..."
-      class="p-2 flex-1 min-w-[200px] border rounded"
+      class="p-2 flex-1 min-w-[200px] rounded bg-gray-700 border border-gray-600"
     />
 
-    <button @click="fetchModels" class="px-4 py-2 bg-gray-200 rounded">
+    <button @click="fetchModels" class="px-4 py-2 bg-gray-600 text-white rounded">
       🔄 Refresh
     </button>
 
@@ -14,12 +14,12 @@
     <input
       v-model="modelUrl"
       placeholder="Paste CivitAI model URL"
-      class="p-2 flex-1 min-w-[200px] border rounded"
+      class="p-2 flex-1 min-w-[200px] rounded bg-gray-700 border border-gray-600"
     />
     <button
       @click="loadVersions"
       :disabled="loading || !modelUrl"
-      class="px-4 py-2 bg-gray-200 rounded disabled:opacity-50"
+      class="px-4 py-2 bg-gray-600 text-white rounded disabled:opacity-50"
     >
       🔍 Load Versions
     </button>
@@ -28,7 +28,7 @@
     <select
       v-if="versions.length"
       v-model="selectedVersionId"
-      class="p-2 flex-1 min-w-[200px] border rounded"
+      class="p-2 flex-1 min-w-[200px] rounded bg-gray-700 border border-gray-600"
     >
       <option disabled value="">Select version</option>
       <option v-for="v in versions" :value="v.id" :key="v.id">
@@ -42,24 +42,30 @@
       v-if="selectedVersionId"
       @click="downloadSelectedVersion"
       :disabled="loading"
-      class="px-4 py-2 bg-blue-500 text-white rounded disabled:opacity-50"
+      class="px-4 py-2 bg-blue-600 text-white rounded disabled:opacity-50"
     >
       <span v-if="loading">⏳ Downloading...</span>
       <span v-else>📥 Download Selected</span>
     </button>
   </div>
 
-  <div v-if="models.length === 0">No models found.</div>
+  <div v-if="models.length === 0" class="text-center p-4">No models found.</div>
 
-  <div class="grid gap-4 p-4 grid-cols-[repeat(auto-fill,minmax(320px,_1fr))]">
-    <div v-for="card in versionCards" :key="card.version.ID" class="bg-white p-4 rounded shadow">
-      <h3>{{ card.model.name }} - {{ card.version.name }}</h3>
+  <div class="grid gap-4 p-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
+    <div
+      v-for="card in versionCards"
+      :key="card.version.ID"
+      class="bg-gray-800 p-4 rounded shadow flex flex-col"
+    >
+      <h3 class="font-semibold mb-2">
+        {{ card.model.name }} - {{ card.version.name }}
+      </h3>
       <img
         v-if="card.imageUrl"
         :src="card.imageUrl"
         :width="card.model.imageWidth"
         :height="card.model.imageHeight"
-        class="w-full h-auto object-cover rounded mb-2"
+        class="w-full h-48 object-cover rounded mb-2"
       />
       <p v-if="card.model.tags">
         Tags: {{ card.model.tags.split(",").join(", ") }}
@@ -79,13 +85,16 @@
       <p v-if="card.version.sizeKB">
         Size: {{ (card.version.sizeKB / 1024).toFixed(2) }} MB
       </p>
-      <button @click="deleteVersion(card.version.ID)" class="px-2 py-1 bg-red-500 text-white rounded">
+      <button
+        @click="deleteVersion(card.version.ID)"
+        class="px-2 py-1 bg-red-600 text-white rounded"
+      >
         🗑 Delete
       </button>
       <button
         v-if="card.version.filePath"
         @click="goToModel(card.model.ID, card.version.ID)"
-        class="px-2 py-1 bg-blue-500 text-white rounded"
+        class="px-2 py-1 bg-blue-600 text-white rounded"
       >
         ℹ️ More details
       </button>

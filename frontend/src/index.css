@@ -2,8 +2,11 @@
 @tailwind components;
 @tailwind utilities;
 
-body {
-  margin: 0;
-  font-family: sans-serif;
-  background: #f3f4f6;
+@layer base {
+  body {
+    margin: 0;
+    font-family: sans-serif;
+    background-color: #111827;
+    color: #f3f4f6;
+  }
 }

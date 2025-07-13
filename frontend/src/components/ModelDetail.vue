@@ -1,64 +1,64 @@
 <template>
-  <div class="p-4">
-    <button @click="goBack" class="mb-2 px-2 py-1 bg-gray-200 rounded">⬅ Back</button>
-    <h2 class="text-xl font-bold">{{ model.name }}</h2>
+  <div class="p-4 max-w-screen-lg mx-auto">
+    <button @click="goBack" class="mb-4 px-2 py-1 bg-gray-700 text-white rounded">⬅ Back</button>
+    <h2 class="text-2xl font-bold mb-1">{{ model.name }}</h2>
     <h3 v-if="version.name" class="text-lg mb-2">{{ version.name }}</h3>
     <img
       v-if="imageUrl"
       :src="imageUrl"
       :width="model.imageWidth"
       :height="model.imageHeight"
-      class="max-w-full h-auto mb-4"
+      class="w-full max-w-md h-auto object-cover rounded mb-4 mx-auto"
     />
     <div v-if="model.description" v-html="model.description" class="mb-4"></div>
     <h3 class="text-lg font-semibold">Meta</h3>
-    <table class="mt-4 border-collapse">
+    <table class="mt-4 border-collapse w-full text-sm">
       <tbody>
-        <tr v-if="model.tags">
-          <th>Tags</th>
-          <td>{{ model.tags.split(",").join(", ") }}</td>
+        <tr v-if="model.tags" class="border-b border-gray-700">
+          <th class="pr-4 py-1">Tags</th>
+          <td class="py-1">{{ model.tags.split(",").join(", ") }}</td>
         </tr>
-        <tr>
-          <th>Type</th>
-          <td>{{ model.type }}</td>
+        <tr class="border-b border-gray-700">
+          <th class="pr-4 py-1">Type</th>
+          <td class="py-1">{{ model.type }}</td>
         </tr>
-        <tr>
-          <th>NSFW</th>
-          <td>{{ model.nsfw }}</td>
+        <tr class="border-b border-gray-700">
+          <th class="pr-4 py-1">NSFW</th>
+          <td class="py-1">{{ model.nsfw }}</td>
         </tr>
-        <tr>
-          <th>Created</th>
-          <td>{{ model.createdAt }}</td>
+        <tr class="border-b border-gray-700">
+          <th class="pr-4 py-1">Created</th>
+          <td class="py-1">{{ model.createdAt }}</td>
         </tr>
-        <tr>
-          <th>Updated</th>
-          <td>{{ model.updatedAt }}</td>
+        <tr class="border-b border-gray-700">
+          <th class="pr-4 py-1">Updated</th>
+          <td class="py-1">{{ model.updatedAt }}</td>
         </tr>
-        <tr>
-          <th>Base Model</th>
-          <td>{{ version.baseModel }}</td>
+        <tr class="border-b border-gray-700">
+          <th class="pr-4 py-1">Base Model</th>
+          <td class="py-1">{{ version.baseModel }}</td>
         </tr>
-        <tr v-if="version.trainedWords">
-          <th>Trained Words</th>
-          <td>{{ version.trainedWords.split(",").join(", ") }}</td>
+        <tr v-if="version.trainedWords" class="border-b border-gray-700">
+          <th class="pr-4 py-1">Trained Words</th>
+          <td class="py-1">{{ version.trainedWords.split(",").join(", ") }}</td>
         </tr>
-        <tr v-if="version.filePath">
-          <th>File</th>
-          <td>{{ fileName }}</td>
+        <tr v-if="version.filePath" class="border-b border-gray-700">
+          <th class="pr-4 py-1">File</th>
+          <td class="py-1">{{ fileName }}</td>
         </tr>
-        <tr v-if="version.sizeKB">
-          <th>Size</th>
-          <td>{{ (version.sizeKB / 1024).toFixed(2) }} MB</td>
+        <tr v-if="version.sizeKB" class="border-b border-gray-700">
+          <th class="pr-4 py-1">Size</th>
+          <td class="py-1">{{ (version.sizeKB / 1024).toFixed(2) }} MB</td>
         </tr>
-        <tr v-if="version.modelUrl">
-          <th>Model URL</th>
-          <td>
+        <tr v-if="version.modelUrl" class="border-b border-gray-700">
+          <th class="pr-4 py-1">Model URL</th>
+          <td class="py-1">
             <a :href="version.modelUrl" target="_blank">View on CivitAI</a>
           </td>
         </tr>
       </tbody>
     </table>
-    <button @click="deleteVersion" class="mt-4 px-2 py-1 bg-red-500 text-white rounded">🗑 Delete Version</button>
+    <button @click="deleteVersion" class="mt-4 px-2 py-1 bg-red-600 text-white rounded">🗑 Delete Version</button>
   </div>
 </template>
 
