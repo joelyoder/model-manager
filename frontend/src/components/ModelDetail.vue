@@ -1,18 +1,18 @@
 <template>
   <div class="p-4">
-    <button @click="goBack" class="mb-2 px-2 py-1 bg-gray-200 rounded">⬅ Back</button>
-    <h2 class="text-xl font-bold">{{ model.name }}</h2>
-    <h3 v-if="version.name" class="text-lg mb-2">{{ version.name }}</h3>
+    <button @click="goBack" class="btn btn-secondary mb-2">⬅ Back</button>
+    <h2 class="h4 fw-bold">{{ model.name }}</h2>
+    <h3 v-if="version.name" class="fs-5 mb-2">{{ version.name }}</h3>
     <img
       v-if="imageUrl"
       :src="imageUrl"
       :width="model.imageWidth"
       :height="model.imageHeight"
-      class="max-w-full h-auto mb-4"
+      class="img-fluid mb-4"
     />
     <div v-if="model.description" v-html="model.description" class="mb-4"></div>
-    <h3 class="text-lg font-semibold">Meta</h3>
-    <table class="mt-4 border-collapse">
+    <h3 class="fs-5 fw-semibold">Meta</h3>
+    <table class="table mt-4">
       <tbody>
         <tr v-if="model.tags">
           <th>Tags</th>
@@ -58,7 +58,7 @@
         </tr>
       </tbody>
     </table>
-    <button @click="deleteVersion" class="mt-4 px-2 py-1 bg-red-500 text-white rounded">🗑 Delete Version</button>
+    <button @click="deleteVersion" class="btn btn-danger mt-4">🗑 Delete Version</button>
   </div>
 </template>
 
