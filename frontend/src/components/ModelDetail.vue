@@ -1,6 +1,6 @@
 <template>
-  <div class="p-4 max-w-screen-lg mx-auto">
-    <button @click="goBack" class="mb-4 px-2 py-1 bg-gray-700 text-white rounded">⬅ Back</button>
+  <div class="p-4 max-w-screen-lg mx-auto bg-gray-50 text-gray-900 dark:bg-gray-900 dark:text-gray-100">
+    <button @click="goBack" class="mb-4 px-2 py-1 bg-gray-200 rounded dark:bg-gray-700 dark:text-white">⬅ Back</button>
     <h2 class="text-2xl font-bold mb-1">{{ model.name }}</h2>
     <h3 v-if="version.name" class="text-lg mb-2">{{ version.name }}</h3>
     <img
@@ -58,7 +58,7 @@
         </tr>
       </tbody>
     </table>
-    <button @click="deleteVersion" class="mt-4 px-2 py-1 bg-red-600 text-white rounded">🗑 Delete Version</button>
+    <button @click="deleteVersion" class="mt-4 px-2 py-1 bg-red-500 text-white rounded dark:bg-red-600">🗑 Delete Version</button>
   </div>
 </template>
 
