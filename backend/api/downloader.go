@@ -1,14 +1,18 @@
 package api
 
 import (
+	"fmt"
 	"image"
 	_ "image/jpeg"
 	_ "image/png"
 	"io"
+	"log"
 	"net/http"
 	"os"
 	"path/filepath"
 	"strings"
+
+	"github.com/schollz/progressbar/v3"
 )
 
 func DownloadFile(url, destDir, filename string) (string, error) {
@@ -21,11 +25,25 @@ func DownloadFile(url, destDir, filename string) (string, error) {
 		}
 	}
 
-	resp, err := http.Get(url)
+	log.Printf("Downloading %s", url)
+
+	req, err := http.NewRequest("GET", url, nil)
+	if err != nil {
+		return "", err
+	}
+	if token != "" {
+		req.Header.Add("Authorization", "Bearer "+token)
+	}
+
+	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
 		return "", err
 	}
 	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		return "", fmt.Errorf("download failed with status %s", resp.Status)
+	}
 
 	os.MkdirAll(destDir, os.ModePerm)
 	fullPath := filepath.Join(destDir, filename)
@@ -40,7 +58,10 @@ func DownloadFile(url, destDir, filename string) (string, error) {
 	}
 	defer out.Close()
 
-	_, err = io.Copy(out, resp.Body)
+	bar := progressbar.DefaultBytes(resp.ContentLength, "downloading")
+	_, err = io.Copy(io.MultiWriter(out, bar), resp.Body)
+	fmt.Println()
+
 	return absPath, err
 }
 

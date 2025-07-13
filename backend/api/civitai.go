@@ -4,12 +4,15 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"log"
 	"net/http"
 )
 
 func FetchCivitModels(apiKey string) ([]CivitModel, error) {
 	var models []CivitModel
 	url := "https://civitai.com/api/v1/models?limit=100"
+
+	log.Printf("GET %s", url)
 
 	req, _ := http.NewRequest("GET", url, nil)
 	req.Header.Add("Authorization", "Bearer "+apiKey)
@@ -29,6 +32,8 @@ func FetchCivitModel(apiKey string, modelID int) (CivitModel, error) {
 	var model CivitModel
 	url := fmt.Sprintf("https://civitai.com/api/v1/models/%d", modelID)
 
+	log.Printf("GET %s", url)
+
 	req, _ := http.NewRequest("GET", url, nil)
 	req.Header.Add("Authorization", "Bearer "+apiKey)
 
@@ -46,6 +51,8 @@ func FetchCivitModel(apiKey string, modelID int) (CivitModel, error) {
 func FetchModelVersion(apiKey string, versionID int) (VersionResponse, error) {
 	var version VersionResponse
 	url := fmt.Sprintf("https://civitai.com/api/v1/model-versions/%d", versionID)
+
+	log.Printf("GET %s", url)
 
 	req, _ := http.NewRequest("GET", url, nil)
 	req.Header.Add("Authorization", "Bearer "+apiKey)
