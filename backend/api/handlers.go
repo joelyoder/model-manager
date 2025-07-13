@@ -386,3 +386,83 @@ func DeleteVersion(c *gin.Context) {
 
 	c.JSON(http.StatusOK, gin.H{"message": "Version deleted"})
 }
+
+// UpdateModel updates an existing model with new values
+func UpdateModel(c *gin.Context) {
+	idStr := c.Param("id")
+	id, err := strconv.Atoi(idStr)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid model ID"})
+		return
+	}
+
+	var model models.Model
+	if err := database.DB.First(&model, id).Error; err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "Model not found"})
+		return
+	}
+
+	var input models.Model
+	if err := c.BindJSON(&input); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request body"})
+		return
+	}
+
+	model.Name = input.Name
+	model.Type = input.Type
+	model.Tags = input.Tags
+	model.Nsfw = input.Nsfw
+	model.Description = input.Description
+	model.CreatedAt = input.CreatedAt
+	model.UpdatedAt = input.UpdatedAt
+	model.ImagePath = input.ImagePath
+	model.FilePath = input.FilePath
+	model.ImageWidth = input.ImageWidth
+	model.ImageHeight = input.ImageHeight
+
+	if err := database.DB.Save(&model).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update model"})
+		return
+	}
+
+	c.JSON(http.StatusOK, model)
+}
+
+// UpdateVersion updates an existing version with new values
+func UpdateVersion(c *gin.Context) {
+	idStr := c.Param("id")
+	id, err := strconv.Atoi(idStr)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid version ID"})
+		return
+	}
+
+	var version models.Version
+	if err := database.DB.First(&version, id).Error; err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "Version not found"})
+		return
+	}
+
+	var input models.Version
+	if err := c.BindJSON(&input); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request body"})
+		return
+	}
+
+	version.Name = input.Name
+	version.BaseModel = input.BaseModel
+	version.CreatedAt = input.CreatedAt
+	version.EarlyAccessTimeFrame = input.EarlyAccessTimeFrame
+	version.SizeKB = input.SizeKB
+	version.TrainedWords = input.TrainedWords
+	version.ModelURL = input.ModelURL
+	version.ImagePath = input.ImagePath
+	version.FilePath = input.FilePath
+
+	if err := database.DB.Save(&version).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update version"})
+		return
+	}
+
+	c.JSON(http.StatusOK, version)
+}
