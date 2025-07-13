@@ -45,6 +45,7 @@ func SyncCivitModelByID(c *gin.Context) {
 	}
 
 	url := fmt.Sprintf("https://civitai.com/api/v1/models/%d", modelID)
+	log.Printf("GET %s", url)
 	req, _ := http.NewRequest("GET", url, nil)
 	req.Header.Add("Authorization", "Bearer "+apiKey)
 
