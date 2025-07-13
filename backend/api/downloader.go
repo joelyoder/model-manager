@@ -9,23 +9,24 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"strings"
 
 	progressbar "github.com/schollz/progressbar/v3"
 )
 
 func DownloadFile(url, destDir, filename string) (string, error) {
 	token := os.Getenv("CIVIT_API_KEY")
+	if token != "" {
+		if strings.Contains(url, "?") {
+			url += "&token=" + token
+		} else {
+			url += "?token=" + token
+		}
+	}
+
 	log.Printf("Downloading %s", url)
 
-	req, err := http.NewRequest("GET", url, nil)
-	if err != nil {
-		return "", err
-	}
-	if token != "" {
-		req.Header.Add("Authorization", "Bearer "+token)
-	}
-
-	resp, err := http.DefaultClient.Do(req)
+	resp, err := http.Get(url)
 	if err != nil {
 		return "", err
 	}
