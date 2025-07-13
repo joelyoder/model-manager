@@ -1,6 +1,6 @@
 
 /frontend/node_modules
-/backend/.env
+.env
 /backend/downloads/*
 /backend/images/*
 /backend/models.db
