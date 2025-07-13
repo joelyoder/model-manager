@@ -22,6 +22,24 @@ func GetModels(c *gin.Context) {
 	c.JSON(200, modelsList)
 }
 
+// GetModel returns a single model with all versions by database ID.
+func GetModel(c *gin.Context) {
+	idStr := c.Param("id")
+	id, err := strconv.Atoi(idStr)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid model ID"})
+		return
+	}
+
+	var model models.Model
+	if err := database.DB.Preload("Versions").First(&model, id).Error; err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "Model not found"})
+		return
+	}
+
+	c.JSON(http.StatusOK, model)
+}
+
 func SyncCivitModels(c *gin.Context) {
 	apiKey := os.Getenv("CIVIT_API_KEY")
 	items, err := FetchCivitModels(apiKey)

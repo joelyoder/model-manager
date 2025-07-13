@@ -59,6 +59,7 @@
       <p v-if="card.version.sizeKB">
         Size: {{ (card.version.sizeKB / 1024).toFixed(2) }} MB
       </p>
+      <RouterLink :to="`/model/${card.model.ID}`">More details</RouterLink>
       <button @click="deleteVersion(card.version.ID)">🗑 Delete</button>
     </div>
   </div>
