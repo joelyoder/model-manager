@@ -121,14 +121,14 @@ func SyncVersionByID(c *gin.Context) {
 	}
 
 	var existingVersion models.Version
-	database.DB.Unscoped().Where("version_id = ?", id).First(&existingVersion)
+	database.DB.Unscoped().Where("version_id = ?", id).Find(&existingVersion)
 	if existingVersion.ID > 0 {
 		c.JSON(200, gin.H{"message": "Version already exists"})
 		return
 	}
 
 	var model models.Model
-	database.DB.Unscoped().Where("civit_id = ?", verData.ModelID).First(&model)
+	database.DB.Unscoped().Where("civit_id = ?", verData.ModelID).Find(&model)
 	if model.ID == 0 {
 		modelData, _ := FetchCivitModel(apiKey, verData.ModelID)
 		model = models.Model{
@@ -190,7 +190,7 @@ func SyncVersionByID(c *gin.Context) {
 func processModels(items []CivitModel, apiKey string) {
 	for _, item := range items {
 		var existing models.Model
-		database.DB.Where("civit_id = ?", item.ID).First(&existing)
+		database.DB.Where("civit_id = ?", item.ID).Find(&existing)
 		if existing.ID == 0 {
 			existing = models.Model{
 				CivitID:     item.ID,
@@ -212,7 +212,7 @@ func processModels(items []CivitModel, apiKey string) {
 			}
 
 			var versionExists models.Version
-			database.DB.Unscoped().Where("version_id = ?", verData.ID).First(&versionExists)
+			database.DB.Unscoped().Where("version_id = ?", verData.ID).Find(&versionExists)
 			if versionExists.ID > 0 {
 				continue
 			}
