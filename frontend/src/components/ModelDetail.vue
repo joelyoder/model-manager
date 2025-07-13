@@ -1,6 +1,10 @@
 <template>
-  <div class="p-4">
-    <button @click="goBack" class="mb-2 px-2 py-1 bg-gray-200 rounded">⬅ Back</button>
+  <div class="p-4 dark:text-white">
+    <div class="flex">
+      <button @click="goBack" class="mb-2 px-2 py-1 bg-gray-200 dark:text-gray-400 rounded">⬅ Back</button>
+      <button @click="deleteVersion" class="mt-4 px-2 py-1 bg-red-500 text-white rounded">🗑 Delete</button>
+    </div>
+    
     <h2 class="text-xl font-bold">{{ model.name }}</h2>
     <h3 v-if="version.name" class="text-lg mb-2">{{ version.name }}</h3>
     <img
@@ -12,7 +16,7 @@
     />
     <div v-if="model.description" v-html="model.description" class="mb-4"></div>
     <h3 class="text-lg font-semibold">Meta</h3>
-    <table class="mt-4 border-collapse">
+    <table class="table-auto">
       <tbody>
         <tr v-if="model.tags">
           <th>Tags</th>
@@ -58,7 +62,6 @@
         </tr>
       </tbody>
     </table>
-    <button @click="deleteVersion" class="mt-4 px-2 py-1 bg-red-500 text-white rounded">🗑 Delete Version</button>
   </div>
 </template>
 
