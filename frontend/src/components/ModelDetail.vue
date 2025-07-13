@@ -10,22 +10,53 @@
       :height="model.imageHeight"
     />
     <div v-if="model.description" v-html="model.description"></div>
-    <p v-if="model.tags">Tags: {{ model.tags.split(",").join(", ") }}</p>
-    <p>Type: {{ model.type }}</p>
-    <p>NSFW: {{ model.nsfw }}</p>
-    <p>Created: {{ model.createdAt }}</p>
-    <p>Updated: {{ model.updatedAt }}</p>
-    <p>Base Model: {{ version.baseModel }}</p>
-    <p v-if="version.trainedWords">
-      Trained Words: {{ version.trainedWords.split(",").join(", ") }}
-    </p>
-    <p v-if="version.filePath">File: {{ fileName }}</p>
-    <p v-if="version.sizeKB">
-      Size: {{ (version.sizeKB / 1024).toFixed(2) }} MB
-    </p>
-    <p v-if="version.modelUrl">
-      <a :href="version.modelUrl" target="_blank">View on CivitAI</a>
-    </p>
+    <h3>Meta</h3>
+    <table class="meta">
+      <tbody>
+        <tr v-if="model.tags">
+          <th>Tags</th>
+          <td>{{ model.tags.split(",").join(", ") }}</td>
+        </tr>
+        <tr>
+          <th>Type</th>
+          <td>{{ model.type }}</td>
+        </tr>
+        <tr>
+          <th>NSFW</th>
+          <td>{{ model.nsfw }}</td>
+        </tr>
+        <tr>
+          <th>Created</th>
+          <td>{{ model.createdAt }}</td>
+        </tr>
+        <tr>
+          <th>Updated</th>
+          <td>{{ model.updatedAt }}</td>
+        </tr>
+        <tr>
+          <th>Base Model</th>
+          <td>{{ version.baseModel }}</td>
+        </tr>
+        <tr v-if="version.trainedWords">
+          <th>Trained Words</th>
+          <td>{{ version.trainedWords.split(",").join(", ") }}</td>
+        </tr>
+        <tr v-if="version.filePath">
+          <th>File</th>
+          <td>{{ fileName }}</td>
+        </tr>
+        <tr v-if="version.sizeKB">
+          <th>Size</th>
+          <td>{{ (version.sizeKB / 1024).toFixed(2) }} MB</td>
+        </tr>
+        <tr v-if="version.modelUrl">
+          <th>Model URL</th>
+          <td>
+            <a :href="version.modelUrl" target="_blank">View on CivitAI</a>
+          </td>
+        </tr>
+      </tbody>
+    </table>
     <button @click="deleteVersion">🗑 Delete Version</button>
   </div>
 </template>
@@ -79,5 +110,16 @@ img {
   max-width: 100%;
   height: auto;
   margin-bottom: 1rem;
+}
+.meta {
+  margin-top: 1rem;
+  border-collapse: collapse;
+}
+.meta th {
+  text-align: left;
+  padding-right: 0.5rem;
+}
+.meta td {
+  padding-bottom: 0.25rem;
 }
 </style>
