@@ -12,6 +12,7 @@ type Version struct {
 	EarlyAccessTimeFrame int     `json:"earlyAccessTimeFrame"`
 	SizeKB               float64 `json:"sizeKB"`
 	TrainedWords         string  `json:"trainedWords"`
+	ModelURL             string  `json:"modelUrl"`
 	ImagePath            string  `json:"imagePath"`
 	FilePath             string  `json:"filePath"`
 }

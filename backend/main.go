@@ -33,6 +33,7 @@ func main() {
 		apiGroup.POST("/sync/:id", api.SyncCivitModelByID)
 		apiGroup.POST("/sync/version/:versionId", api.SyncVersionByID)
 		apiGroup.GET("/model/:id/versions", api.GetModelVersions)
+		apiGroup.GET("/versions/:id", api.GetVersion)
 		apiGroup.DELETE("/versions/:id", api.DeleteVersion)
 	}
 

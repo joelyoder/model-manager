@@ -2,6 +2,7 @@
   <div class="detail">
     <button @click="goBack">⬅ Back</button>
     <h2>{{ model.name }}</h2>
+    <h3 v-if="version.name">{{ version.name }}</h3>
     <img
       v-if="imageUrl"
       :src="imageUrl"
@@ -14,14 +15,18 @@
     <p>NSFW: {{ model.nsfw }}</p>
     <p>Created: {{ model.createdAt }}</p>
     <p>Updated: {{ model.updatedAt }}</p>
-    <h3>Versions</h3>
-    <ul>
-      <li v-for="v in model.versions" :key="v.ID">
-        {{ v.name }} - {{ v.baseModel }} -
-        <span v-if="v.sizeKB">{{ (v.sizeKB / 1024).toFixed(2) }} MB</span>
-      </li>
-    </ul>
-    <button @click="deleteModel">🗑 Delete</button>
+    <p>Base Model: {{ version.baseModel }}</p>
+    <p v-if="version.trainedWords">
+      Trained Words: {{ version.trainedWords.split(",").join(", ") }}
+    </p>
+    <p v-if="version.filePath">File: {{ fileName }}</p>
+    <p v-if="version.sizeKB">
+      Size: {{ (version.sizeKB / 1024).toFixed(2) }} MB
+    </p>
+    <p v-if="version.modelUrl">
+      <a :href="version.modelUrl" target="_blank">View on CivitAI</a>
+    </p>
+    <button @click="deleteVersion">🗑 Delete Version</button>
   </div>
 </template>
 
@@ -33,23 +38,31 @@ import axios from "axios";
 const router = useRouter();
 const route = useRoute();
 const model = ref({});
+const version = ref({});
 
 const imageUrl = computed(() => {
-  if (!model.value.imagePath) return null;
-  return model.value.imagePath.replace(/^.*\/backend\/images/, "/images");
+  const path = version.value.imagePath || model.value.imagePath;
+  if (!path) return null;
+  return path.replace(/^.*\/backend\/images/, "/images");
 });
 
-const fetchModel = async () => {
-  const { id } = route.params;
-  const res = await axios.get(`/api/models/${id}`);
-  model.value = res.data;
+const fileName = computed(() => {
+  if (!version.value.filePath) return "";
+  return version.value.filePath.split("/").pop();
+});
+
+const fetchData = async () => {
+  const { versionId } = route.params;
+  const res = await axios.get(`/api/versions/${versionId}`);
+  model.value = res.data.model;
+  version.value = res.data.version;
 };
 
-onMounted(fetchModel);
+onMounted(fetchData);
 
-const deleteModel = async () => {
-  if (!confirm("Delete this model and all files?")) return;
-  await axios.delete(`/api/models/${route.params.id}`);
+const deleteVersion = async () => {
+  if (!confirm("Delete this version and all files?")) return;
+  await axios.delete(`/api/versions/${route.params.versionId}`);
   router.push("/");
 };
 

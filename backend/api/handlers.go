@@ -199,6 +199,7 @@ func SyncVersionByID(c *gin.Context) {
 		EarlyAccessTimeFrame: verData.EarlyAccessTimeFrame,
 		SizeKB:               verData.ModelFiles[0].SizeKB,
 		TrainedWords:         strings.Join(verData.TrainedWords, ","),
+		ModelURL:             fmt.Sprintf("https://civitai.com/models/%d?modelVersionId=%d", verData.ModelID, verData.ID),
 		ImagePath:            imagePath,
 		FilePath:             filePath,
 	})
@@ -264,6 +265,7 @@ func processModels(items []CivitModel, apiKey string) {
 				EarlyAccessTimeFrame: verData.EarlyAccessTimeFrame,
 				SizeKB:               verData.ModelFiles[0].SizeKB,
 				TrainedWords:         strings.Join(verData.TrainedWords, ","),
+				ModelURL:             fmt.Sprintf("https://civitai.com/models/%d?modelVersionId=%d", item.ID, verData.ID),
 				ImagePath:            imagePath,
 				FilePath:             filePath,
 			})
@@ -315,6 +317,30 @@ func DeleteModel(c *gin.Context) {
 	database.DB.Unscoped().Delete(&model)
 
 	c.JSON(http.StatusOK, gin.H{"message": "Model deleted"})
+}
+
+// GetVersion returns a single model version along with its parent model
+func GetVersion(c *gin.Context) {
+	idStr := c.Param("id")
+	id, err := strconv.Atoi(idStr)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid version ID"})
+		return
+	}
+
+	var version models.Version
+	if err := database.DB.First(&version, id).Error; err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "Version not found"})
+		return
+	}
+
+	var model models.Model
+	if err := database.DB.First(&model, version.ModelID).Error; err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "Model not found"})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"model": model, "version": version})
 }
 
 // DeleteVersion removes a single model version and associated files from the database.

@@ -60,7 +60,10 @@
         Size: {{ (card.version.sizeKB / 1024).toFixed(2) }} MB
       </p>
       <button @click="deleteVersion(card.version.ID)">🗑 Delete</button>
-      <button v-if="card.version.filePath" @click="goToModel(card.model.ID)">
+      <button
+        v-if="card.version.filePath"
+        @click="goToModel(card.model.ID, card.version.ID)"
+      >
         ℹ️ More details
       </button>
     </div>
@@ -175,8 +178,8 @@ const deleteVersion = async (id) => {
   await fetchModels();
 };
 
-const goToModel = (id) => {
-  router.push(`/model/${id}`);
+const goToModel = (modelId, versionId) => {
+  router.push(`/model/${modelId}/version/${versionId}`);
 };
 </script>
 

@@ -4,7 +4,11 @@ import ModelDetail from "./components/ModelDetail.vue";
 
 const routes = [
   { path: "/", component: ModelList },
-  { path: "/model/:id", component: ModelDetail, props: true },
+  {
+    path: "/model/:modelId/version/:versionId",
+    component: ModelDetail,
+    props: true,
+  },
 ];
 
 const router = createRouter({
