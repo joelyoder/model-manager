@@ -5,23 +5,27 @@ import (
 	_ "image/jpeg"
 	_ "image/png"
 	"io"
+	"log"
 	"net/http"
 	"os"
 	"path/filepath"
-	"strings"
+
+	progressbar "github.com/schollz/progressbar/v3"
 )
 
 func DownloadFile(url, destDir, filename string) (string, error) {
 	token := os.Getenv("CIVIT_API_KEY")
+	log.Printf("Downloading %s", url)
+
+	req, err := http.NewRequest("GET", url, nil)
+	if err != nil {
+		return "", err
+	}
 	if token != "" {
-		if strings.Contains(url, "?") {
-			url += "&token=" + token
-		} else {
-			url += "?token=" + token
-		}
+		req.Header.Add("Authorization", "Bearer "+token)
 	}
 
-	resp, err := http.Get(url)
+	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
 		return "", err
 	}
@@ -40,7 +44,8 @@ func DownloadFile(url, destDir, filename string) (string, error) {
 	}
 	defer out.Close()
 
-	_, err = io.Copy(out, resp.Body)
+	bar := progressbar.DefaultBytes(resp.ContentLength)
+	_, err = io.Copy(io.MultiWriter(out, bar), resp.Body)
 	return absPath, err
 }
 
