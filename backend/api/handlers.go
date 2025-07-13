@@ -123,7 +123,8 @@ func SyncVersionByID(c *gin.Context) {
 	var existingVersion models.Version
 	database.DB.Unscoped().Where("version_id = ?", id).Find(&existingVersion)
 	if existingVersion.ID > 0 {
-		c.JSON(200, gin.H{"message": "Version already exists"})
+		log.Printf("Skipping download: version %d already exists", id)
+		c.JSON(http.StatusConflict, gin.H{"error": "Version already exists"})
 		return
 	}
 
@@ -214,6 +215,7 @@ func processModels(items []CivitModel, apiKey string) {
 			var versionExists models.Version
 			database.DB.Unscoped().Where("version_id = ?", verData.ID).Find(&versionExists)
 			if versionExists.ID > 0 {
+				log.Printf("Skipping download: version %d already exists", verData.ID)
 				continue
 			}
 
