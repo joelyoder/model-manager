@@ -1,13 +1,11 @@
 <template>
   <div class="app">
     <h1>📦 Local CivitAI Model Manager</h1>
-    <ModelList />
+    <router-view />
   </div>
 </template>
 
-<script setup>
-import ModelList from './components/ModelList.vue'
-</script>
+<script setup></script>
 
 <style>
 body {
