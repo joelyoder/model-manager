@@ -26,6 +26,27 @@
             {{ bm }}
           </option>
         </select>
+
+        <select
+          v-model="selectedModelType"
+          class="form-select"
+          style="min-width: 200px"
+        >
+          <option value="">All model types</option>
+          <option v-for="t in modelTypes" :key="t" :value="t">
+            {{ t }}
+          </option>
+        </select>
+
+        <div class="form-check align-self-center">
+          <input
+            type="checkbox"
+            id="hide-nsfw"
+            class="form-check-input"
+            v-model="hideNsfw"
+          />
+          <label class="form-check-label" for="hide-nsfw">Hide NSFW</label>
+        </div>
       </div>
       <div class="col-6 d-flex flex-wrap align-items-center gap-2 px-4 pb-4">
         <!-- Paste URL and fetch versions -->
@@ -139,6 +160,8 @@ const models = ref([]);
 const search = ref("");
 const tagsSearch = ref("");
 const selectedBaseModel = ref("");
+const selectedModelType = ref("");
+const hideNsfw = ref(false);
 const modelUrl = ref("");
 const versions = ref([]);
 const selectedVersionId = ref("");
@@ -200,6 +223,14 @@ const baseModels = computed(() => {
   return Array.from(set);
 });
 
+const modelTypes = computed(() => {
+  const set = new Set();
+  models.value.forEach((m) => {
+    if (m.type) set.add(m.type);
+  });
+  return Array.from(set);
+});
+
 const filteredModels = computed(() => {
   return models.value.filter((m) => {
     let tagsMatch = true;
@@ -219,7 +250,17 @@ const filteredModels = computed(() => {
       );
     }
 
-    return tagsMatch && baseMatch;
+    let typeMatch = true;
+    if (selectedModelType.value) {
+      typeMatch = m.type === selectedModelType.value;
+    }
+
+    let nsfwMatch = true;
+    if (hideNsfw.value) {
+      nsfwMatch = !m.nsfw;
+    }
+
+    return tagsMatch && baseMatch && typeMatch && nsfwMatch;
   });
 });
 
