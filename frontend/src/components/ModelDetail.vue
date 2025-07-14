@@ -1,16 +1,16 @@
 <template>
   <div class="px-4">
-    <div class="mb-2 d-flex gap-2 justify-content-center px-4 pb-4" v-if="!isEditing">
+    <div
+      class="mb-2 d-flex gap-2 justify-content-center px-4 pb-4"
+      v-if="!isEditing"
+    >
       <button @click="goBack" class="btn btn-secondary">⬅ Back</button>
-      <button  
-        @click="startEdit"
-        class="btn btn-primary"
-      >✏️ Edit</button>
+      <button @click="startEdit" class="btn btn-primary">✏️ Edit</button>
       <button @click="deleteVersion" class="btn btn-danger">🗑 Delete</button>
     </div>
     <div v-else class="d-flex gap-2 justify-content-center">
-        <button @click="saveEdit" class="btn btn-primary">💾 Save</button>
-        <button @click="cancelEdit" class="btn btn-secondary">Cancel</button>
+      <button @click="saveEdit" class="btn btn-primary">💾 Save</button>
+      <button @click="cancelEdit" class="btn btn-secondary">Cancel</button>
     </div>
     <div v-if="!isEditing" class="container">
       <div class="row">
@@ -67,14 +67,20 @@
               <tr v-if="version.modelUrl">
                 <th>Model URL</th>
                 <td>
-                  <a :href="version.modelUrl" target="_blank">{{version.modelUrl}}</a>
+                  <a :href="version.modelUrl" target="_blank">{{
+                    version.modelUrl
+                  }}</a>
                 </td>
               </tr>
             </tbody>
           </table>
         </div>
       </div>
-      <div v-if="model.description" v-html="model.description" class="mb-4"></div>
+      <div
+        v-if="model.description"
+        v-html="model.description"
+        class="mb-4"
+      ></div>
     </div>
     <div v-else>
       <div class="mb-3">
@@ -94,12 +100,17 @@
         <input v-model="model.type" class="form-control" />
       </div>
       <div class="form-check mb-3">
-        <input type="checkbox" class="form-check-input" id="nsfw" v-model="model.nsfw" />
+        <input
+          type="checkbox"
+          class="form-check-input"
+          id="nsfw"
+          v-model="model.nsfw"
+        />
         <label class="form-check-label" for="nsfw">NSFW</label>
       </div>
       <div class="mb-3">
         <label class="form-label">Description</label>
-        <textarea v-model="model.description" class="form-control" rows="3"></textarea>
+        <div ref="editor" style="height: 200px"></div>
       </div>
       <div class="mb-3">
         <label class="form-label">Created</label>
@@ -123,7 +134,11 @@
       </div>
       <div class="mb-3">
         <label class="form-label">Size (KB)</label>
-        <input v-model.number="version.sizeKB" type="number" class="form-control" />
+        <input
+          v-model.number="version.sizeKB"
+          type="number"
+          class="form-control"
+        />
       </div>
       <div class="mb-3">
         <label class="form-label">Model URL</label>
@@ -134,15 +149,19 @@
 </template>
 
 <script setup>
-import { ref, onMounted, computed } from "vue";
+import { ref, onMounted, computed, nextTick, watch } from "vue";
 import { useRouter, useRoute } from "vue-router";
 import axios from "axios";
+import Quill from "quill";
+import { showToast, showConfirm } from "../utils/ui";
 
 const router = useRouter();
 const route = useRoute();
 const model = ref({});
 const version = ref({});
 const isEditing = ref(false);
+const editor = ref(null);
+let quill;
 
 const imageUrl = computed(() => {
   const path = version.value.imagePath || model.value.imagePath;
@@ -164,8 +183,16 @@ const fetchData = async () => {
 
 onMounted(fetchData);
 
+watch(isEditing, async (val) => {
+  if (val) {
+    await nextTick();
+    quill = new Quill(editor.value, { theme: "snow" });
+    quill.root.innerHTML = model.value.description || "";
+  }
+});
+
 const deleteVersion = async () => {
-  if (!confirm("Delete this version and all files?")) return;
+  if (!(await showConfirm("Delete this version and all files?"))) return;
   await axios.delete(`/api/versions/${route.params.versionId}`);
   router.push("/");
 };
@@ -180,14 +207,17 @@ const cancelEdit = async () => {
 };
 
 const saveEdit = async () => {
+  if (quill) {
+    model.value.description = quill.root.innerHTML;
+  }
   await axios.put(`/api/models/${model.value.ID}`, model.value);
   await axios.put(`/api/versions/${version.value.ID}`, version.value);
   isEditing.value = false;
   await fetchData();
+  showToast("Saved", "success");
 };
 
 const goBack = () => {
   router.push("/");
 };
 </script>
-

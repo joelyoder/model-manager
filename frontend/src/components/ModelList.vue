@@ -4,19 +4,17 @@
       v-model="search"
       placeholder="Search models..."
       class="form-control flex-grow-1"
-      style="min-width: 200px;"
+      style="min-width: 200px"
     />
 
-    <button @click="fetchModels" class="btn btn-secondary">
-      🔄 Refresh
-    </button>
+    <button @click="fetchModels" class="btn btn-secondary">🔄 Refresh</button>
 
     <!-- Paste URL and fetch versions -->
     <input
       v-model="modelUrl"
       placeholder="Paste CivitAI model URL"
       class="form-control flex-grow-1"
-      style="min-width: 200px;"
+      style="min-width: 200px"
       @keyup.enter="loadVersions"
     />
     <button
@@ -32,7 +30,7 @@
       v-if="versions.length"
       v-model="selectedVersionId"
       class="form-select flex-grow-1"
-      style="min-width: 200px;"
+      style="min-width: 200px"
     >
       <option disabled value="">Select version</option>
       <option v-for="v in versions" :value="v.id" :key="v.id">
@@ -53,9 +51,11 @@
     </button>
     <div v-if="downloading" class="progress w-100 mt-2">
       <div
-        class="progress-bar progress-bar-striped progress-bar-animated"
-        style="width: 100%"
-      ></div>
+        class="progress-bar progress-bar-striped"
+        :style="{ width: downloadProgress + '%' }"
+      >
+        {{ downloadProgress }}%
+      </div>
     </div>
   </div>
 
@@ -72,10 +72,17 @@
           class="img-fluid card-img-top"
         />
         <div class="card-img-overlay z-2">
-            <span class="badge rounded-pill text-bg-primary">{{ card.model.type }}</span> <span class="ms-1 badge rounded-pill text-bg-success">{{ card.version.baseModel }}</span>
-          </div>
+          <span class="badge rounded-pill text-bg-primary">{{
+            card.model.type
+          }}</span>
+          <span class="ms-1 badge rounded-pill text-bg-success">{{
+            card.version.baseModel
+          }}</span>
+        </div>
         <div class="card-body z-3">
-          <h3 class="card-title h5 pb-3">{{ card.model.name }} - {{ card.version.name }}</h3>
+          <h3 class="card-title h5 pb-3">
+            {{ card.model.name }} - {{ card.version.name }}
+          </h3>
           <div class="mb-2 d-flex gap-2">
             <button
               v-if="card.version.filePath"
@@ -84,7 +91,10 @@
             >
               ℹ️ More details
             </button>
-            <button @click="deleteVersion(card.version.ID)" class="btn btn-danger">
+            <button
+              @click="deleteVersion(card.version.ID)"
+              class="btn btn-danger"
+            >
               🗑 Delete
             </button>
           </div>
@@ -98,6 +108,7 @@
 import { ref, computed, onMounted } from "vue";
 import { useRouter } from "vue-router";
 import axios from "axios";
+import { showToast, showConfirm } from "../utils/ui";
 
 const models = ref([]);
 const search = ref("");
@@ -106,6 +117,8 @@ const versions = ref([]);
 const selectedVersionId = ref("");
 const loading = ref(false);
 const downloading = ref(false);
+const downloadProgress = ref(0);
+let progressInterval = null;
 const router = useRouter();
 
 const fetchModels = async () => {
@@ -166,7 +179,7 @@ const extractVersionId = (url) => {
 const loadVersions = async () => {
   const id = extractModelId(modelUrl.value);
   if (!id) {
-    alert("Invalid CivitAI model URL");
+    showToast("Invalid CivitAI model URL", "danger");
     return;
   }
 
@@ -184,7 +197,7 @@ const loadVersions = async () => {
     }
   } catch (err) {
     console.error(err);
-    alert("Failed to load versions");
+    showToast("Failed to load versions", "danger");
   } finally {
     loading.value = false;
   }
@@ -195,14 +208,22 @@ const downloadSelectedVersion = async () => {
 
   loading.value = true;
   downloading.value = true;
+  downloadProgress.value = 0;
+  progressInterval = setInterval(async () => {
+    const res = await axios.get("/api/download/progress");
+    downloadProgress.value = res.data.progress || 0;
+  }, 500);
   try {
     await axios.post(`/api/sync/version/${selectedVersionId.value}`);
     await fetchModels();
-    alert("Version downloaded successfully");
+    showToast("Version downloaded successfully", "success");
   } catch (err) {
     console.error(err);
-    alert("Download failed");
+    showToast("Download failed", "danger");
   } finally {
+    clearInterval(progressInterval);
+    progressInterval = null;
+    downloadProgress.value = 0;
     modelUrl.value = "";
     versions.value = [];
     selectedVersionId.value = "";
@@ -212,7 +233,7 @@ const downloadSelectedVersion = async () => {
 };
 
 const deleteVersion = async (id) => {
-  if (!confirm("Delete this version and all files?")) return;
+  if (!(await showConfirm("Delete this version and all files?"))) return;
   await axios.delete(`/api/versions/${id}`);
   await fetchModels();
 };
@@ -221,4 +242,3 @@ const goToModel = (modelId, versionId) => {
   router.push(`/model/${modelId}/version/${versionId}`);
 };
 </script>
-

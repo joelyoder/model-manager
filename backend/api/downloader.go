@@ -9,9 +9,10 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
-
-	progressbar "github.com/schollz/progressbar/v3"
+	"strings"
 )
+
+var CurrentDownloadProgress int64
 
 func DownloadFile(url, destDir, filename string) (string, error) {
 	token := os.Getenv("CIVIT_API_KEY")
@@ -44,9 +45,37 @@ func DownloadFile(url, destDir, filename string) (string, error) {
 	}
 	defer out.Close()
 
-	bar := progressbar.DefaultBytes(resp.ContentLength)
-	_, err = io.Copy(io.MultiWriter(out, bar), resp.Body)
-	return absPath, err
+	if strings.Contains(destDir, "downloads") {
+		CurrentDownloadProgress = 0
+	}
+
+	total := resp.ContentLength
+	buf := make([]byte, 32*1024)
+	var downloaded int64
+	for {
+		n, err := resp.Body.Read(buf)
+		if n > 0 {
+			if _, werr := out.Write(buf[:n]); werr != nil {
+				return "", werr
+			}
+			downloaded += int64(n)
+			if strings.Contains(destDir, "downloads") && total > 0 {
+				CurrentDownloadProgress = downloaded * 100 / total
+			}
+		}
+		if err != nil {
+			if err == io.EOF {
+				break
+			}
+			return "", err
+		}
+	}
+
+	if strings.Contains(destDir, "downloads") {
+		CurrentDownloadProgress = 100
+	}
+
+	return absPath, nil
 }
 
 func GetImageDimensions(path string) (int, int, error) {
