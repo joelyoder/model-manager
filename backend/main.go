@@ -28,12 +28,14 @@ func main() {
 	{
 		apiGroup.GET("/models", api.GetModels)
 		apiGroup.GET("/models/:id", api.GetModel)
+		apiGroup.PUT("/models/:id", api.UpdateModel)
 		apiGroup.DELETE("/models/:id", api.DeleteModel)
 		apiGroup.POST("/sync", api.SyncCivitModels)
 		apiGroup.POST("/sync/:id", api.SyncCivitModelByID)
 		apiGroup.POST("/sync/version/:versionId", api.SyncVersionByID)
 		apiGroup.GET("/model/:id/versions", api.GetModelVersions)
 		apiGroup.GET("/versions/:id", api.GetVersion)
+		apiGroup.PUT("/versions/:id", api.UpdateVersion)
 		apiGroup.DELETE("/versions/:id", api.DeleteVersion)
 	}
 
