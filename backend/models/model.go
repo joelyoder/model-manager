@@ -10,8 +10,6 @@ type Model struct {
 	Tags        string `json:"tags"`
 	Nsfw        bool   `gorm:"column:nsfw" json:"nsfw"`
 	Description string `json:"description"`
-	CreatedAt   string `json:"createdAt"`
-	UpdatedAt   string `json:"updatedAt"`
 
 	// Local paths
 	ImagePath string `json:"imagePath"`

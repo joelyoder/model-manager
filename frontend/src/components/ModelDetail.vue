@@ -1,12 +1,11 @@
 <template>
   <div class="px-4 container">
-    <div
-      class="mb-2 d-flex gap-2 pb-2"
-      v-if="!isEditing"
-    >
+    <div class="mb-2 d-flex gap-2 pb-2" v-if="!isEditing">
       <button @click="goBack" class="btn btn-secondary">Back</button>
       <button @click="startEdit" class="btn btn-primary">Edit</button>
-      <button @click="deleteVersion" class="btn btn-danger ms-auto">Delete</button>
+      <button @click="deleteVersion" class="btn btn-danger ms-auto">
+        Delete
+      </button>
     </div>
     <div v-else class="mb-2 d-flex gap-2 pb-2">
       <button @click="cancelEdit" class="btn btn-secondary">Cancel</button>
@@ -39,14 +38,6 @@
               <tr>
                 <th>NSFW</th>
                 <td>{{ model.nsfw }}</td>
-              </tr>
-              <tr>
-                <th>Created</th>
-                <td>{{ model.createdAt }}</td>
-              </tr>
-              <tr>
-                <th>Updated</th>
-                <td>{{ model.updatedAt }}</td>
               </tr>
               <tr>
                 <th>Base Model</th>
@@ -135,14 +126,6 @@
       <div class="mb-3">
         <label class="form-label">Description</label>
         <div ref="editor" style="height: 200px"></div>
-      </div>
-      <div class="mb-3">
-        <label class="form-label">Created</label>
-        <input v-model="model.createdAt" class="form-control" />
-      </div>
-      <div class="mb-3">
-        <label class="form-label">Updated</label>
-        <input v-model="model.updatedAt" class="form-control" />
       </div>
       <div class="mb-3">
         <label class="form-label">Base Model</label>

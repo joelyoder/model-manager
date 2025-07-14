@@ -3,19 +3,19 @@
     <div class="row">
       <div class="col-md-6 d-flex align-content-start flex-wrap gap-2">
         <input
-        v-model="search"
-        placeholder="Search models..."
-        class="form-control w-200 flex-grow-1"
-        style="min-width: 200px"
+          v-model="search"
+          placeholder="Search models..."
+          class="form-control w-200 flex-grow-1"
+          style="min-width: 200px"
         />
 
         <input
-        v-model="tagsSearch"
-        placeholder="Search tags (comma separated)"
-        class="form-control"
-        style="min-width: 200px"
+          v-model="tagsSearch"
+          placeholder="Search tags (comma separated)"
+          class="form-control"
+          style="min-width: 200px"
         />
-        
+
         <select
           v-model="selectedBaseModel"
           class="form-select"
@@ -37,7 +37,7 @@
             {{ t }}
           </option>
         </select>
-        
+
         <div class="form-check form-switch">
           <input
             type="checkbox"
@@ -63,7 +63,7 @@
           :disabled="loading || !modelUrl"
           class="btn btn-secondary"
         >
-        Load Versions
+          Load Versions
         </button>
 
         <!-- Version selector -->
@@ -87,7 +87,11 @@
           :disabled="loading"
           class="btn btn-primary"
         >
-          <span v-if="loading" class="spinner-border spinner-border-sm" aria-hidden="true"></span>
+          <span
+            v-if="loading"
+            class="spinner-border spinner-border-sm"
+            aria-hidden="true"
+          ></span>
           <span v-if="loading" role="status" class="ps-2">Downloading...</span>
           <span v-else>Download</span>
         </button>
@@ -266,24 +270,26 @@ const filteredModels = computed(() => {
 });
 
 const versionCards = computed(() => {
-  return filteredModels.value.flatMap((model) =>
-    model.versions
-      .filter(
-        (v) =>
-          !selectedBaseModel.value || v.baseModel === selectedBaseModel.value,
-      )
-      .map((v) => {
-        let trained = v.trainedWords;
-        if (typeof trained === "string") {
-          trained = trained ? trained.split(",") : [];
-        }
-        return {
-          model,
-          version: { ...v, trainedWordsArr: trained },
-          imageUrl: v.imageUrl || model.imageUrl,
-        };
-      }),
-  );
+  return filteredModels.value
+    .flatMap((model) =>
+      model.versions
+        .filter(
+          (v) =>
+            !selectedBaseModel.value || v.baseModel === selectedBaseModel.value,
+        )
+        .map((v) => {
+          let trained = v.trainedWords;
+          if (typeof trained === "string") {
+            trained = trained ? trained.split(",") : [];
+          }
+          return {
+            model,
+            version: { ...v, trainedWordsArr: trained },
+            imageUrl: v.imageUrl || model.imageUrl,
+          };
+        }),
+    )
+    .sort((a, b) => b.version.ID - a.version.ID);
 });
 
 const extractModelId = (url) => {
