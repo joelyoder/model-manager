@@ -1,16 +1,18 @@
 <template>
-  <div class="d-flex flex-wrap align-items-center gap-2 px-4 pb-4">
+  <div class="">
+    <div class="row">
+      <div class="col-6 d-flex flex-wrap gap-2 px-4 pb-4">
     <input
       v-model="search"
       placeholder="Search models..."
-      class="form-control flex-grow-1"
+      class="form-control w-200"
       style="min-width: 200px"
     />
-
+    <!--<button @click="fetchModels" class="btn btn-secondary">🔄 Refresh</button>-->
     <input
       v-model="tagsSearch"
       placeholder="Search tags (comma separated)"
-      class="form-control flex-grow-1"
+      class="form-control"
       style="min-width: 200px"
     />
 
@@ -24,14 +26,13 @@
         {{ bm }}
       </option>
     </select>
-
-    <button @click="fetchModels" class="btn btn-secondary">🔄 Refresh</button>
-
-    <!-- Paste URL and fetch versions -->
+      </div>
+      <div class="col-6 d-flex flex-wrap align-items-center gap-2 px-4 pb-4">
+        <!-- Paste URL and fetch versions -->
     <input
       v-model="modelUrl"
       placeholder="Paste CivitAI model URL"
-      class="form-control flex-grow-1"
+      class="form-control"
       style="min-width: 200px"
       @keyup.enter="loadVersions"
     />
@@ -76,6 +77,9 @@
       </div>
     </div>
   </div>
+      </div>
+    </div>
+  
 
   <div v-if="models.length === 0">No models found.</div>
 
@@ -98,10 +102,11 @@
           }}</span>
         </div>
         <div class="card-body z-3">
-          <h3 class="card-title h5 pb-3">
+          <h3 class="card-title h5">
             {{ card.model.name }} - {{ card.version.name }}
           </h3>
-          <div class="mb-2 d-flex gap-2">
+        </div>
+        <div class="mb-2 d-flex gap-2 card-footer z-2">
             <button
               v-if="card.version.filePath"
               @click="goToModel(card.model.ID, card.version.ID)"
@@ -111,12 +116,11 @@
             </button>
             <button
               @click="deleteVersion(card.version.ID)"
-              class="btn btn-danger"
+              class="btn btn-danger align-self-end"
             >
               🗑 Delete
             </button>
           </div>
-        </div>
       </div>
     </div>
   </div>
