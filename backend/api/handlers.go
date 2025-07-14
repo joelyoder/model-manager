@@ -17,9 +17,24 @@ import (
 )
 
 func GetModels(c *gin.Context) {
+	page, _ := strconv.Atoi(c.DefaultQuery("page", "1"))
+	limit, _ := strconv.Atoi(c.DefaultQuery("limit", "50"))
+	if page < 1 {
+		page = 1
+	}
+	if limit <= 0 {
+		limit = 50
+	}
+
+	search := c.Query("search")
+
 	var modelsList []models.Model
-	database.DB.Preload("Versions").Find(&modelsList)
-	c.JSON(200, modelsList)
+	q := database.DB.Preload("Versions")
+	if search != "" {
+		q = q.Where("LOWER(name) LIKE ?", "%"+strings.ToLower(search)+"%")
+	}
+	q.Limit(limit).Offset((page - 1) * limit).Find(&modelsList)
+	c.JSON(http.StatusOK, modelsList)
 }
 
 // GetModel returns a single model by ID with its versions

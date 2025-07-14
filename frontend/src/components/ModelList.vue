@@ -2,84 +2,83 @@
   <div class="">
     <div class="row">
       <div class="col-6 d-flex flex-wrap gap-2 px-4 pb-4">
-    <input
-      v-model="search"
-      placeholder="Search models..."
-      class="form-control w-200"
-      style="min-width: 200px"
-    />
-    <!--<button @click="fetchModels" class="btn btn-secondary">🔄 Refresh</button>-->
-    <input
-      v-model="tagsSearch"
-      placeholder="Search tags (comma separated)"
-      class="form-control"
-      style="min-width: 200px"
-    />
+        <input
+          v-model="search"
+          placeholder="Search models..."
+          class="form-control w-200"
+          style="min-width: 200px"
+        />
+        <!--<button @click="fetchModels" class="btn btn-secondary">🔄 Refresh</button>-->
+        <input
+          v-model="tagsSearch"
+          placeholder="Search tags (comma separated)"
+          class="form-control"
+          style="min-width: 200px"
+        />
 
-    <select
-      v-model="selectedBaseModel"
-      class="form-select"
-      style="min-width: 200px"
-    >
-      <option value="">All base models</option>
-      <option v-for="bm in baseModels" :key="bm" :value="bm">
-        {{ bm }}
-      </option>
-    </select>
+        <select
+          v-model="selectedBaseModel"
+          class="form-select"
+          style="min-width: 200px"
+        >
+          <option value="">All base models</option>
+          <option v-for="bm in baseModels" :key="bm" :value="bm">
+            {{ bm }}
+          </option>
+        </select>
       </div>
       <div class="col-6 d-flex flex-wrap align-items-center gap-2 px-4 pb-4">
         <!-- Paste URL and fetch versions -->
-    <input
-      v-model="modelUrl"
-      placeholder="Paste CivitAI model URL"
-      class="form-control"
-      style="min-width: 200px"
-      @keyup.enter="loadVersions"
-    />
-    <button
-      @click="loadVersions"
-      :disabled="loading || !modelUrl"
-      class="btn btn-secondary"
-    >
-      🔍 Load Versions
-    </button>
+        <input
+          v-model="modelUrl"
+          placeholder="Paste CivitAI model URL"
+          class="form-control"
+          style="min-width: 200px"
+          @keyup.enter="loadVersions"
+        />
+        <button
+          @click="loadVersions"
+          :disabled="loading || !modelUrl"
+          class="btn btn-secondary"
+        >
+          🔍 Load Versions
+        </button>
 
-    <!-- Version selector -->
-    <select
-      v-if="versions.length"
-      v-model="selectedVersionId"
-      class="form-select flex-grow-1"
-      style="min-width: 200px"
-    >
-      <option disabled value="">Select version</option>
-      <option v-for="v in versions" :value="v.id" :key="v.id">
-        {{ v.name }} | {{ v.baseModel }} |
-        {{ ((v.sizeKB || 0) / 1024).toFixed(2) }} MB
-      </option>
-    </select>
+        <!-- Version selector -->
+        <select
+          v-if="versions.length"
+          v-model="selectedVersionId"
+          class="form-select flex-grow-1"
+          style="min-width: 200px"
+        >
+          <option disabled value="">Select version</option>
+          <option v-for="v in versions" :value="v.id" :key="v.id">
+            {{ v.name }} | {{ v.baseModel }} |
+            {{ ((v.sizeKB || 0) / 1024).toFixed(2) }} MB
+          </option>
+        </select>
 
-    <!-- Download version -->
-    <button
-      v-if="selectedVersionId"
-      @click="downloadSelectedVersion"
-      :disabled="loading"
-      class="btn btn-primary"
-    >
-      <span v-if="loading">⏳ Downloading...</span>
-      <span v-else>📥 Download Selected</span>
-    </button>
-    <div v-if="downloading" class="progress w-100 mt-2">
-      <div
-        class="progress-bar progress-bar-striped"
-        :style="{ width: downloadProgress + '%' }"
-      >
-        {{ downloadProgress }}%
+        <!-- Download version -->
+        <button
+          v-if="selectedVersionId"
+          @click="downloadSelectedVersion"
+          :disabled="loading"
+          class="btn btn-primary"
+        >
+          <span v-if="loading">⏳ Downloading...</span>
+          <span v-else>📥 Download Selected</span>
+        </button>
+        <div v-if="downloading" class="progress w-100 mt-2">
+          <div
+            class="progress-bar progress-bar-striped"
+            :style="{ width: downloadProgress + '%' }"
+          >
+            {{ downloadProgress }}%
+          </div>
+        </div>
       </div>
     </div>
   </div>
-      </div>
-    </div>
-  
 
   <div v-if="models.length === 0">No models found.</div>
 
@@ -107,27 +106,30 @@
           </h3>
         </div>
         <div class="mb-2 d-flex gap-2 card-footer z-2">
-            <button
-              v-if="card.version.filePath"
-              @click="goToModel(card.model.ID, card.version.ID)"
-              class="btn btn-primary"
-            >
-              ℹ️ More details
-            </button>
-            <button
-              @click="deleteVersion(card.version.ID)"
-              class="btn btn-danger align-self-end"
-            >
-              🗑 Delete
-            </button>
-          </div>
+          <button
+            v-if="card.version.filePath"
+            @click="goToModel(card.model.ID, card.version.ID)"
+            class="btn btn-primary"
+          >
+            ℹ️ More details
+          </button>
+          <button
+            @click="deleteVersion(card.version.ID)"
+            class="btn btn-danger align-self-end"
+          >
+            🗑 Delete
+          </button>
+        </div>
       </div>
     </div>
+  </div>
+  <div v-if="hasMore" class="text-center mb-4">
+    <button @click="loadMore" class="btn btn-secondary">Load More</button>
   </div>
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from "vue";
+import { ref, computed, onMounted, watch } from "vue";
 import { useRouter } from "vue-router";
 import axios from "axios";
 import { showToast, showConfirm } from "../utils/ui";
@@ -145,27 +147,47 @@ const downloadProgress = ref(0);
 let progressInterval = null;
 const router = useRouter();
 
-const fetchModels = async () => {
-  const res = await axios.get("/api/models");
-  models.value = res.data.map((model) => {
-    const imageUrl = model.imagePath
-      ? model.imagePath.replace(/^.*\/backend\/images/, "/images")
+const page = ref(1);
+const limit = 50;
+const hasMore = ref(true);
+
+const mapModel = (model) => {
+  const imageUrl = model.imagePath
+    ? model.imagePath.replace(/^.*\/backend\/images/, "/images")
+    : null;
+  const versions = (model.versions || []).map((v) => {
+    const vImage = v.imagePath
+      ? v.imagePath.replace(/^.*\/backend\/images/, "/images")
       : null;
-    const versions = (model.versions || []).map((v) => {
-      const vImage = v.imagePath
-        ? v.imagePath.replace(/^.*\/backend\/images/, "/images")
-        : null;
-      return { ...v, imageUrl: vImage };
-    });
-    return {
-      ...model,
-      versions,
-      imageUrl,
-    };
+    return { ...v, imageUrl: vImage };
   });
+  return {
+    ...model,
+    versions,
+    imageUrl,
+  };
 };
 
-onMounted(fetchModels);
+const fetchModels = async (reset = false) => {
+  const params = { page: page.value, limit };
+  if (search.value) params.search = search.value;
+  const res = await axios.get("/api/models", { params });
+  const fetched = res.data.map(mapModel);
+  if (reset) {
+    models.value = fetched;
+  } else {
+    models.value = [...models.value, ...fetched];
+  }
+  hasMore.value = fetched.length === limit;
+};
+
+onMounted(() => fetchModels(true));
+
+watch(search, () => {
+  page.value = 1;
+  hasMore.value = true;
+  fetchModels(true);
+});
 
 const baseModels = computed(() => {
   const set = new Set();
@@ -179,15 +201,9 @@ const baseModels = computed(() => {
 
 const filteredModels = computed(() => {
   return models.value.filter((m) => {
-    const nameMatch = m.name
-      .toLowerCase()
-      .includes(search.value.toLowerCase());
-
     let tagsMatch = true;
     if (tagsSearch.value.trim()) {
-      const tags = (m.tags || "")
-        .split(",")
-        .map((t) => t.trim().toLowerCase());
+      const tags = (m.tags || "").split(",").map((t) => t.trim().toLowerCase());
       const searchTags = tagsSearch.value
         .split(/[, ]+/)
         .map((t) => t.trim().toLowerCase())
@@ -202,7 +218,7 @@ const filteredModels = computed(() => {
       );
     }
 
-    return nameMatch && tagsMatch && baseMatch;
+    return tagsMatch && baseMatch;
   });
 });
 
@@ -276,7 +292,8 @@ const downloadSelectedVersion = async () => {
   }, 500);
   try {
     await axios.post(`/api/sync/version/${selectedVersionId.value}`);
-    await fetchModels();
+    page.value = 1;
+    await fetchModels(true);
     showToast("Version downloaded successfully", "success");
   } catch (err) {
     console.error(err);
@@ -296,10 +313,16 @@ const downloadSelectedVersion = async () => {
 const deleteVersion = async (id) => {
   if (!(await showConfirm("Delete this version and all files?"))) return;
   await axios.delete(`/api/versions/${id}`);
-  await fetchModels();
+  page.value = 1;
+  await fetchModels(true);
 };
 
 const goToModel = (modelId, versionId) => {
   router.push(`/model/${modelId}/version/${versionId}`);
+};
+
+const loadMore = async () => {
+  page.value += 1;
+  await fetchModels();
 };
 </script>
