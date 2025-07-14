@@ -1,6 +1,8 @@
 package api
 
 import (
+	"crypto/sha256"
+	"encoding/hex"
 	"image"
 	_ "image/jpeg"
 	_ "image/png"
@@ -90,4 +92,18 @@ func GetImageDimensions(path string) (int, int, error) {
 		return 0, 0, err
 	}
 	return cfg.Width, cfg.Height, nil
+}
+
+func FileHash(path string) (string, error) {
+	f, err := os.Open(path)
+	if err != nil {
+		return "", err
+	}
+	defer f.Close()
+
+	h := sha256.New()
+	if _, err := io.Copy(h, f); err != nil {
+		return "", err
+	}
+	return hex.EncodeToString(h.Sum(nil)), nil
 }

@@ -184,16 +184,49 @@ func SyncVersionByID(c *gin.Context) {
 		filePath, _ = DownloadFile(verData.ModelFiles[0].DownloadURL, "./backend/downloads/"+model.Type, verData.ModelFiles[0].Name)
 	}
 
-	if len(verData.Images) > 0 {
-		imageURL := verData.Images[0].URL
+	versionRecord := models.Version{
+		ModelID:              model.ID,
+		VersionID:            verData.ID,
+		Name:                 verData.Name,
+		BaseModel:            verData.BaseModel,
+		CreatedAt:            verData.Created,
+		EarlyAccessTimeFrame: verData.EarlyAccessTimeFrame,
+		SizeKB:               verData.ModelFiles[0].SizeKB,
+		TrainedWords:         strings.Join(verData.TrainedWords, ","),
+		ModelURL:             fmt.Sprintf("https://civitai.com/models/%d?modelVersionId=%d", verData.ModelID, verData.ID),
+		FilePath:             filePath,
+	}
+	database.DB.Create(&versionRecord)
+
+	for idx, img := range verData.Images {
+		imageURL := img.URL
 		if imageURL == "" {
-			imageURL = verData.Images[0].URLSmall
+			imageURL = img.URLSmall
 		}
-		if imageURL != "" {
-			imagePath, _ = DownloadFile(imageURL, "./backend/images/"+model.Type, fmt.Sprintf("%d.jpg", verData.ID))
-			imgW, imgH, _ = GetImageDimensions(imagePath)
+		if imageURL == "" {
+			continue
+		}
+		imgPath, _ := DownloadFile(imageURL, "./backend/images/"+model.Type, fmt.Sprintf("%d_%d.jpg", verData.ID, idx))
+		w, h, _ := GetImageDimensions(imgPath)
+		hash, _ := FileHash(imgPath)
+		metaBytes, _ := json.Marshal(img.Meta)
+		database.DB.Create(&models.VersionImage{
+			VersionID: versionRecord.ID,
+			Path:      imgPath,
+			Width:     w,
+			Height:    h,
+			Hash:      hash,
+			Meta:      string(metaBytes),
+		})
+		if idx == 0 {
+			imagePath = imgPath
+			imgW = w
+			imgH = h
 		}
 	}
+
+	versionRecord.ImagePath = imagePath
+	database.DB.Save(&versionRecord)
 
 	if model.ImagePath == "" && imagePath != "" {
 		model.ImagePath = imagePath
@@ -260,18 +293,8 @@ func processModels(items []CivitModel, apiKey string) {
 				fileName := verData.ModelFiles[0].Name
 				filePath, _ = DownloadFile(fileURL, "./backend/downloads/"+item.Type, fileName)
 			}
-			if len(verData.Images) > 0 {
-				imageURL := verData.Images[0].URL
-				if imageURL == "" {
-					imageURL = verData.Images[0].URLSmall
-				}
-				if imageURL != "" {
-					imagePath, _ = DownloadFile(imageURL, "./backend/images/"+item.Type, fmt.Sprintf("%d.jpg", verData.ID))
-					imgW, imgH, _ = GetImageDimensions(imagePath)
-				}
-			}
 
-			database.DB.Create(&models.Version{
+			versionRec := models.Version{
 				ModelID:              existing.ID,
 				VersionID:            verData.ID,
 				Name:                 verData.Name,
@@ -281,9 +304,39 @@ func processModels(items []CivitModel, apiKey string) {
 				SizeKB:               verData.ModelFiles[0].SizeKB,
 				TrainedWords:         strings.Join(verData.TrainedWords, ","),
 				ModelURL:             fmt.Sprintf("https://civitai.com/models/%d?modelVersionId=%d", item.ID, verData.ID),
-				ImagePath:            imagePath,
 				FilePath:             filePath,
-			})
+			}
+			database.DB.Create(&versionRec)
+
+			for idx, img := range verData.Images {
+				imageURL := img.URL
+				if imageURL == "" {
+					imageURL = img.URLSmall
+				}
+				if imageURL == "" {
+					continue
+				}
+				imgPath, _ := DownloadFile(imageURL, "./backend/images/"+item.Type, fmt.Sprintf("%d_%d.jpg", verData.ID, idx))
+				w, h, _ := GetImageDimensions(imgPath)
+				hash, _ := FileHash(imgPath)
+				metaBytes, _ := json.Marshal(img.Meta)
+				database.DB.Create(&models.VersionImage{
+					VersionID: versionRec.ID,
+					Path:      imgPath,
+					Width:     w,
+					Height:    h,
+					Hash:      hash,
+					Meta:      string(metaBytes),
+				})
+				if idx == 0 {
+					imagePath = imgPath
+					imgW = w
+					imgH = h
+				}
+			}
+
+			versionRec.ImagePath = imagePath
+			database.DB.Save(&versionRec)
 
 			if existing.ImagePath == "" && imagePath != "" {
 				existing.ImagePath = imagePath
@@ -326,6 +379,14 @@ func DeleteModel(c *gin.Context) {
 		if v.ImagePath != "" {
 			os.Remove(v.ImagePath)
 		}
+		var imgs []models.VersionImage
+		database.DB.Where("version_id = ?", v.ID).Find(&imgs)
+		for _, img := range imgs {
+			if img.Path != "" {
+				os.Remove(img.Path)
+			}
+		}
+		database.DB.Where("version_id = ?", v.ID).Delete(&models.VersionImage{})
 	}
 
 	database.DB.Unscoped().Where("model_id = ?", model.ID).Delete(&models.Version{})
@@ -344,7 +405,7 @@ func GetVersion(c *gin.Context) {
 	}
 
 	var version models.Version
-	if err := database.DB.First(&version, id).Error; err != nil {
+	if err := database.DB.Preload("Images").First(&version, id).Error; err != nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": "Version not found"})
 		return
 	}
@@ -379,6 +440,14 @@ func DeleteVersion(c *gin.Context) {
 	if version.ImagePath != "" {
 		os.Remove(version.ImagePath)
 	}
+	var imgs []models.VersionImage
+	database.DB.Where("version_id = ?", version.ID).Find(&imgs)
+	for _, img := range imgs {
+		if img.Path != "" {
+			os.Remove(img.Path)
+		}
+	}
+	database.DB.Where("version_id = ?", version.ID).Delete(&models.VersionImage{})
 
 	database.DB.Unscoped().Delete(&models.Version{}, version.ID)
 

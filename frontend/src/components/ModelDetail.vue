@@ -81,6 +81,30 @@
         v-html="model.description"
         class="mb-4"
       ></div>
+      <div
+        v-if="galleryImages.length"
+        class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4 mb-4"
+      >
+        <div v-for="img in galleryImages" :key="img.ID" class="col">
+          <img
+            :src="img.url"
+            :width="img.width"
+            :height="img.height"
+            class="img-fluid"
+          />
+          <table
+            v-if="Object.keys(img.parsedMeta || {}).length"
+            class="table table-sm bg-body-secondary rounded mb-0 mt-1"
+          >
+            <tbody>
+              <tr v-for="(value, key) in img.parsedMeta" :key="key">
+                <th class="fw-normal">{{ key }}</th>
+                <td>{{ value }}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
     </div>
     <div v-else>
       <div class="mb-3">
@@ -167,6 +191,24 @@ const imageUrl = computed(() => {
   const path = version.value.imagePath || model.value.imagePath;
   if (!path) return null;
   return path.replace(/^.*\/backend\/images/, "/images");
+});
+
+const parseMeta = (meta) => {
+  try {
+    if (typeof meta === "string") return JSON.parse(meta);
+    return meta || {};
+  } catch {
+    return {};
+  }
+};
+
+const galleryImages = computed(() => {
+  const imgs = version.value.images || [];
+  return imgs.map((img) => ({
+    ...img,
+    url: img.path.replace(/^.*\/backend\/images/, "/images"),
+    parsedMeta: parseMeta(img.meta),
+  }));
 });
 
 const fileName = computed(() => {
