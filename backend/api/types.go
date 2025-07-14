@@ -36,8 +36,12 @@ type ModelFile struct {
 }
 
 type ModelImage struct {
-	URL      string `json:"url"`
-	URLSmall string `json:"urlSmall"`
+	URL      string                 `json:"url"`
+	URLSmall string                 `json:"urlSmall"`
+	Width    int                    `json:"width"`
+	Height   int                    `json:"height"`
+	Hash     string                 `json:"hash"`
+	Meta     map[string]interface{} `json:"meta"`
 }
 
 // VersionInfo represents a simplified view of a model version returned to the frontend.

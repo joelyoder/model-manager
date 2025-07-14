@@ -15,4 +15,6 @@ type Version struct {
 	ModelURL             string  `json:"modelUrl"`
 	ImagePath            string  `json:"imagePath"`
 	FilePath             string  `json:"filePath"`
+
+	Images []VersionImage `json:"images"`
 }

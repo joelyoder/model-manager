@@ -81,6 +81,23 @@
         v-html="model.description"
         class="mb-4"
       ></div>
+      <div
+        v-if="galleryImages.length"
+        class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4 mb-4"
+      >
+        <div v-for="img in galleryImages" :key="img.ID" class="col">
+          <img
+            :src="img.url"
+            :width="img.width"
+            :height="img.height"
+            class="img-fluid"
+          />
+          <div class="small bg-body-secondary rounded p-2 mt-1">
+            <div><strong>Hash:</strong> {{ img.hash }}</div>
+            <pre class="mb-0">{{ formatMeta(img.meta) }}</pre>
+          </div>
+        </div>
+      </div>
     </div>
     <div v-else>
       <div class="mb-3">
@@ -168,6 +185,23 @@ const imageUrl = computed(() => {
   if (!path) return null;
   return path.replace(/^.*\/backend\/images/, "/images");
 });
+
+const galleryImages = computed(() => {
+  const imgs = version.value.images || [];
+  return imgs.map((img) => ({
+    ...img,
+    url: img.path.replace(/^.*\/backend\/images/, "/images"),
+  }));
+});
+
+const formatMeta = (meta) => {
+  try {
+    if (typeof meta === "string") meta = JSON.parse(meta);
+    return JSON.stringify(meta, null, 2);
+  } catch {
+    return meta;
+  }
+};
 
 const fileName = computed(() => {
   if (!version.value.filePath) return "";

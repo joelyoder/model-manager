@@ -13,6 +13,6 @@ func ConnectDatabase() {
 	if err != nil {
 		panic("Failed to connect to database")
 	}
-	database.AutoMigrate(&models.Model{}, &models.Version{})
+	database.AutoMigrate(&models.Model{}, &models.Version{}, &models.VersionImage{})
 	DB = database
 }
