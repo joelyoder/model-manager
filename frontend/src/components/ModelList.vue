@@ -7,6 +7,24 @@
       style="min-width: 200px"
     />
 
+    <input
+      v-model="tagsSearch"
+      placeholder="Search tags (comma separated)"
+      class="form-control flex-grow-1"
+      style="min-width: 200px"
+    />
+
+    <select
+      v-model="selectedBaseModel"
+      class="form-select"
+      style="min-width: 200px"
+    >
+      <option value="">All base models</option>
+      <option v-for="bm in baseModels" :key="bm" :value="bm">
+        {{ bm }}
+      </option>
+    </select>
+
     <button @click="fetchModels" class="btn btn-secondary">🔄 Refresh</button>
 
     <!-- Paste URL and fetch versions -->
@@ -112,6 +130,8 @@ import { showToast, showConfirm } from "../utils/ui";
 
 const models = ref([]);
 const search = ref("");
+const tagsSearch = ref("");
+const selectedBaseModel = ref("");
 const modelUrl = ref("");
 const versions = ref([]);
 const selectedVersionId = ref("");
@@ -143,26 +163,63 @@ const fetchModels = async () => {
 
 onMounted(fetchModels);
 
+const baseModels = computed(() => {
+  const set = new Set();
+  models.value.forEach((m) => {
+    (m.versions || []).forEach((v) => {
+      if (v.baseModel) set.add(v.baseModel);
+    });
+  });
+  return Array.from(set);
+});
+
 const filteredModels = computed(() => {
-  if (!search.value) return models.value;
-  return models.value.filter((m) =>
-    m.name.toLowerCase().includes(search.value.toLowerCase()),
-  );
+  return models.value.filter((m) => {
+    const nameMatch = m.name
+      .toLowerCase()
+      .includes(search.value.toLowerCase());
+
+    let tagsMatch = true;
+    if (tagsSearch.value.trim()) {
+      const tags = (m.tags || "")
+        .split(",")
+        .map((t) => t.trim().toLowerCase());
+      const searchTags = tagsSearch.value
+        .split(/[, ]+/)
+        .map((t) => t.trim().toLowerCase())
+        .filter(Boolean);
+      tagsMatch = searchTags.every((t) => tags.includes(t));
+    }
+
+    let baseMatch = true;
+    if (selectedBaseModel.value) {
+      baseMatch = m.versions.some(
+        (v) => v.baseModel === selectedBaseModel.value,
+      );
+    }
+
+    return nameMatch && tagsMatch && baseMatch;
+  });
 });
 
 const versionCards = computed(() => {
   return filteredModels.value.flatMap((model) =>
-    model.versions.map((v) => {
-      let trained = v.trainedWords;
-      if (typeof trained === "string") {
-        trained = trained ? trained.split(",") : [];
-      }
-      return {
-        model,
-        version: { ...v, trainedWordsArr: trained },
-        imageUrl: v.imageUrl || model.imageUrl,
-      };
-    }),
+    model.versions
+      .filter(
+        (v) =>
+          !selectedBaseModel.value || v.baseModel === selectedBaseModel.value,
+      )
+      .map((v) => {
+        let trained = v.trainedWords;
+        if (typeof trained === "string") {
+          trained = trained ? trained.split(",") : [];
+        }
+        return {
+          model,
+          version: { ...v, trainedWordsArr: trained },
+          imageUrl: v.imageUrl || model.imageUrl,
+        };
+      }),
   );
 });
 
