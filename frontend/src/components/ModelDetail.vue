@@ -1,78 +1,80 @@
 <template>
-  <div class="p-4">
-    <div class="mb-2 d-flex gap-2">
+  <div class="px-4">
+    <div class="mb-2 d-flex gap-2 justify-content-center px-4 pb-4" v-if="!isEditing">
       <button @click="goBack" class="btn btn-secondary">⬅ Back</button>
-      <button
-        v-if="!isEditing"
+      <button  
         @click="startEdit"
         class="btn btn-primary"
-      >
-        ✏️ Edit
-      </button>
-      <div v-else class="d-flex gap-2">
+      >✏️ Edit</button>
+      <button @click="deleteVersion" class="btn btn-danger">🗑 Delete</button>
+    </div>
+    <div v-else class="d-flex gap-2 justify-content-center">
         <button @click="saveEdit" class="btn btn-primary">💾 Save</button>
         <button @click="cancelEdit" class="btn btn-secondary">Cancel</button>
-      </div>
     </div>
-    <div v-if="!isEditing">
-      <h2 class="h4 fw-bold">{{ model.name }}</h2>
-      <h3 v-if="version.name" class="fs-5 mb-2">{{ version.name }}</h3>
-      <img
-        v-if="imageUrl"
-        :src="imageUrl"
-        :width="model.imageWidth"
-        :height="model.imageHeight"
-        class="img-fluid mb-4"
-      />
+    <div v-if="!isEditing" class="container">
+      <div class="row">
+        <div class="col-4">
+          <img
+            v-if="imageUrl"
+            :src="imageUrl"
+            :width="model.imageWidth"
+            :height="model.imageHeight"
+            class="img-fluid mb-4"
+          />
+        </div>
+        <div class="col-8">
+          <h2 class="fw-bold">{{ model.name }}</h2>
+          <h3 v-if="version.name" class="mb-2">{{ version.name }}</h3>
+          <table class="table mt-4">
+            <tbody>
+              <tr v-if="model.tags">
+                <th>Tags</th>
+                <td>{{ model.tags.split(",").join(", ") }}</td>
+              </tr>
+              <tr>
+                <th>Type</th>
+                <td>{{ model.type }}</td>
+              </tr>
+              <tr>
+                <th>NSFW</th>
+                <td>{{ model.nsfw }}</td>
+              </tr>
+              <tr>
+                <th>Created</th>
+                <td>{{ model.createdAt }}</td>
+              </tr>
+              <tr>
+                <th>Updated</th>
+                <td>{{ model.updatedAt }}</td>
+              </tr>
+              <tr>
+                <th>Base Model</th>
+                <td>{{ version.baseModel }}</td>
+              </tr>
+              <tr v-if="version.trainedWords">
+                <th>Trained Words</th>
+                <td>{{ version.trainedWords.split(",").join(", ") }}</td>
+              </tr>
+              <tr v-if="version.filePath">
+                <th>File</th>
+                <td>{{ fileName }}</td>
+              </tr>
+              <tr v-if="version.sizeKB">
+                <th>Size</th>
+                <td>{{ (version.sizeKB / 1024).toFixed(2) }} MB</td>
+              </tr>
+              <tr v-if="version.modelUrl">
+                <th>Model URL</th>
+                <td>
+                  <a :href="version.modelUrl" target="_blank">{{version.modelUrl}}</a>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
       <div v-if="model.description" v-html="model.description" class="mb-4"></div>
-      <h3 class="fs-5 fw-semibold">Meta</h3>
-      <table class="table mt-4">
-        <tbody>
-          <tr v-if="model.tags">
-            <th>Tags</th>
-            <td>{{ model.tags.split(",").join(", ") }}</td>
-          </tr>
-          <tr>
-            <th>Type</th>
-            <td>{{ model.type }}</td>
-          </tr>
-          <tr>
-            <th>NSFW</th>
-            <td>{{ model.nsfw }}</td>
-          </tr>
-          <tr>
-            <th>Created</th>
-            <td>{{ model.createdAt }}</td>
-          </tr>
-          <tr>
-            <th>Updated</th>
-            <td>{{ model.updatedAt }}</td>
-          </tr>
-          <tr>
-            <th>Base Model</th>
-            <td>{{ version.baseModel }}</td>
-          </tr>
-          <tr v-if="version.trainedWords">
-            <th>Trained Words</th>
-            <td>{{ version.trainedWords.split(",").join(", ") }}</td>
-          </tr>
-          <tr v-if="version.filePath">
-            <th>File</th>
-            <td>{{ fileName }}</td>
-          </tr>
-          <tr v-if="version.sizeKB">
-            <th>Size</th>
-            <td>{{ (version.sizeKB / 1024).toFixed(2) }} MB</td>
-          </tr>
-          <tr v-if="version.modelUrl">
-            <th>Model URL</th>
-            <td>
-              <a :href="version.modelUrl" target="_blank">View on CivitAI</a>
-            </td>
-          </tr>
-        </tbody>
-      </table>
-      <button @click="deleteVersion" class="btn btn-danger mt-4">🗑 Delete Version</button>
     </div>
     <div v-else>
       <div class="mb-3">

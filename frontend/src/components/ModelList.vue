@@ -1,5 +1,5 @@
 <template>
-  <div class="d-flex flex-wrap align-items-center gap-2 p-4">
+  <div class="d-flex flex-wrap align-items-center gap-2 px-4 pb-4">
     <input
       v-model="search"
       placeholder="Search models..."
@@ -54,45 +54,34 @@
 
   <div v-if="models.length === 0">No models found.</div>
 
-  <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4 p-4">
+  <div class="row row-cols-1 row-cols-md-3 row-cols-lg-5 g-4 p-4">
     <div v-for="card in versionCards" :key="card.version.ID" class="col">
-      <div class="card h-100 p-4">
-      <h3>{{ card.model.name }} - {{ card.version.name }}</h3>
-      <img
-        v-if="card.imageUrl"
-        :src="card.imageUrl"
-        :width="card.model.imageWidth"
-        :height="card.model.imageHeight"
-        class="img-fluid rounded mb-2"
-      />
-      <p v-if="card.model.tags">
-        Tags: {{ card.model.tags.split(",").join(", ") }}
-      </p>
-      <p v-if="card.version.filePath">
-        File: {{ card.version.filePath.split("/").pop() }}
-      </p>
-      <p>Type: {{ card.model.type }}</p>
-      <p>Base Model: {{ card.version.baseModel }}</p>
-      <p
-        v-if="
-          card.version.trainedWordsArr && card.version.trainedWordsArr.length
-        "
-      >
-        Trained Words: {{ card.version.trainedWordsArr.join(", ") }}
-      </p>
-      <p v-if="card.version.sizeKB">
-        Size: {{ (card.version.sizeKB / 1024).toFixed(2) }} MB
-      </p>
-      <button @click="deleteVersion(card.version.ID)" class="btn btn-danger btn-sm">
-        🗑 Delete
-      </button>
-      <button
-        v-if="card.version.filePath"
-        @click="goToModel(card.model.ID, card.version.ID)"
-        class="btn btn-primary btn-sm"
-      >
-        ℹ️ More details
-      </button>
+      <div class="card h-100">
+        <img
+          v-if="card.imageUrl"
+          :src="card.imageUrl"
+          :width="card.model.imageWidth"
+          :height="card.model.imageHeight"
+          class="img-fluid card-img-top"
+        />
+        <div class="card-body">
+          <h3 class="card-title h5">{{ card.model.name }} - {{ card.version.name }}</h3>
+          <div class="card-text my-3">
+            <span class="badge rounded-pill text-bg-primary">{{ card.model.type }}</span> <span class="ms-1 badge rounded-pill text-bg-success">{{ card.version.baseModel }}</span>
+          </div>
+          <div class="mb-2 d-flex gap-2">
+            <button
+              v-if="card.version.filePath"
+              @click="goToModel(card.model.ID, card.version.ID)"
+              class="btn btn-primary"
+            >
+              ℹ️ More details
+            </button>
+            <button @click="deleteVersion(card.version.ID)" class="btn btn-danger">
+              🗑 Delete
+            </button>
+          </div>
+        </div>
       </div>
     </div>
   </div>
