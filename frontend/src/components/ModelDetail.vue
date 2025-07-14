@@ -14,7 +14,7 @@
     </div>
     <div v-if="!isEditing">
       <div class="row">
-        <div class="col-12 col-md-4">
+        <div class="col-md-4">
           <img
             v-if="imageUrl"
             :src="imageUrl"
@@ -23,7 +23,7 @@
             class="img-fluid mb-4"
           />
         </div>
-        <div class="col-12 col-md-8">
+        <div class="col-md-8">
           <h2 class="fw-bold">{{ model.name }}</h2>
           <h3 v-if="version.name" class="mb-2">{{ version.name }}</h3>
           <table class="table mt-4">

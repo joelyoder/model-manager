@@ -1,21 +1,21 @@
 <template>
-  <div class="">
+  <div class="mx-4">
     <div class="row">
-      <div class="col-md-6 d-flex flex-wrap gap-2 px-4 pb-4">
+      <div class="col-md-6 d-flex align-content-start flex-wrap gap-2">
         <input
-          v-model="search"
-          placeholder="Search models..."
-          class="form-control w-200"
-          style="min-width: 200px"
-        />
-        <!--<button @click="fetchModels" class="btn btn-secondary">🔄 Refresh</button>-->
-        <input
-          v-model="tagsSearch"
-          placeholder="Search tags (comma separated)"
-          class="form-control"
-          style="min-width: 200px"
+        v-model="search"
+        placeholder="Search models..."
+        class="form-control w-200 flex-grow-1"
+        style="min-width: 200px"
         />
 
+        <input
+        v-model="tagsSearch"
+        placeholder="Search tags (comma separated)"
+        class="form-control"
+        style="min-width: 200px"
+        />
+        
         <select
           v-model="selectedBaseModel"
           class="form-select"
@@ -37,7 +37,7 @@
             {{ t }}
           </option>
         </select>
-
+        
         <div class="form-check form-switch">
           <input
             type="checkbox"
@@ -49,7 +49,7 @@
           <label class="form-check-label" for="hide-nsfw">Hide NSFW</label>
         </div>
       </div>
-      <div class="col-md-6 d-flex flex-wrap align-items-center gap-2 px-4 pb-4">
+      <div class="col-md-6 d-flex align-content-start flex-wrap gap-2">
         <!-- Paste URL and fetch versions -->
         <input
           v-model="modelUrl"
@@ -70,7 +70,7 @@
         <select
           v-if="versions.length"
           v-model="selectedVersionId"
-          class="form-select flex-grow-1"
+          class="form-select"
           style="min-width: 200px"
         >
           <option disabled value="">Select version</option>
