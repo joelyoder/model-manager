@@ -1,7 +1,7 @@
 <template>
   <div class="">
     <div class="row">
-      <div class="col-6 d-flex flex-wrap gap-2 px-4 pb-4">
+      <div class="col-md-6 d-flex flex-wrap gap-2 px-4 pb-4">
         <input
           v-model="search"
           placeholder="Search models..."
@@ -38,17 +38,18 @@
           </option>
         </select>
 
-        <div class="form-check align-self-center">
+        <div class="form-check form-switch">
           <input
             type="checkbox"
             id="hide-nsfw"
             class="form-check-input"
+            role="switch"
             v-model="hideNsfw"
           />
           <label class="form-check-label" for="hide-nsfw">Hide NSFW</label>
         </div>
       </div>
-      <div class="col-6 d-flex flex-wrap align-items-center gap-2 px-4 pb-4">
+      <div class="col-md-6 d-flex flex-wrap align-items-center gap-2 px-4 pb-4">
         <!-- Paste URL and fetch versions -->
         <input
           v-model="modelUrl"

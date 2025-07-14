@@ -1,20 +1,20 @@
 <template>
   <div class="px-4 container">
     <div
-      class="mb-2 d-flex gap-2 px-4 pb-4"
+      class="mb-2 d-flex gap-2 pb-2"
       v-if="!isEditing"
     >
       <button @click="goBack" class="btn btn-secondary">Back</button>
       <button @click="startEdit" class="btn btn-primary">Edit</button>
       <button @click="deleteVersion" class="btn btn-danger ms-auto">Delete</button>
     </div>
-    <div v-else class="mb-2 d-flex gap-2 px-4 pb-4">
+    <div v-else class="mb-2 d-flex gap-2 pb-2">
       <button @click="cancelEdit" class="btn btn-secondary">Cancel</button>
       <button @click="saveEdit" class="btn btn-primary">Save</button>
     </div>
     <div v-if="!isEditing">
       <div class="row">
-        <div class="col-4">
+        <div class="col-12 col-md-4">
           <img
             v-if="imageUrl"
             :src="imageUrl"
@@ -23,7 +23,7 @@
             class="img-fluid mb-4"
           />
         </div>
-        <div class="col-8">
+        <div class="col-12 col-md-8">
           <h2 class="fw-bold">{{ model.name }}</h2>
           <h3 v-if="version.name" class="mb-2">{{ version.name }}</h3>
           <table class="table mt-4">
