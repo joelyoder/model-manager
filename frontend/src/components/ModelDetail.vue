@@ -218,7 +218,7 @@ watch(isEditing, async (val) => {
   if (val) {
     await nextTick();
     quill = new Quill(editor.value, { theme: "snow" });
-    quill.root.innerHTML = version.value.description || "";
+    quill.clipboard.dangerouslyPasteHTML(version.value.description || "");
   }
 });
 
