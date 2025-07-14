@@ -161,17 +161,14 @@ func SyncVersionByID(c *gin.Context) {
 		return
 	}
 
+	modelData, _ := FetchCivitModel(apiKey, verData.ModelID)
+
 	var model models.Model
 	database.DB.Unscoped().Where("civit_id = ?", verData.ModelID).Find(&model)
 	if model.ID == 0 {
-		modelData, _ := FetchCivitModel(apiKey, verData.ModelID)
 		model = models.Model{
-			CivitID:     modelData.ID,
-			Name:        modelData.Name,
-			Nsfw:        modelData.Nsfw,
-			Type:        modelData.Type,
-			Tags:        strings.Join(modelData.Tags, ","),
-			Description: modelData.Description,
+			CivitID: modelData.ID,
+			Name:    modelData.Name,
 		}
 		database.DB.Create(&model)
 	}
@@ -190,6 +187,11 @@ func SyncVersionByID(c *gin.Context) {
 		EarlyAccessTimeFrame: verData.EarlyAccessTimeFrame,
 		SizeKB:               verData.ModelFiles[0].SizeKB,
 		TrainedWords:         strings.Join(verData.TrainedWords, ","),
+		Nsfw:                 modelData.Nsfw,
+		Type:                 modelData.Type,
+		Tags:                 strings.Join(modelData.Tags, ","),
+		Description:          modelData.Description,
+		Mode:                 modelData.Mode,
 		ModelURL:             fmt.Sprintf("https://civitai.com/models/%d?modelVersionId=%d", verData.ModelID, verData.ID),
 		FilePath:             filePath,
 	}
@@ -244,12 +246,8 @@ func processModels(items []CivitModel, apiKey string) {
 		database.DB.Where("civit_id = ?", item.ID).Find(&existing)
 		if existing.ID == 0 {
 			existing = models.Model{
-				CivitID:     item.ID,
-				Name:        item.Name,
-				Nsfw:        item.Nsfw,
-				Type:        item.Type,
-				Tags:        strings.Join(item.Tags, ","),
-				Description: item.Description,
+				CivitID: item.ID,
+				Name:    item.Name,
 			}
 			database.DB.Create(&existing)
 		}
@@ -283,6 +281,11 @@ func processModels(items []CivitModel, apiKey string) {
 				EarlyAccessTimeFrame: verData.EarlyAccessTimeFrame,
 				SizeKB:               verData.ModelFiles[0].SizeKB,
 				TrainedWords:         strings.Join(verData.TrainedWords, ","),
+				Nsfw:                 item.Nsfw,
+				Type:                 item.Type,
+				Tags:                 strings.Join(item.Tags, ","),
+				Description:          item.Description,
+				Mode:                 item.Mode,
 				ModelURL:             fmt.Sprintf("https://civitai.com/models/%d?modelVersionId=%d", item.ID, verData.ID),
 				FilePath:             filePath,
 			}
@@ -516,6 +519,11 @@ func UpdateVersion(c *gin.Context) {
 	version.EarlyAccessTimeFrame = input.EarlyAccessTimeFrame
 	version.SizeKB = input.SizeKB
 	version.TrainedWords = input.TrainedWords
+	version.Nsfw = input.Nsfw
+	version.Type = input.Type
+	version.Tags = input.Tags
+	version.Description = input.Description
+	version.Mode = input.Mode
 	version.ModelURL = input.ModelURL
 	version.ImagePath = input.ImagePath
 	version.FilePath = input.FilePath

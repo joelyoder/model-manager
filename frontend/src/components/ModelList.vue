@@ -121,7 +121,7 @@
         />
         <div class="card-img-overlay z-2">
           <span class="badge rounded-pill text-bg-primary">{{
-            card.model.type
+            card.version.type
           }}</span>
           <span class="ms-1 badge rounded-pill text-bg-success">{{
             card.version.baseModel
@@ -231,52 +231,46 @@ const baseModels = computed(() => {
 const modelTypes = computed(() => {
   const set = new Set();
   models.value.forEach((m) => {
-    if (m.type) set.add(m.type);
+    (m.versions || []).forEach((v) => {
+      if (v.type) set.add(v.type);
+    });
   });
   return Array.from(set);
 });
 
 const filteredModels = computed(() => {
-  return models.value.filter((m) => {
-    let tagsMatch = true;
-    if (tagsSearch.value.trim()) {
-      const tags = (m.tags || "").split(",").map((t) => t.trim().toLowerCase());
-      const searchTags = tagsSearch.value
-        .split(/[, ]+/)
-        .map((t) => t.trim().toLowerCase())
-        .filter(Boolean);
-      tagsMatch = searchTags.every((t) => tags.includes(t));
-    }
-
-    let baseMatch = true;
-    if (selectedBaseModel.value) {
-      baseMatch = m.versions.some(
-        (v) => v.baseModel === selectedBaseModel.value,
-      );
-    }
-
-    let typeMatch = true;
-    if (selectedModelType.value) {
-      typeMatch = m.type === selectedModelType.value;
-    }
-
-    let nsfwMatch = true;
-    if (hideNsfw.value) {
-      nsfwMatch = !m.nsfw;
-    }
-
-    return tagsMatch && baseMatch && typeMatch && nsfwMatch;
-  });
+  if (!search.value) return models.value;
+  return models.value.filter((m) =>
+    m.name.toLowerCase().includes(search.value.toLowerCase()),
+  );
 });
 
 const versionCards = computed(() => {
   return filteredModels.value
     .flatMap((model) =>
       model.versions
-        .filter(
-          (v) =>
-            !selectedBaseModel.value || v.baseModel === selectedBaseModel.value,
-        )
+        .filter((v) => {
+          if (
+            selectedBaseModel.value &&
+            v.baseModel !== selectedBaseModel.value
+          )
+            return false;
+          if (selectedModelType.value && v.type !== selectedModelType.value)
+            return false;
+          if (hideNsfw.value && v.nsfw) return false;
+
+          if (tagsSearch.value.trim()) {
+            const tags = (v.tags || "")
+              .split(",")
+              .map((t) => t.trim().toLowerCase());
+            const searchTags = tagsSearch.value
+              .split(/[, ]+/)
+              .map((t) => t.trim().toLowerCase())
+              .filter(Boolean);
+            if (!searchTags.every((t) => tags.includes(t))) return false;
+          }
+          return true;
+        })
         .map((v) => {
           let trained = v.trainedWords;
           if (typeof trained === "string") {
