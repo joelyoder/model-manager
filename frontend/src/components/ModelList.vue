@@ -17,6 +17,7 @@
       placeholder="Paste CivitAI model URL"
       class="form-control flex-grow-1"
       style="min-width: 200px;"
+      @keyup.enter="loadVersions"
     />
     <button
       @click="loadVersions"
@@ -50,6 +51,12 @@
       <span v-if="loading">⏳ Downloading...</span>
       <span v-else>📥 Download Selected</span>
     </button>
+    <div v-if="downloading" class="progress w-100 mt-2">
+      <div
+        class="progress-bar progress-bar-striped progress-bar-animated"
+        style="width: 100%"
+      ></div>
+    </div>
   </div>
 
   <div v-if="models.length === 0">No models found.</div>
@@ -98,6 +105,7 @@ const modelUrl = ref("");
 const versions = ref([]);
 const selectedVersionId = ref("");
 const loading = ref(false);
+const downloading = ref(false);
 const router = useRouter();
 
 const fetchModels = async () => {
@@ -150,6 +158,11 @@ const extractModelId = (url) => {
   return match ? match[1] : null;
 };
 
+const extractVersionId = (url) => {
+  const match = url.match(/modelVersionId=(\d+)/);
+  return match ? match[1] : null;
+};
+
 const loadVersions = async () => {
   const id = extractModelId(modelUrl.value);
   if (!id) {
@@ -161,7 +174,14 @@ const loadVersions = async () => {
   try {
     const res = await axios.get(`/api/model/${id}/versions`);
     versions.value = res.data;
-    selectedVersionId.value = "";
+    const vid = extractVersionId(modelUrl.value);
+    if (vid && res.data.some((v) => v.id === Number(vid))) {
+      selectedVersionId.value = vid;
+    } else if (res.data.length) {
+      selectedVersionId.value = String(res.data[0].id);
+    } else {
+      selectedVersionId.value = "";
+    }
   } catch (err) {
     console.error(err);
     alert("Failed to load versions");
@@ -174,6 +194,7 @@ const downloadSelectedVersion = async () => {
   if (!selectedVersionId.value) return;
 
   loading.value = true;
+  downloading.value = true;
   try {
     await axios.post(`/api/sync/version/${selectedVersionId.value}`);
     await fetchModels();
@@ -186,6 +207,7 @@ const downloadSelectedVersion = async () => {
     versions.value = [];
     selectedVersionId.value = "";
     loading.value = false;
+    downloading.value = false;
   }
 };
 
