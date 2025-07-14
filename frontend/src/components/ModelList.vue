@@ -182,11 +182,11 @@ const hasMore = ref(true);
 
 const mapModel = (model) => {
   const imageUrl = model.imagePath
-    ? model.imagePath.replace(/^.*\/backend\/images/, "/images")
+    ? model.imagePath.replace(/^.*[\\/]backend[\\/]images/, "/images")
     : null;
   const versions = (model.versions || []).map((v) => {
     const vImage = v.imagePath
-      ? v.imagePath.replace(/^.*\/backend\/images/, "/images")
+      ? v.imagePath.replace(/^.*[\\/]backend[\\/]images/, "/images")
       : null;
     return { ...v, imageUrl: vImage };
   });

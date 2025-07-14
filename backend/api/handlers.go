@@ -235,19 +235,6 @@ func SyncVersionByID(c *gin.Context) {
 	}
 	database.DB.Save(&model)
 
-	database.DB.Create(&models.Version{
-		ModelID:              model.ID,
-		VersionID:            verData.ID,
-		Name:                 verData.Name,
-		BaseModel:            verData.BaseModel,
-		EarlyAccessTimeFrame: verData.EarlyAccessTimeFrame,
-		SizeKB:               verData.ModelFiles[0].SizeKB,
-		TrainedWords:         strings.Join(verData.TrainedWords, ","),
-		ModelURL:             fmt.Sprintf("https://civitai.com/models/%d?modelVersionId=%d", verData.ModelID, verData.ID),
-		ImagePath:            imagePath,
-		FilePath:             filePath,
-	})
-
 	c.JSON(200, gin.H{"message": "Version synced", "versionId": verData.ID})
 }
 
