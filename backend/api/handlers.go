@@ -172,8 +172,6 @@ func SyncVersionByID(c *gin.Context) {
 			Type:        modelData.Type,
 			Tags:        strings.Join(modelData.Tags, ","),
 			Description: modelData.Description,
-			CreatedAt:   modelData.Created,
-			UpdatedAt:   modelData.Updated,
 		}
 		database.DB.Create(&model)
 	}
@@ -189,7 +187,6 @@ func SyncVersionByID(c *gin.Context) {
 		VersionID:            verData.ID,
 		Name:                 verData.Name,
 		BaseModel:            verData.BaseModel,
-		CreatedAt:            verData.Created,
 		EarlyAccessTimeFrame: verData.EarlyAccessTimeFrame,
 		SizeKB:               verData.ModelFiles[0].SizeKB,
 		TrainedWords:         strings.Join(verData.TrainedWords, ","),
@@ -243,7 +240,6 @@ func SyncVersionByID(c *gin.Context) {
 		VersionID:            verData.ID,
 		Name:                 verData.Name,
 		BaseModel:            verData.BaseModel,
-		CreatedAt:            verData.Created,
 		EarlyAccessTimeFrame: verData.EarlyAccessTimeFrame,
 		SizeKB:               verData.ModelFiles[0].SizeKB,
 		TrainedWords:         strings.Join(verData.TrainedWords, ","),
@@ -267,8 +263,6 @@ func processModels(items []CivitModel, apiKey string) {
 				Type:        item.Type,
 				Tags:        strings.Join(item.Tags, ","),
 				Description: item.Description,
-				CreatedAt:   item.Created,
-				UpdatedAt:   item.Updated,
 			}
 			database.DB.Create(&existing)
 		}
@@ -299,7 +293,6 @@ func processModels(items []CivitModel, apiKey string) {
 				VersionID:            verData.ID,
 				Name:                 verData.Name,
 				BaseModel:            verData.BaseModel,
-				CreatedAt:            verData.Created,
 				EarlyAccessTimeFrame: verData.EarlyAccessTimeFrame,
 				SizeKB:               verData.ModelFiles[0].SizeKB,
 				TrainedWords:         strings.Join(verData.TrainedWords, ","),
@@ -497,8 +490,6 @@ func UpdateModel(c *gin.Context) {
 	model.Tags = input.Tags
 	model.Nsfw = input.Nsfw
 	model.Description = input.Description
-	model.CreatedAt = input.CreatedAt
-	model.UpdatedAt = input.UpdatedAt
 	model.ImagePath = input.ImagePath
 	model.FilePath = input.FilePath
 	model.ImageWidth = input.ImageWidth
@@ -535,7 +526,6 @@ func UpdateVersion(c *gin.Context) {
 
 	version.Name = input.Name
 	version.BaseModel = input.BaseModel
-	version.CreatedAt = input.CreatedAt
 	version.EarlyAccessTimeFrame = input.EarlyAccessTimeFrame
 	version.SizeKB = input.SizeKB
 	version.TrainedWords = input.TrainedWords

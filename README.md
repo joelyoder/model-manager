@@ -11,5 +11,3 @@ This is a simple desktop application to download and manage models for local ima
 - Settings
     - Move Civitai API key to setting stored in the database
     - Add setting for the models folder location
-- Cleanup
-    - Remove createdAt and updatedAt fields from the application

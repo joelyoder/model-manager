@@ -8,7 +8,6 @@ type Version struct {
 	VersionID            int     `gorm:"uniqueIndex" json:"versionId"`
 	Name                 string  `json:"name"`
 	BaseModel            string  `json:"baseModel"`
-	CreatedAt            string  `json:"createdAt"`
 	EarlyAccessTimeFrame int     `json:"earlyAccessTimeFrame"`
 	SizeKB               float64 `json:"sizeKB"`
 	TrainedWords         string  `json:"trainedWords"`
