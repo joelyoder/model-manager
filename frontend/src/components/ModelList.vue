@@ -64,11 +64,11 @@
           :height="card.model.imageHeight"
           class="img-fluid card-img-top"
         />
-        <div class="card-body">
-          <h3 class="card-title h5">{{ card.model.name }} - {{ card.version.name }}</h3>
-          <div class="card-text my-3">
+        <div class="card-img-overlay z-2">
             <span class="badge rounded-pill text-bg-primary">{{ card.model.type }}</span> <span class="ms-1 badge rounded-pill text-bg-success">{{ card.version.baseModel }}</span>
           </div>
+        <div class="card-body z-3">
+          <h3 class="card-title h5 pb-3">{{ card.model.name }} - {{ card.version.name }}</h3>
           <div class="mb-2 d-flex gap-2">
             <button
               v-if="card.version.filePath"
