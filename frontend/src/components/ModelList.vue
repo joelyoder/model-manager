@@ -1,19 +1,38 @@
 <template>
-  <div class="d-flex flex-wrap align-items-center gap-2 px-4 pb-4">
+  <div class="">
+    <div class="row">
+      <div class="col-6 d-flex flex-wrap gap-2 px-4 pb-4">
     <input
       v-model="search"
       placeholder="Search models..."
-      class="form-control flex-grow-1"
+      class="form-control w-200"
+      style="min-width: 200px"
+    />
+    <!--<button @click="fetchModels" class="btn btn-secondary">🔄 Refresh</button>-->
+    <input
+      v-model="tagsSearch"
+      placeholder="Search tags (comma separated)"
+      class="form-control"
       style="min-width: 200px"
     />
 
-    <button @click="fetchModels" class="btn btn-secondary">🔄 Refresh</button>
-
-    <!-- Paste URL and fetch versions -->
+    <select
+      v-model="selectedBaseModel"
+      class="form-select"
+      style="min-width: 200px"
+    >
+      <option value="">All base models</option>
+      <option v-for="bm in baseModels" :key="bm" :value="bm">
+        {{ bm }}
+      </option>
+    </select>
+      </div>
+      <div class="col-6 d-flex flex-wrap align-items-center gap-2 px-4 pb-4">
+        <!-- Paste URL and fetch versions -->
     <input
       v-model="modelUrl"
       placeholder="Paste CivitAI model URL"
-      class="form-control flex-grow-1"
+      class="form-control"
       style="min-width: 200px"
       @keyup.enter="loadVersions"
     />
@@ -58,6 +77,9 @@
       </div>
     </div>
   </div>
+      </div>
+    </div>
+  
 
   <div v-if="models.length === 0">No models found.</div>
 
@@ -80,10 +102,11 @@
           }}</span>
         </div>
         <div class="card-body z-3">
-          <h3 class="card-title h5 pb-3">
+          <h3 class="card-title h5">
             {{ card.model.name }} - {{ card.version.name }}
           </h3>
-          <div class="mb-2 d-flex gap-2">
+        </div>
+        <div class="mb-2 d-flex gap-2 card-footer z-2">
             <button
               v-if="card.version.filePath"
               @click="goToModel(card.model.ID, card.version.ID)"
@@ -93,12 +116,11 @@
             </button>
             <button
               @click="deleteVersion(card.version.ID)"
-              class="btn btn-danger"
+              class="btn btn-danger align-self-end"
             >
               🗑 Delete
             </button>
           </div>
-        </div>
       </div>
     </div>
   </div>
@@ -112,6 +134,8 @@ import { showToast, showConfirm } from "../utils/ui";
 
 const models = ref([]);
 const search = ref("");
+const tagsSearch = ref("");
+const selectedBaseModel = ref("");
 const modelUrl = ref("");
 const versions = ref([]);
 const selectedVersionId = ref("");
@@ -143,26 +167,63 @@ const fetchModels = async () => {
 
 onMounted(fetchModels);
 
+const baseModels = computed(() => {
+  const set = new Set();
+  models.value.forEach((m) => {
+    (m.versions || []).forEach((v) => {
+      if (v.baseModel) set.add(v.baseModel);
+    });
+  });
+  return Array.from(set);
+});
+
 const filteredModels = computed(() => {
-  if (!search.value) return models.value;
-  return models.value.filter((m) =>
-    m.name.toLowerCase().includes(search.value.toLowerCase()),
-  );
+  return models.value.filter((m) => {
+    const nameMatch = m.name
+      .toLowerCase()
+      .includes(search.value.toLowerCase());
+
+    let tagsMatch = true;
+    if (tagsSearch.value.trim()) {
+      const tags = (m.tags || "")
+        .split(",")
+        .map((t) => t.trim().toLowerCase());
+      const searchTags = tagsSearch.value
+        .split(/[, ]+/)
+        .map((t) => t.trim().toLowerCase())
+        .filter(Boolean);
+      tagsMatch = searchTags.every((t) => tags.includes(t));
+    }
+
+    let baseMatch = true;
+    if (selectedBaseModel.value) {
+      baseMatch = m.versions.some(
+        (v) => v.baseModel === selectedBaseModel.value,
+      );
+    }
+
+    return nameMatch && tagsMatch && baseMatch;
+  });
 });
 
 const versionCards = computed(() => {
   return filteredModels.value.flatMap((model) =>
-    model.versions.map((v) => {
-      let trained = v.trainedWords;
-      if (typeof trained === "string") {
-        trained = trained ? trained.split(",") : [];
-      }
-      return {
-        model,
-        version: { ...v, trainedWordsArr: trained },
-        imageUrl: v.imageUrl || model.imageUrl,
-      };
-    }),
+    model.versions
+      .filter(
+        (v) =>
+          !selectedBaseModel.value || v.baseModel === selectedBaseModel.value,
+      )
+      .map((v) => {
+        let trained = v.trainedWords;
+        if (typeof trained === "string") {
+          trained = trained ? trained.split(",") : [];
+        }
+        return {
+          model,
+          version: { ...v, trainedWordsArr: trained },
+          imageUrl: v.imageUrl || model.imageUrl,
+        };
+      }),
   );
 });
 
