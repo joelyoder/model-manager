@@ -121,7 +121,7 @@
         />
         <div class="card-img-overlay z-2">
           <span class="badge rounded-pill text-bg-primary">{{
-            card.model.type
+            card.version.type
           }}</span>
           <span class="ms-1 badge rounded-pill text-bg-success">{{
             card.version.baseModel
