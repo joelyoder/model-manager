@@ -189,7 +189,7 @@ const galleryImages = computed(() => {
   const imgs = version.value.images || [];
   return imgs.map((img) => ({
     ...img,
-    url: img.path.replace(/^.*\/backend\/images/, "/images"),
+    url: img.path.replace(/^.*[\\/]backend[\\/]images/, "/images"),
     parsedMeta: parseMeta(img.meta),
   }));
 });
