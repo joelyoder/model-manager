@@ -173,7 +173,7 @@ let quill;
 const imageUrl = computed(() => {
   const path = version.value.imagePath || model.value.imagePath;
   if (!path) return null;
-  return path.replace(/^.*\/backend\/images/, "/images");
+  return path.replace(/^.*[\\/]backend[\\/]images/, "/images");
 });
 
 const parseMeta = (meta) => {
@@ -189,7 +189,7 @@ const galleryImages = computed(() => {
   const imgs = version.value.images || [];
   return imgs.map((img) => ({
     ...img,
-    url: img.path.replace(/^.*\/backend\/images/, "/images"),
+    url: img.path.replace(/^.*[\\/]backend[\\/]images/, "/images"),
     parsedMeta: parseMeta(img.meta),
   }));
 });
