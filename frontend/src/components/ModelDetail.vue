@@ -27,17 +27,17 @@
           <h3 v-if="version.name" class="mb-2">{{ version.name }}</h3>
           <table class="table mt-4">
             <tbody>
-              <tr v-if="model.tags">
+              <tr v-if="version.tags">
                 <th>Tags</th>
-                <td>{{ model.tags.split(",").join(", ") }}</td>
+                <td>{{ version.tags.split(",").join(", ") }}</td>
               </tr>
               <tr>
                 <th>Type</th>
-                <td>{{ model.type }}</td>
+                <td>{{ version.type }}</td>
               </tr>
               <tr>
                 <th>NSFW</th>
-                <td>{{ model.nsfw }}</td>
+                <td>{{ version.nsfw }}</td>
               </tr>
               <tr>
                 <th>Base Model</th>
@@ -68,8 +68,8 @@
         </div>
       </div>
       <div
-        v-if="model.description"
-        v-html="model.description"
+        v-if="version.description"
+        v-html="version.description"
         class="mb-4"
       ></div>
       <div
@@ -108,18 +108,18 @@
       </div>
       <div class="mb-3">
         <label class="form-label">Tags</label>
-        <input v-model="model.tags" class="form-control" />
+        <input v-model="version.tags" class="form-control" />
       </div>
       <div class="mb-3">
         <label class="form-label">Type</label>
-        <input v-model="model.type" class="form-control" />
+        <input v-model="version.type" class="form-control" />
       </div>
       <div class="form-check mb-3">
         <input
           type="checkbox"
           class="form-check-input"
           id="nsfw"
-          v-model="model.nsfw"
+          v-model="version.nsfw"
         />
         <label class="form-check-label" for="nsfw">NSFW</label>
       </div>
@@ -187,11 +187,17 @@ const parseMeta = (meta) => {
 
 const galleryImages = computed(() => {
   const imgs = version.value.images || [];
-  return imgs.map((img) => ({
-    ...img,
-    url: img.path.replace(/^.*[\\/]backend[\\/]images/, "/images"),
-    parsedMeta: parseMeta(img.meta),
-  }));
+  return imgs.map((img) => {
+    const meta = parseMeta(img.meta);
+    if (version.value.mode) {
+      meta.mode = version.value.mode;
+    }
+    return {
+      ...img,
+      url: img.path.replace(/^.*[\\/]backend[\\/]images/, "/images"),
+      parsedMeta: meta,
+    };
+  });
 });
 
 const fileName = computed(() => {
@@ -212,7 +218,7 @@ watch(isEditing, async (val) => {
   if (val) {
     await nextTick();
     quill = new Quill(editor.value, { theme: "snow" });
-    quill.root.innerHTML = model.value.description || "";
+    quill.root.innerHTML = version.value.description || "";
   }
 });
 
@@ -233,7 +239,7 @@ const cancelEdit = async () => {
 
 const saveEdit = async () => {
   if (quill) {
-    model.value.description = quill.root.innerHTML;
+    version.value.description = quill.root.innerHTML;
   }
   await axios.put(`/api/models/${model.value.ID}`, model.value);
   await axios.put(`/api/versions/${version.value.ID}`, version.value);
