@@ -92,10 +92,17 @@
             :height="img.height"
             class="img-fluid"
           />
-          <div class="small bg-body-secondary rounded p-2 mt-1">
-            <div><strong>Hash:</strong> {{ img.hash }}</div>
-            <pre class="mb-0">{{ formatMeta(img.meta) }}</pre>
-          </div>
+          <table
+            v-if="Object.keys(img.parsedMeta || {}).length"
+            class="table table-sm bg-body-secondary rounded mb-0 mt-1"
+          >
+            <tbody>
+              <tr v-for="(value, key) in img.parsedMeta" :key="key">
+                <th class="fw-normal">{{ key }}</th>
+                <td>{{ value }}</td>
+              </tr>
+            </tbody>
+          </table>
         </div>
       </div>
     </div>
@@ -186,22 +193,23 @@ const imageUrl = computed(() => {
   return path.replace(/^.*\/backend\/images/, "/images");
 });
 
+const parseMeta = (meta) => {
+  try {
+    if (typeof meta === "string") return JSON.parse(meta);
+    return meta || {};
+  } catch {
+    return {};
+  }
+};
+
 const galleryImages = computed(() => {
   const imgs = version.value.images || [];
   return imgs.map((img) => ({
     ...img,
     url: img.path.replace(/^.*\/backend\/images/, "/images"),
+    parsedMeta: parseMeta(img.meta),
   }));
 });
-
-const formatMeta = (meta) => {
-  try {
-    if (typeof meta === "string") meta = JSON.parse(meta);
-    return JSON.stringify(meta, null, 2);
-  } catch {
-    return meta;
-  }
-};
 
 const fileName = computed(() => {
   if (!version.value.filePath) return "";
