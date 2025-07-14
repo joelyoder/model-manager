@@ -41,7 +41,7 @@
           :disabled="loading || !modelUrl"
           class="btn btn-secondary"
         >
-          🔍 Load Versions
+        Load Versions
         </button>
 
         <!-- Version selector -->
@@ -65,8 +65,9 @@
           :disabled="loading"
           class="btn btn-primary"
         >
-          <span v-if="loading">⏳ Downloading...</span>
-          <span v-else>📥 Download Selected</span>
+          <span v-if="loading" class="spinner-border spinner-border-sm" aria-hidden="true"></span>
+          <span v-if="loading" role="status" class="ps-2">Downloading...</span>
+          <span v-else>Download</span>
         </button>
         <div v-if="downloading" class="progress w-100 mt-2">
           <div
@@ -111,13 +112,13 @@
             @click="goToModel(card.model.ID, card.version.ID)"
             class="btn btn-primary"
           >
-            ℹ️ More details
+            More details
           </button>
           <button
             @click="deleteVersion(card.version.ID)"
             class="btn btn-danger align-self-end"
           >
-            🗑 Delete
+            Delete
           </button>
         </div>
       </div>

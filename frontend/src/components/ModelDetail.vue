@@ -1,18 +1,18 @@
 <template>
-  <div class="px-4">
+  <div class="px-4 container">
     <div
-      class="mb-2 d-flex gap-2 justify-content-center px-4 pb-4"
+      class="mb-2 d-flex gap-2 px-4 pb-4"
       v-if="!isEditing"
     >
-      <button @click="goBack" class="btn btn-secondary">⬅ Back</button>
-      <button @click="startEdit" class="btn btn-primary">✏️ Edit</button>
-      <button @click="deleteVersion" class="btn btn-danger">🗑 Delete</button>
+      <button @click="goBack" class="btn btn-secondary">Back</button>
+      <button @click="startEdit" class="btn btn-primary">Edit</button>
+      <button @click="deleteVersion" class="btn btn-danger ms-auto">Delete</button>
     </div>
-    <div v-else class="d-flex gap-2 justify-content-center">
-      <button @click="saveEdit" class="btn btn-primary">💾 Save</button>
+    <div v-else class="mb-2 d-flex gap-2 px-4 pb-4">
       <button @click="cancelEdit" class="btn btn-secondary">Cancel</button>
+      <button @click="saveEdit" class="btn btn-primary">Save</button>
     </div>
-    <div v-if="!isEditing" class="container">
+    <div v-if="!isEditing">
       <div class="row">
         <div class="col-4">
           <img
