@@ -1,9 +1,11 @@
 import { createRouter, createWebHashHistory } from "vue-router";
 import ModelList from "./components/ModelList.vue";
 import ModelDetail from "./components/ModelDetail.vue";
+import AppSettings from "./components/AppSettings.vue";
 
 const routes = [
   { path: "/", component: ModelList },
+  { path: "/settings", component: AppSettings },
   {
     path: "/model/:modelId/version/:versionId",
     component: ModelDetail,

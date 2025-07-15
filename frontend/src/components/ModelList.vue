@@ -63,6 +63,9 @@
           >
             {{ showImport ? "Hide Import" : "Import Models" }}
           </button>
+          <router-link to="/settings" class="btn btn-outline-secondary ms-2"
+            >Settings</router-link
+          >
         </div>
 
         <div v-if="showImport" class="input-group mt-2">
@@ -259,13 +262,9 @@ const limit = 50;
 const hasMore = ref(true);
 
 const mapModel = (model) => {
-  const imageUrl = model.imagePath
-    ? model.imagePath.replace(/^.*[\\/]backend[\\/]images/, "/images")
-    : null;
+  const imageUrl = model.imagePath ? `/images/${model.imagePath}` : null;
   const versions = (model.versions || []).map((v) => {
-    const vImage = v.imagePath
-      ? v.imagePath.replace(/^.*[\\/]backend[\\/]images/, "/images")
-      : null;
+    const vImage = v.imagePath ? `/images/${v.imagePath}` : null;
     return { ...v, imageUrl: vImage };
   });
   return {

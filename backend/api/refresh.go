@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
+	"path/filepath"
 	"strings"
 
 	"model-manager/backend/database"
@@ -45,7 +46,7 @@ func refreshVersionData(id int, fields string) error {
 		}
 	}
 
-	apiKey := os.Getenv("CIVIT_API_KEY")
+	apiKey := database.GetAPIKey()
 	modelData, err := FetchCivitModel(apiKey, model.CivitID)
 	if err != nil {
 		return err
@@ -86,13 +87,13 @@ func refreshVersionData(id int, fields string) error {
 
 	if updateImages {
 		if version.ImagePath != "" {
-			os.Remove(version.ImagePath)
+			os.Remove(filepath.Join(database.GetImagesPath(), version.ImagePath))
 		}
 		var imgs []models.VersionImage
 		database.DB.Where("version_id = ?", version.ID).Find(&imgs)
 		for _, img := range imgs {
 			if img.Path != "" {
-				os.Remove(img.Path)
+				os.Remove(filepath.Join(database.GetImagesPath(), img.Path))
 			}
 		}
 		database.DB.Where("version_id = ?", version.ID).Delete(&models.VersionImage{})
@@ -111,9 +112,11 @@ func refreshVersionData(id int, fields string) error {
 			if imageURL == "" {
 				continue
 			}
-			imgPath, _ := DownloadFile(imageURL, "./backend/images/"+modelType, fmt.Sprintf("%d_%d.jpg", verData.ID, idx))
-			w, h, _ := GetImageDimensions(imgPath)
-			hash, _ := FileHash(imgPath)
+			imgPath, _ := DownloadFile(imageURL, filepath.Join(database.GetImagesPath(), modelType), fmt.Sprintf("%d_%d.jpg", verData.ID, idx))
+			relImg, _ := filepath.Rel(database.GetImagesPath(), imgPath)
+			imgPath = relImg
+			w, h, _ := GetImageDimensions(filepath.Join(database.GetImagesPath(), imgPath))
+			hash, _ := FileHash(filepath.Join(database.GetImagesPath(), imgPath))
 			metaBytes, _ := json.Marshal(img.Meta)
 			database.DB.Create(&models.VersionImage{
 				VersionID: version.ID,

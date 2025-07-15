@@ -12,12 +12,14 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+
+	"model-manager/backend/database"
 )
 
 var CurrentDownloadProgress int64
 
 func DownloadFile(url, destDir, filename string) (string, error) {
-	token := os.Getenv("CIVIT_API_KEY")
+	token := database.GetAPIKey()
 	log.Printf("Downloading %s", url)
 
 	req, err := http.NewRequest("GET", url, nil)

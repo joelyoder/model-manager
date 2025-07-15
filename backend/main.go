@@ -19,8 +19,8 @@ func main() {
 	r.SetTrustedProxies(nil) // safe for local dev
 
 	// Serve static assets
-	r.Static("/images", "./backend/images")
-	r.Static("/downloads", "./backend/downloads")
+	r.Static("/images", database.GetImagesPath())
+	r.Static("/downloads", database.GetModelsPath())
 	r.Static("/assets", "./frontend/dist/assets")
 
 	// API routes
@@ -41,6 +41,8 @@ func main() {
 		apiGroup.POST("/versions/:id/main-image/:imageId", api.SetVersionMainImage)
 		apiGroup.DELETE("/versions/:id", api.DeleteVersion)
 		apiGroup.POST("/import", api.ImportModels)
+		apiGroup.GET("/settings", api.GetSettings)
+		apiGroup.PUT("/settings", api.UpdateSettings)
 	}
 
 	// Vue SPA fallback for all other routes (no wildcard)

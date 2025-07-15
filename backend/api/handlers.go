@@ -7,6 +7,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"path/filepath"
 	"strconv"
 	"strings"
 
@@ -56,7 +57,7 @@ func GetModel(c *gin.Context) {
 }
 
 func SyncCivitModels(c *gin.Context) {
-	apiKey := os.Getenv("CIVIT_API_KEY")
+	apiKey := database.GetAPIKey()
 	items, err := FetchCivitModels(apiKey)
 	if err != nil {
 		c.JSON(500, gin.H{"error": "Failed to fetch models"})
@@ -68,7 +69,7 @@ func SyncCivitModels(c *gin.Context) {
 
 func SyncCivitModelByID(c *gin.Context) {
 	log.Println("Hit /api/sync/:id")
-	apiKey := os.Getenv("CIVIT_API_KEY")
+	apiKey := database.GetAPIKey()
 	id := c.Param("id")
 
 	modelID, err := strconv.Atoi(id)
@@ -98,7 +99,7 @@ func SyncCivitModelByID(c *gin.Context) {
 }
 
 func GetModelVersions(c *gin.Context) {
-	apiKey := os.Getenv("CIVIT_API_KEY")
+	apiKey := database.GetAPIKey()
 	modelID := c.Param("id")
 
 	id, err := strconv.Atoi(modelID)
@@ -147,7 +148,7 @@ func GetModelVersions(c *gin.Context) {
 }
 
 func SyncVersionByID(c *gin.Context) {
-	apiKey := os.Getenv("CIVIT_API_KEY")
+	apiKey := database.GetAPIKey()
 	versionID := c.Param("versionId")
 
 	id, err := strconv.Atoi(versionID)
@@ -197,9 +198,11 @@ func SyncVersionByID(c *gin.Context) {
 	}
 	if len(verData.ModelFiles) > 0 {
 		downloadURL = verData.ModelFiles[0].DownloadURL
-		filePath, _ = DownloadFile(downloadURL, "./backend/downloads/"+modelType, verData.ModelFiles[0].Name)
-		if info, err := os.Stat(filePath); err == nil && info.Size() < 110 {
-			os.Remove(filePath)
+		filePath, _ = DownloadFile(downloadURL, filepath.Join(database.GetModelsPath(), modelType), verData.ModelFiles[0].Name)
+		rel, _ := filepath.Rel(database.GetModelsPath(), filePath)
+		filePath = rel
+		if info, err := os.Stat(filepath.Join(database.GetModelsPath(), filePath)); err == nil && info.Size() < 110 {
+			os.Remove(filepath.Join(database.GetModelsPath(), filePath))
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Downloaded file too small"})
 			return
 		}
@@ -236,9 +239,11 @@ func SyncVersionByID(c *gin.Context) {
 		if imageURL == "" {
 			continue
 		}
-		imgPath, _ := DownloadFile(imageURL, "./backend/images/"+modelType, fmt.Sprintf("%d_%d.jpg", verData.ID, idx))
-		w, h, _ := GetImageDimensions(imgPath)
-		hash, _ := FileHash(imgPath)
+		imgPath, _ := DownloadFile(imageURL, filepath.Join(database.GetImagesPath(), modelType), fmt.Sprintf("%d_%d.jpg", verData.ID, idx))
+		relImg, _ := filepath.Rel(database.GetImagesPath(), imgPath)
+		imgPath = relImg
+		w, h, _ := GetImageDimensions(filepath.Join(database.GetImagesPath(), imgPath))
+		hash, _ := FileHash(filepath.Join(database.GetImagesPath(), imgPath))
 		metaBytes, _ := json.Marshal(img.Meta)
 		database.DB.Create(&models.VersionImage{
 			VersionID: versionRecord.ID,
@@ -308,9 +313,11 @@ func processModels(items []CivitModel, apiKey string) {
 			if len(verData.ModelFiles) > 0 {
 				downloadURL = verData.ModelFiles[0].DownloadURL
 				fileName := verData.ModelFiles[0].Name
-				filePath, _ = DownloadFile(downloadURL, "./backend/downloads/"+item.Type, fileName)
-				if info, err := os.Stat(filePath); err == nil && info.Size() < 110 {
-					os.Remove(filePath)
+				filePath, _ = DownloadFile(downloadURL, filepath.Join(database.GetModelsPath(), item.Type), fileName)
+				rel, _ := filepath.Rel(database.GetModelsPath(), filePath)
+				filePath = rel
+				if info, err := os.Stat(filepath.Join(database.GetModelsPath(), filePath)); err == nil && info.Size() < 110 {
+					os.Remove(filepath.Join(database.GetModelsPath(), filePath))
 					log.Printf("downloaded %s is too small", fileName)
 					continue
 				}
@@ -347,9 +354,11 @@ func processModels(items []CivitModel, apiKey string) {
 				if imageURL == "" {
 					continue
 				}
-				imgPath, _ := DownloadFile(imageURL, "./backend/images/"+item.Type, fmt.Sprintf("%d_%d.jpg", verData.ID, idx))
-				w, h, _ := GetImageDimensions(imgPath)
-				hash, _ := FileHash(imgPath)
+				imgPath, _ := DownloadFile(imageURL, filepath.Join(database.GetImagesPath(), item.Type), fmt.Sprintf("%d_%d.jpg", verData.ID, idx))
+				relImg, _ := filepath.Rel(database.GetImagesPath(), imgPath)
+				imgPath = relImg
+				w, h, _ := GetImageDimensions(filepath.Join(database.GetImagesPath(), imgPath))
+				hash, _ := FileHash(filepath.Join(database.GetImagesPath(), imgPath))
 				metaBytes, _ := json.Marshal(img.Meta)
 				database.DB.Create(&models.VersionImage{
 					VersionID: versionRec.ID,
@@ -398,23 +407,23 @@ func DeleteModel(c *gin.Context) {
 	}
 
 	if model.FilePath != "" {
-		os.Remove(model.FilePath)
+		os.Remove(filepath.Join(database.GetModelsPath(), model.FilePath))
 	}
 	if model.ImagePath != "" {
-		os.Remove(model.ImagePath)
+		os.Remove(filepath.Join(database.GetImagesPath(), model.ImagePath))
 	}
 	for _, v := range model.Versions {
 		if v.FilePath != "" {
-			os.Remove(v.FilePath)
+			os.Remove(filepath.Join(database.GetModelsPath(), v.FilePath))
 		}
 		if v.ImagePath != "" {
-			os.Remove(v.ImagePath)
+			os.Remove(filepath.Join(database.GetImagesPath(), v.ImagePath))
 		}
 		var imgs []models.VersionImage
 		database.DB.Where("version_id = ?", v.ID).Find(&imgs)
 		for _, img := range imgs {
 			if img.Path != "" {
-				os.Remove(img.Path)
+				os.Remove(filepath.Join(database.GetImagesPath(), img.Path))
 			}
 		}
 		database.DB.Where("version_id = ?", v.ID).Delete(&models.VersionImage{})
@@ -466,16 +475,16 @@ func DeleteVersion(c *gin.Context) {
 	}
 
 	if version.FilePath != "" {
-		os.Remove(version.FilePath)
+		os.Remove(filepath.Join(database.GetModelsPath(), version.FilePath))
 	}
 	if version.ImagePath != "" {
-		os.Remove(version.ImagePath)
+		os.Remove(filepath.Join(database.GetImagesPath(), version.ImagePath))
 	}
 	var imgs []models.VersionImage
 	database.DB.Where("version_id = ?", version.ID).Find(&imgs)
 	for _, img := range imgs {
 		if img.Path != "" {
-			os.Remove(img.Path)
+			os.Remove(filepath.Join(database.GetImagesPath(), img.Path))
 		}
 	}
 	database.DB.Where("version_id = ?", version.ID).Delete(&models.VersionImage{})
@@ -488,11 +497,11 @@ func DeleteVersion(c *gin.Context) {
 		var model models.Model
 		if err := database.DB.First(&model, version.ModelID).Error; err == nil {
 			if model.FilePath != "" && model.FilePath == version.FilePath {
-				os.Remove(model.FilePath)
+				os.Remove(filepath.Join(database.GetModelsPath(), model.FilePath))
 				model.FilePath = ""
 			}
 			if model.ImagePath != "" && model.ImagePath == version.ImagePath {
-				os.Remove(model.ImagePath)
+				os.Remove(filepath.Join(database.GetImagesPath(), model.ImagePath))
 				model.ImagePath = ""
 			}
 			database.DB.Save(&model)

@@ -221,8 +221,7 @@ let quill;
 
 const imageUrl = computed(() => {
   const path = version.value.imagePath || model.value.imagePath;
-  if (!path) return null;
-  return path.replace(/^.*[\\/]backend[\\/]images/, "/images");
+  return path ? `/images/${path}` : null;
 });
 
 const parseMeta = (meta) => {
@@ -243,7 +242,7 @@ const galleryImages = computed(() => {
     }
     return {
       ...img,
-      url: img.path.replace(/^.*[\\/]backend[\\/]images/, "/images"),
+      url: `/images/${img.path}`,
       parsedMeta: meta,
     };
   });
