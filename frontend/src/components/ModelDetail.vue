@@ -7,6 +7,18 @@
         Delete
       </button>
     </div>
+    <div class="mb-2 d-flex gap-2 pb-2" v-if="!isEditing">
+      <button @click="updateMeta" class="btn btn-secondary">
+        Update Metadata
+      </button>
+      <button @click="updateDesc" class="btn btn-secondary">
+        Update Description
+      </button>
+      <button @click="updateImages" class="btn btn-secondary">
+        Refresh Images
+      </button>
+      <button @click="updateAll" class="btn btn-secondary">Update All</button>
+    </div>
     <div v-else class="mb-2 d-flex gap-2 pb-2">
       <button @click="cancelEdit" class="btn btn-secondary">Cancel</button>
       <button @click="saveEdit" class="btn btn-primary">Save</button>
@@ -246,6 +258,31 @@ const saveEdit = async () => {
   isEditing.value = false;
   await fetchData();
   showToast("Saved", "success");
+};
+
+const refreshVersion = async (fields) => {
+  await axios.post(`/api/versions/${version.value.ID}/refresh`, null, {
+    params: { fields },
+  });
+  await fetchData();
+  showToast("Updated", "success");
+};
+
+const updateMeta = () => refreshVersion("metadata");
+const updateDesc = () => refreshVersion("description");
+const updateImages = async () => {
+  if (!(await showConfirm("Replace all images with the latest from CivitAI?")))
+    return;
+  await refreshVersion("images");
+};
+const updateAll = async () => {
+  if (
+    !(await showConfirm(
+      "Update all data from CivitAI? This will replace images.",
+    ))
+  )
+    return;
+  await refreshVersion("all");
 };
 
 const goBack = () => {
