@@ -181,15 +181,23 @@ func SyncVersionByID(c *gin.Context) {
 			Type:    modelData.Type,
 		}
 		database.DB.Create(&model)
+	} else if model.Type == "" {
+		// ensure type is populated for older records
+		model.Type = modelData.Type
+		database.DB.Save(&model)
 	}
 
 	var filePath, imagePath string
 	var imgW, imgH int
 	var fileSHA string
 	var downloadURL string
+	modelType := model.Type
+	if modelType == "" {
+		modelType = modelData.Type
+	}
 	if len(verData.ModelFiles) > 0 {
 		downloadURL = verData.ModelFiles[0].DownloadURL
-		filePath, _ = DownloadFile(downloadURL, "./backend/downloads/"+model.Type, verData.ModelFiles[0].Name)
+		filePath, _ = DownloadFile(downloadURL, "./backend/downloads/"+modelType, verData.ModelFiles[0].Name)
 		if info, err := os.Stat(filePath); err == nil && info.Size() < 110 {
 			os.Remove(filePath)
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Downloaded file too small"})
@@ -228,7 +236,7 @@ func SyncVersionByID(c *gin.Context) {
 		if imageURL == "" {
 			continue
 		}
-		imgPath, _ := DownloadFile(imageURL, "./backend/images/"+model.Type, fmt.Sprintf("%d_%d.jpg", verData.ID, idx))
+		imgPath, _ := DownloadFile(imageURL, "./backend/images/"+modelType, fmt.Sprintf("%d_%d.jpg", verData.ID, idx))
 		w, h, _ := GetImageDimensions(imgPath)
 		hash, _ := FileHash(imgPath)
 		metaBytes, _ := json.Marshal(img.Meta)
@@ -274,6 +282,10 @@ func processModels(items []CivitModel, apiKey string) {
 				Type:    item.Type,
 			}
 			database.DB.Create(&existing)
+		} else if existing.Type == "" {
+			// populate missing type on older records
+			existing.Type = item.Type
+			database.DB.Save(&existing)
 		}
 
 		for _, version := range item.ModelVersions {
