@@ -83,17 +83,6 @@
             :height="img.height"
             class="img-fluid"
           />
-          <table
-            v-if="Object.keys(img.parsedMeta || {}).length"
-            class="table table-sm bg-body-secondary rounded mb-0 mt-1"
-          >
-            <tbody>
-              <tr v-for="(value, key) in img.parsedMeta" :key="key">
-                <th class="fw-normal">{{ key }}</th>
-                <td>{{ value }}</td>
-              </tr>
-            </tbody>
-          </table>
           <button
             v-if="img.path !== version.imagePath"
             @click="setMainImage(img)"
@@ -107,6 +96,17 @@
           >
             Main Image
           </span>
+          <table
+            v-if="Object.keys(img.parsedMeta || {}).length"
+            class="table table-sm bg-body-secondary rounded mb-0 mt-1"
+          >
+            <tbody>
+              <tr v-for="(value, key) in img.parsedMeta" :key="key">
+                <th class="fw-normal">{{ key }}</th>
+                <td>{{ value }}</td>
+              </tr>
+            </tbody>
+          </table>
         </div>
       </div>
       <div class="mb-2 d-flex justify-content-center gap-2 pb-2" v-if="!isEditing">
