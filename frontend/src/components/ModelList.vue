@@ -16,37 +16,42 @@
           style="min-width: 200px"
         />
 
-        <select
-          v-model="selectedBaseModel"
-          class="form-select"
-          style="min-width: 200px"
-        >
-          <option value="">All base models</option>
-          <option v-for="bm in baseModels" :key="bm" :value="bm">
-            {{ bm }}
-          </option>
-        </select>
+        <div class="row">
+          <div class="col-12 col-sm-6">
+            <select
+              v-model="selectedBaseModel"
+              class="form-select"
+              style="min-width: 200px"
+            >
+              <option value="">All base models</option>
+              <option v-for="bm in baseModels" :key="bm" :value="bm">
+                {{ bm }}
+              </option>
+            </select>
+          </div>
+          <div class="col-12 col-sm-6">
+            <select
+              v-model="selectedModelType"
+              class="form-select"
+              style="min-width: 200px"
+            >
+              <option value="">All model types</option>
+              <option v-for="t in modelTypes" :key="t" :value="t">
+                {{ t }}
+              </option>
+            </select>
+          </div>
+        </div>
 
-        <select
-          v-model="selectedModelType"
-          class="form-select"
-          style="min-width: 200px"
-        >
-          <option value="">All model types</option>
-          <option v-for="t in modelTypes" :key="t" :value="t">
-            {{ t }}
-          </option>
-        </select>
-
-        <div class="form-check form-switch">
+        <div class="form-check form-switch d-flex ps-2">
           <input
             type="checkbox"
             id="hide-nsfw"
-            class="form-check-input"
-            role="switch"
+            class="btn-check"
+            autocomplete="off"
             v-model="hideNsfw"
           />
-          <label class="form-check-label" for="hide-nsfw">Hide NSFW</label>
+          <label class="btn btn-outline-secondary" for="hide-nsfw">Hide NSFW</label>
         </div>
       </div>
       <div class="col-md-6 d-flex align-content-start flex-wrap gap-2">
@@ -63,7 +68,7 @@
             <button
               @click="loadVersions"
               :disabled="loading || !modelUrl"
-              class="btn btn-secondary"
+              class="btn btn-primary"
             >
               Load Versions
             </button>
@@ -115,7 +120,7 @@
     </div>
   </div>
 
-  <div v-if="models.length === 0">No models found.</div>
+  <div class="m-4 text-center" v-if="models.length === 0">No models found.</div>
 
   <div class="row row-cols-1 row-cols-md-3 row-cols-lg-5 g-4 p-4">
     <div v-for="card in versionCards" :key="card.version.ID" class="col">
@@ -150,7 +155,7 @@
           </button>
           <button
             @click="deleteVersion(card.version.ID)"
-            class="btn btn-danger align-self-end"
+            class="btn btn-danger ms-auto"
           >
             Delete
           </button>

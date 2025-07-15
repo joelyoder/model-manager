@@ -7,18 +7,6 @@
         Delete
       </button>
     </div>
-    <div class="mb-2 d-flex gap-2 pb-2" v-if="!isEditing">
-      <button @click="updateMeta" class="btn btn-secondary">
-        Update Metadata
-      </button>
-      <button @click="updateDesc" class="btn btn-secondary">
-        Update Description
-      </button>
-      <button @click="updateImages" class="btn btn-secondary">
-        Refresh Images
-      </button>
-      <button @click="updateAll" class="btn btn-secondary">Update All</button>
-    </div>
     <div v-else class="mb-2 d-flex gap-2 pb-2">
       <button @click="cancelEdit" class="btn btn-secondary">Cancel</button>
       <button @click="saveEdit" class="btn btn-primary">Save</button>
@@ -107,6 +95,18 @@
             </tbody>
           </table>
         </div>
+      </div>
+      <div class="mb-2 d-flex justify-content-center gap-2 pb-2" v-if="!isEditing">
+        <button @click="updateMeta" class="btn btn-secondary btn-sm">
+          Update Metadata
+        </button>
+        <button @click="updateDesc" class="btn btn-secondary btn-sm">
+          Update Description
+        </button>
+        <button @click="updateImages" class="btn btn-secondary btn-sm">
+          Refresh Images
+        </button>
+        <button @click="updateAll" class="btn btn-secondary btn-sm">Update All</button>
       </div>
     </div>
     <div v-else>
