@@ -38,6 +38,7 @@ func main() {
 		apiGroup.GET("/versions/:id", api.GetVersion)
 		apiGroup.PUT("/versions/:id", api.UpdateVersion)
 		apiGroup.POST("/versions/:id/refresh", api.RefreshVersion)
+		apiGroup.POST("/versions/:id/main-image/:imageId", api.SetVersionMainImage)
 		apiGroup.DELETE("/versions/:id", api.DeleteVersion)
 	}
 
