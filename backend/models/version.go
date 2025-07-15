@@ -17,6 +17,10 @@ type Version struct {
 	Description          string  `json:"description"`
 	Mode                 string  `json:"mode"`
 	ModelURL             string  `json:"modelUrl"`
+	CivitCreatedAt       string  `json:"createdAt"`
+	CivitUpdatedAt       string  `json:"updatedAt"`
+	SHA256               string  `json:"sha256"`
+	DownloadURL          string  `json:"downloadUrl"`
 	ImagePath            string  `json:"imagePath"`
 	FilePath             string  `json:"filePath"`
 

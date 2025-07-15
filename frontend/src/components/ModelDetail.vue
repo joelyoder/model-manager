@@ -63,6 +63,28 @@
                   }}</a>
                 </td>
               </tr>
+              <tr v-if="version.createdAt">
+                <th>Created</th>
+                <td>{{ version.createdAt }}</td>
+              </tr>
+              <tr v-if="version.updatedAt">
+                <th>Updated</th>
+                <td>{{ version.updatedAt }}</td>
+              </tr>
+              <tr v-if="version.sha256">
+                <th>SHA256</th>
+                <td>
+                  <code>{{ version.sha256 }}</code>
+                </td>
+              </tr>
+              <tr v-if="version.downloadUrl">
+                <th>Download URL</th>
+                <td>
+                  <a :href="version.downloadUrl" target="_blank">{{
+                    version.downloadUrl
+                  }}</a>
+                </td>
+              </tr>
             </tbody>
           </table>
         </div>
@@ -90,10 +112,7 @@
           >
             Set as Main
           </button>
-          <span
-            v-else
-            class="badge text-bg-success d-block text-center mt-1"
-          >
+          <span v-else class="badge text-bg-success d-block text-center mt-1">
             Main Image
           </span>
           <table
@@ -109,7 +128,10 @@
           </table>
         </div>
       </div>
-      <div class="mb-2 d-flex justify-content-center gap-2 pb-2" v-if="!isEditing">
+      <div
+        class="mb-2 d-flex justify-content-center gap-2 pb-2"
+        v-if="!isEditing"
+      >
         <button @click="updateMeta" class="btn btn-secondary btn-sm">
           Update Metadata
         </button>
@@ -119,7 +141,9 @@
         <button @click="updateImages" class="btn btn-secondary btn-sm">
           Refresh Images
         </button>
-        <button @click="updateAll" class="btn btn-secondary btn-sm">Update All</button>
+        <button @click="updateAll" class="btn btn-secondary btn-sm">
+          Update All
+        </button>
       </div>
     </div>
     <div v-else>
@@ -303,9 +327,7 @@ const goBack = () => {
 };
 
 const setMainImage = async (img) => {
-  await axios.post(
-    `/api/versions/${version.value.ID}/main-image/${img.ID}`,
-  );
+  await axios.post(`/api/versions/${version.value.ID}/main-image/${img.ID}`);
   await fetchData();
   showToast("Main image updated", "success");
 };

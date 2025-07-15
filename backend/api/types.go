@@ -23,6 +23,7 @@ type VersionResponse struct {
 	Name                 string       `json:"name"`
 	BaseModel            string       `json:"baseModel"`
 	Created              string       `json:"createdAt"`
+	Updated              string       `json:"updatedAt"`
 	EarlyAccessTimeFrame int          `json:"earlyAccessTimeFrame"`
 	TrainedWords         []string     `json:"trainedWords"`
 	ModelFiles           []ModelFile  `json:"files"`
@@ -33,6 +34,9 @@ type ModelFile struct {
 	Name        string  `json:"name"`
 	DownloadURL string  `json:"downloadUrl"`
 	SizeKB      float64 `json:"sizeKB"`
+	Hashes      struct {
+		SHA256 string `json:"SHA256"`
+	} `json:"hashes"`
 }
 
 type ModelImage struct {

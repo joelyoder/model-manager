@@ -175,8 +175,12 @@ func SyncVersionByID(c *gin.Context) {
 
 	var filePath, imagePath string
 	var imgW, imgH int
+	var fileSHA string
+	var downloadURL string
 	if len(verData.ModelFiles) > 0 {
-		filePath, _ = DownloadFile(verData.ModelFiles[0].DownloadURL, "./backend/downloads/"+model.Type, verData.ModelFiles[0].Name)
+		downloadURL = verData.ModelFiles[0].DownloadURL
+		filePath, _ = DownloadFile(downloadURL, "./backend/downloads/"+model.Type, verData.ModelFiles[0].Name)
+		fileSHA = verData.ModelFiles[0].Hashes.SHA256
 	}
 
 	versionRecord := models.Version{
@@ -193,6 +197,10 @@ func SyncVersionByID(c *gin.Context) {
 		Description:          modelData.Description,
 		Mode:                 modelData.Mode,
 		ModelURL:             fmt.Sprintf("https://civitai.com/models/%d?modelVersionId=%d", verData.ModelID, verData.ID),
+		CivitCreatedAt:       verData.Created,
+		CivitUpdatedAt:       verData.Updated,
+		SHA256:               fileSHA,
+		DownloadURL:          downloadURL,
 		FilePath:             filePath,
 	}
 	database.DB.Create(&versionRecord)
@@ -267,10 +275,13 @@ func processModels(items []CivitModel, apiKey string) {
 
 			var filePath, imagePath string
 			var imgW, imgH int
+			var fileSHA string
+			var downloadURL string
 			if len(verData.ModelFiles) > 0 {
-				fileURL := verData.ModelFiles[0].DownloadURL
+				downloadURL = verData.ModelFiles[0].DownloadURL
 				fileName := verData.ModelFiles[0].Name
-				filePath, _ = DownloadFile(fileURL, "./backend/downloads/"+item.Type, fileName)
+				filePath, _ = DownloadFile(downloadURL, "./backend/downloads/"+item.Type, fileName)
+				fileSHA = verData.ModelFiles[0].Hashes.SHA256
 			}
 
 			versionRec := models.Version{
@@ -287,6 +298,10 @@ func processModels(items []CivitModel, apiKey string) {
 				Description:          item.Description,
 				Mode:                 item.Mode,
 				ModelURL:             fmt.Sprintf("https://civitai.com/models/%d?modelVersionId=%d", item.ID, verData.ID),
+				CivitCreatedAt:       verData.Created,
+				CivitUpdatedAt:       verData.Updated,
+				SHA256:               fileSHA,
+				DownloadURL:          downloadURL,
 				FilePath:             filePath,
 			}
 			database.DB.Create(&versionRec)
@@ -600,6 +615,8 @@ func RefreshVersion(c *gin.Context) {
 		version.EarlyAccessTimeFrame = verData.EarlyAccessTimeFrame
 		if len(verData.ModelFiles) > 0 {
 			version.SizeKB = verData.ModelFiles[0].SizeKB
+			version.SHA256 = verData.ModelFiles[0].Hashes.SHA256
+			version.DownloadURL = verData.ModelFiles[0].DownloadURL
 		}
 		version.TrainedWords = strings.Join(verData.TrainedWords, ",")
 		version.Nsfw = modelData.Nsfw
@@ -607,6 +624,8 @@ func RefreshVersion(c *gin.Context) {
 		version.Tags = strings.Join(modelData.Tags, ",")
 		version.Mode = modelData.Mode
 		version.ModelURL = fmt.Sprintf("https://civitai.com/models/%d?modelVersionId=%d", verData.ModelID, verData.ID)
+		version.CivitCreatedAt = verData.Created
+		version.CivitUpdatedAt = verData.Updated
 
 		model.Name = modelData.Name
 		model.Type = modelData.Type
