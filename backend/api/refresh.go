@@ -99,6 +99,10 @@ func refreshVersionData(id int, fields string) error {
 
 		var imagePath string
 		var imgW, imgH int
+		modelType := model.Type
+		if modelType == "" {
+			modelType = modelData.Type
+		}
 		for idx, img := range verData.Images {
 			imageURL := img.URL
 			if imageURL == "" {
@@ -107,7 +111,7 @@ func refreshVersionData(id int, fields string) error {
 			if imageURL == "" {
 				continue
 			}
-			imgPath, _ := DownloadFile(imageURL, "./backend/images/"+model.Type, fmt.Sprintf("%d_%d.jpg", verData.ID, idx))
+			imgPath, _ := DownloadFile(imageURL, "./backend/images/"+modelType, fmt.Sprintf("%d_%d.jpg", verData.ID, idx))
 			w, h, _ := GetImageDimensions(imgPath)
 			hash, _ := FileHash(imgPath)
 			metaBytes, _ := json.Marshal(img.Meta)
