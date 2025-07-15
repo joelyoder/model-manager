@@ -315,8 +315,14 @@ const refreshVersion = async (fields) => {
   showToast("Updated", "success");
 };
 
-const updateMeta = () => refreshVersion("metadata");
-const updateDesc = () => refreshVersion("description");
+const updateMeta = async () => {
+  if (!(await showConfirm("Pull latest metadata from CivitAI?"))) return;
+  await refreshVersion("metadata");
+};
+const updateDesc = async () => {
+  if (!(await showConfirm("Pull latest description from CivitAI?"))) return;
+  await refreshVersion("description");
+};
 const updateImages = async () => {
   if (!(await showConfirm("Replace all images with the latest from CivitAI?")))
     return;

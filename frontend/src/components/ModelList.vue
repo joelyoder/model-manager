@@ -137,6 +137,35 @@
             </button>
           </div>
         </div>
+        <div class="d-flex gap-2 mt-1">
+          <div class="form-check">
+            <input
+              class="form-check-input"
+              type="checkbox"
+              id="pull-images"
+              v-model="pullImages"
+            />
+            <label class="form-check-label" for="pull-images">Images</label>
+          </div>
+          <div class="form-check">
+            <input
+              class="form-check-input"
+              type="checkbox"
+              id="pull-meta"
+              v-model="pullMeta"
+            />
+            <label class="form-check-label" for="pull-meta">Metadata</label>
+          </div>
+          <div class="form-check">
+            <input
+              class="form-check-input"
+              type="checkbox"
+              id="pull-desc"
+              v-model="pullDesc"
+            />
+            <label class="form-check-label" for="pull-desc">Description</label>
+          </div>
+        </div>
       </div>
     </div>
   </div>
@@ -208,6 +237,9 @@ const loading = ref(false);
 const downloading = ref(false);
 const downloadProgress = ref(0);
 const importFile = ref(null);
+const pullImages = ref(false);
+const pullMeta = ref(false);
+const pullDesc = ref(false);
 let progressInterval = null;
 const router = useRouter();
 
@@ -427,7 +459,12 @@ const importJson = async () => {
   const form = new FormData();
   form.append("file", importFile.value);
   try {
-    await axios.post("/api/import", form);
+    const params = [];
+    if (pullMeta.value) params.push("metadata");
+    if (pullDesc.value) params.push("description");
+    if (pullImages.value) params.push("images");
+    const query = params.length ? `?fields=${params.join(",")}` : "";
+    await axios.post(`/api/import${query}`, form);
     page.value = 1;
     await fetchModels(true);
     showToast("Import successful", "success");
