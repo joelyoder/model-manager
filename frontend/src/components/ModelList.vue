@@ -8,7 +8,7 @@
           class="form-control w-200 flex-grow-1"
           style="min-width: 200px"
         />
-        
+
         <input
           v-model="tagsSearch"
           placeholder="Search tags (comma separated)"
@@ -51,7 +51,9 @@
             autocomplete="off"
             v-model="hideNsfw"
           />
-          <label class="btn btn-outline-secondary" for="hide-nsfw">Hide NSFW</label>
+          <label class="btn btn-outline-secondary" for="hide-nsfw"
+            >Hide NSFW</label
+          >
         </div>
       </div>
       <div class="col-md-6 d-flex align-content-start flex-wrap gap-2">
@@ -74,7 +76,6 @@
             </button>
           </div>
         </div>
-
 
         <div class="input-group">
           <!-- Version selector -->
@@ -103,7 +104,9 @@
                 class="spinner-border spinner-border-sm"
                 aria-hidden="true"
               ></span>
-              <span v-if="loading" role="status" class="ps-2">Downloading...</span>
+              <span v-if="loading" role="status" class="ps-2"
+                >Downloading...</span
+              >
               <span v-else>Download</span>
             </button>
           </div>
@@ -338,6 +341,20 @@ const loadVersions = async () => {
 
 const downloadSelectedVersion = async () => {
   if (!selectedVersionId.value) return;
+
+  const ver = versions.value.find(
+    (v) => v.id === Number(selectedVersionId.value),
+  );
+  if (ver) {
+    const duplicate = models.value.some((m) =>
+      (m.versions || []).some(
+        (existing) => existing.sha256 && existing.sha256 === ver.sha256,
+      ),
+    );
+    if (duplicate) {
+      showToast("Model with the same hash already exists", "warning");
+    }
+  }
 
   loading.value = true;
   downloading.value = true;

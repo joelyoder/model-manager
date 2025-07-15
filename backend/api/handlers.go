@@ -121,16 +121,25 @@ func GetModelVersions(c *gin.Context) {
 		}
 
 		sizeKB := 0.0
+		sha := ""
+		created := ver.Created
+		updated := ver.Updated
+		eaf := ver.EarlyAccessTimeFrame
 		if len(ver.ModelFiles) > 0 {
 			sizeKB = ver.ModelFiles[0].SizeKB
+			sha = ver.ModelFiles[0].Hashes.SHA256
 		}
 
 		versions = append(versions, VersionInfo{
-			ID:           ver.ID,
-			Name:         ver.Name,
-			BaseModel:    ver.BaseModel,
-			SizeKB:       sizeKB,
-			TrainedWords: ver.TrainedWords,
+			ID:                   ver.ID,
+			Name:                 ver.Name,
+			BaseModel:            ver.BaseModel,
+			SizeKB:               sizeKB,
+			TrainedWords:         ver.TrainedWords,
+			EarlyAccessTimeFrame: eaf,
+			SHA256:               sha,
+			Created:              created,
+			Updated:              updated,
 		})
 	}
 
@@ -169,14 +178,24 @@ func SyncVersionByID(c *gin.Context) {
 		model = models.Model{
 			CivitID: modelData.ID,
 			Name:    modelData.Name,
+			Type:    modelData.Type,
 		}
 		database.DB.Create(&model)
 	}
 
 	var filePath, imagePath string
 	var imgW, imgH int
+	var fileSHA string
+	var downloadURL string
 	if len(verData.ModelFiles) > 0 {
-		filePath, _ = DownloadFile(verData.ModelFiles[0].DownloadURL, "./backend/downloads/"+model.Type, verData.ModelFiles[0].Name)
+		downloadURL = verData.ModelFiles[0].DownloadURL
+		filePath, _ = DownloadFile(downloadURL, "./backend/downloads/"+model.Type, verData.ModelFiles[0].Name)
+		if info, err := os.Stat(filePath); err == nil && info.Size() < 110 {
+			os.Remove(filePath)
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Downloaded file too small"})
+			return
+		}
+		fileSHA = verData.ModelFiles[0].Hashes.SHA256
 	}
 
 	versionRecord := models.Version{
@@ -193,6 +212,10 @@ func SyncVersionByID(c *gin.Context) {
 		Description:          modelData.Description,
 		Mode:                 modelData.Mode,
 		ModelURL:             fmt.Sprintf("https://civitai.com/models/%d?modelVersionId=%d", verData.ModelID, verData.ID),
+		CivitCreatedAt:       verData.Created,
+		CivitUpdatedAt:       verData.Updated,
+		SHA256:               fileSHA,
+		DownloadURL:          downloadURL,
 		FilePath:             filePath,
 	}
 	database.DB.Create(&versionRecord)
@@ -248,6 +271,7 @@ func processModels(items []CivitModel, apiKey string) {
 			existing = models.Model{
 				CivitID: item.ID,
 				Name:    item.Name,
+				Type:    item.Type,
 			}
 			database.DB.Create(&existing)
 		}
@@ -267,10 +291,18 @@ func processModels(items []CivitModel, apiKey string) {
 
 			var filePath, imagePath string
 			var imgW, imgH int
+			var fileSHA string
+			var downloadURL string
 			if len(verData.ModelFiles) > 0 {
-				fileURL := verData.ModelFiles[0].DownloadURL
+				downloadURL = verData.ModelFiles[0].DownloadURL
 				fileName := verData.ModelFiles[0].Name
-				filePath, _ = DownloadFile(fileURL, "./backend/downloads/"+item.Type, fileName)
+				filePath, _ = DownloadFile(downloadURL, "./backend/downloads/"+item.Type, fileName)
+				if info, err := os.Stat(filePath); err == nil && info.Size() < 110 {
+					os.Remove(filePath)
+					log.Printf("downloaded %s is too small", fileName)
+					continue
+				}
+				fileSHA = verData.ModelFiles[0].Hashes.SHA256
 			}
 
 			versionRec := models.Version{
@@ -287,6 +319,10 @@ func processModels(items []CivitModel, apiKey string) {
 				Description:          item.Description,
 				Mode:                 item.Mode,
 				ModelURL:             fmt.Sprintf("https://civitai.com/models/%d?modelVersionId=%d", item.ID, verData.ID),
+				CivitCreatedAt:       verData.Created,
+				CivitUpdatedAt:       verData.Updated,
+				SHA256:               fileSHA,
+				DownloadURL:          downloadURL,
 				FilePath:             filePath,
 			}
 			database.DB.Create(&versionRec)
@@ -600,6 +636,8 @@ func RefreshVersion(c *gin.Context) {
 		version.EarlyAccessTimeFrame = verData.EarlyAccessTimeFrame
 		if len(verData.ModelFiles) > 0 {
 			version.SizeKB = verData.ModelFiles[0].SizeKB
+			version.SHA256 = verData.ModelFiles[0].Hashes.SHA256
+			version.DownloadURL = verData.ModelFiles[0].DownloadURL
 		}
 		version.TrainedWords = strings.Join(verData.TrainedWords, ",")
 		version.Nsfw = modelData.Nsfw
@@ -607,6 +645,8 @@ func RefreshVersion(c *gin.Context) {
 		version.Tags = strings.Join(modelData.Tags, ",")
 		version.Mode = modelData.Mode
 		version.ModelURL = fmt.Sprintf("https://civitai.com/models/%d?modelVersionId=%d", verData.ModelID, verData.ID)
+		version.CivitCreatedAt = verData.Created
+		version.CivitUpdatedAt = verData.Updated
 
 		model.Name = modelData.Name
 		model.Type = modelData.Type
