@@ -1,13 +1,16 @@
 package api
 
 type CivitModel struct {
-	ID            int              `json:"id"`
-	Name          string           `json:"name"`
-	Type          string           `json:"type"`
-	Description   string           `json:"description"`
-	Nsfw          bool             `json:"nsfw"`
-	Tags          []string         `json:"tags"`
-	Mode          string           `json:"mode"`
+	ID          int      `json:"id"`
+	Name        string   `json:"name"`
+	Type        string   `json:"type"`
+	Description string   `json:"description"`
+	Nsfw        bool     `json:"nsfw"`
+	Tags        []string `json:"tags"`
+	Mode        string   `json:"mode"`
+	Creator     struct {
+		Username string `json:"username"`
+	} `json:"creator"`
 	ModelVersions []VersionSummary `json:"modelVersions"`
 	Created       string           `json:"createdAt"`
 	Updated       string           `json:"updatedAt"`

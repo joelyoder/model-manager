@@ -63,6 +63,10 @@
                   }}</a>
                 </td>
               </tr>
+              <tr v-if="model.creatorUsername">
+                <th>Creator</th>
+                <td>{{ model.creatorUsername }}</td>
+              </tr>
               <tr v-if="version.createdAt">
                 <th>Created</th>
                 <td>{{ createdAtReadable }}</td>
@@ -240,6 +244,9 @@ const galleryImages = computed(() => {
     const meta = parseMeta(img.meta);
     if (version.value.mode) {
       meta.mode = version.value.mode;
+    }
+    if (model.value.creatorUsername) {
+      meta.creator = model.value.creatorUsername;
     }
     return {
       ...img,

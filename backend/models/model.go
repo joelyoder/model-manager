@@ -4,12 +4,13 @@ import "gorm.io/gorm"
 
 type Model struct {
 	gorm.Model
-	CivitID     int    `gorm:"uniqueIndex" json:"civitId"`
-	Name        string `json:"name"`
-	Type        string `json:"type"`
-	Tags        string `json:"tags"`
-	Nsfw        bool   `gorm:"column:nsfw" json:"nsfw"`
-	Description string `json:"description"`
+	CivitID         int    `gorm:"uniqueIndex" json:"civitId"`
+	Name            string `json:"name"`
+	Type            string `json:"type"`
+	CreatorUsername string `json:"creatorUsername"`
+	Tags            string `json:"tags"`
+	Nsfw            bool   `gorm:"column:nsfw" json:"nsfw"`
+	Description     string `json:"description"`
 
 	// Local paths
 	ImagePath string `json:"imagePath"`

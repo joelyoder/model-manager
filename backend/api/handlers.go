@@ -176,11 +176,15 @@ func SyncVersionByID(c *gin.Context) {
 	database.DB.Unscoped().Where("civit_id = ?", verData.ModelID).Find(&model)
 	if model.ID == 0 {
 		model = models.Model{
-			CivitID: modelData.ID,
-			Name:    modelData.Name,
-			Type:    modelData.Type,
+			CivitID:         modelData.ID,
+			Name:            modelData.Name,
+			Type:            modelData.Type,
+			CreatorUsername: modelData.Creator.Username,
 		}
 		database.DB.Create(&model)
+	} else if model.CreatorUsername == "" && modelData.Creator.Username != "" {
+		model.CreatorUsername = modelData.Creator.Username
+		database.DB.Save(&model)
 	}
 
 	var filePath, imagePath string
@@ -269,11 +273,15 @@ func processModels(items []CivitModel, apiKey string) {
 		database.DB.Where("civit_id = ?", item.ID).Find(&existing)
 		if existing.ID == 0 {
 			existing = models.Model{
-				CivitID: item.ID,
-				Name:    item.Name,
-				Type:    item.Type,
+				CivitID:         item.ID,
+				Name:            item.Name,
+				Type:            item.Type,
+				CreatorUsername: item.Creator.Username,
 			}
 			database.DB.Create(&existing)
+		} else if existing.CreatorUsername == "" && item.Creator.Username != "" {
+			existing.CreatorUsername = item.Creator.Username
+			database.DB.Save(&existing)
 		}
 
 		for _, version := range item.ModelVersions {
@@ -652,6 +660,9 @@ func RefreshVersion(c *gin.Context) {
 		model.Type = modelData.Type
 		model.Tags = strings.Join(modelData.Tags, ",")
 		model.Nsfw = modelData.Nsfw
+		if modelData.Creator.Username != "" {
+			model.CreatorUsername = modelData.Creator.Username
+		}
 	}
 
 	if updateDesc {
