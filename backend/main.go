@@ -20,7 +20,7 @@ func main() {
 
 	// Serve static assets
 	r.Static("/images", database.GetImagesPath())
-	r.Static("/downloads", database.GetModelsPath())
+	r.Static("/models", database.GetModelsPath())
 	r.Static("/assets", "./frontend/dist/assets")
 
 	// API routes

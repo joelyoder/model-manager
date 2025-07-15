@@ -28,7 +28,7 @@ func SetSetting(key, value string) {
 func GetImagesPath() string {
 	p := GetSetting(models.SettingImagesPath)
 	if p == "" {
-		p = "./backend/images"
+		p = "./images"
 	}
 	return p
 }
@@ -37,7 +37,7 @@ func GetImagesPath() string {
 func GetModelsPath() string {
 	p := GetSetting(models.SettingModelsPath)
 	if p == "" {
-		p = "./backend/downloads"
+		p = "./models"
 	}
 	return p
 }
