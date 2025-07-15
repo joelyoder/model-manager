@@ -674,3 +674,57 @@ func RefreshVersion(c *gin.Context) {
 
 	c.JSON(http.StatusOK, gin.H{"message": "Version refreshed"})
 }
+
+// SetVersionMainImage sets the ImagePath of a version to the specified image
+// ID. If the model currently references the old ImagePath, it will be updated
+// to the new one as well.
+func SetVersionMainImage(c *gin.Context) {
+	verIDStr := c.Param("id")
+	verID, err := strconv.Atoi(verIDStr)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid version ID"})
+		return
+	}
+
+	imgIDStr := c.Param("imageId")
+	imgID, err := strconv.Atoi(imgIDStr)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid image ID"})
+		return
+	}
+
+	var version models.Version
+	if err := database.DB.First(&version, verID).Error; err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "Version not found"})
+		return
+	}
+
+	var image models.VersionImage
+	if err := database.DB.First(&image, imgID).Error; err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "Image not found"})
+		return
+	}
+	if image.VersionID != version.ID {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Image does not belong to this version"})
+		return
+	}
+
+	oldPath := version.ImagePath
+	version.ImagePath = image.Path
+	if err := database.DB.Save(&version).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update version"})
+		return
+	}
+
+	var model models.Model
+	if err := database.DB.First(&model, version.ModelID).Error; err == nil {
+		if model.ImagePath == oldPath {
+			model.ImagePath = image.Path
+			model.ImageWidth = image.Width
+			model.ImageHeight = image.Height
+			database.DB.Save(&model)
+		}
+	}
+
+	c.JSON(http.StatusOK, gin.H{"message": "Main image updated"})
+}

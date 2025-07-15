@@ -94,6 +94,19 @@
               </tr>
             </tbody>
           </table>
+          <button
+            v-if="img.path !== version.imagePath"
+            @click="setMainImage(img)"
+            class="btn btn-secondary btn-sm mt-1 w-100"
+          >
+            Set as Main
+          </button>
+          <span
+            v-else
+            class="badge text-bg-success d-block text-center mt-1"
+          >
+            Main Image
+          </span>
         </div>
       </div>
       <div class="mb-2 d-flex justify-content-center gap-2 pb-2" v-if="!isEditing">
@@ -287,5 +300,13 @@ const updateAll = async () => {
 
 const goBack = () => {
   router.push("/");
+};
+
+const setMainImage = async (img) => {
+  await axios.post(
+    `/api/versions/${version.value.ID}/main-image/${img.ID}`,
+  );
+  await fetchData();
+  showToast("Main image updated", "success");
 };
 </script>
