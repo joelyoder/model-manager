@@ -8,7 +8,7 @@
           class="form-control w-200 flex-grow-1"
           style="min-width: 200px"
         />
-
+        
         <input
           v-model="tagsSearch"
           placeholder="Search tags (comma separated)"
@@ -50,51 +50,59 @@
         </div>
       </div>
       <div class="col-md-6 d-flex align-content-start flex-wrap gap-2">
-        <!-- Paste URL and fetch versions -->
-        <input
-          v-model="modelUrl"
-          placeholder="Paste CivitAI model URL"
-          class="form-control"
-          style="min-width: 200px"
-          @keyup.enter="loadVersions"
-        />
-        <button
-          @click="loadVersions"
-          :disabled="loading || !modelUrl"
-          class="btn btn-secondary"
-        >
-          Load Versions
-        </button>
+        <div class="input-group">
+          <!-- Paste URL and fetch versions -->
+          <input
+            v-model="modelUrl"
+            placeholder="Paste CivitAI model URL"
+            class="form-control"
+            style="min-width: 200px"
+            @keyup.enter="loadVersions"
+          />
+          <div class="input-group-append">
+            <button
+              @click="loadVersions"
+              :disabled="loading || !modelUrl"
+              class="btn btn-secondary"
+            >
+              Load Versions
+            </button>
+          </div>
+        </div>
 
-        <!-- Version selector -->
-        <select
-          v-if="versions.length"
-          v-model="selectedVersionId"
-          class="form-select"
-          style="min-width: 200px"
-        >
-          <option disabled value="">Select version</option>
-          <option v-for="v in versions" :value="v.id" :key="v.id">
-            {{ v.name }} | {{ v.baseModel }} |
-            {{ ((v.sizeKB || 0) / 1024).toFixed(2) }} MB
-          </option>
-        </select>
 
-        <!-- Download version -->
-        <button
-          v-if="selectedVersionId"
-          @click="downloadSelectedVersion"
-          :disabled="loading"
-          class="btn btn-primary"
-        >
-          <span
-            v-if="loading"
-            class="spinner-border spinner-border-sm"
-            aria-hidden="true"
-          ></span>
-          <span v-if="loading" role="status" class="ps-2">Downloading...</span>
-          <span v-else>Download</span>
-        </button>
+        <div class="input-group">
+          <!-- Version selector -->
+          <select
+            v-if="versions.length"
+            v-model="selectedVersionId"
+            class="form-select"
+            style="min-width: 200px"
+          >
+            <option disabled value="">Select version</option>
+            <option v-for="v in versions" :value="v.id" :key="v.id">
+              {{ v.name }} | {{ v.baseModel }} |
+              {{ ((v.sizeKB || 0) / 1024).toFixed(2) }} MB
+            </option>
+          </select>
+          <div class="input-group-append">
+            <!-- Download version -->
+            <button
+              v-if="selectedVersionId"
+              @click="downloadSelectedVersion"
+              :disabled="loading"
+              class="btn btn-primary"
+            >
+              <span
+                v-if="loading"
+                class="spinner-border spinner-border-sm"
+                aria-hidden="true"
+              ></span>
+              <span v-if="loading" role="status" class="ps-2">Downloading...</span>
+              <span v-else>Download</span>
+            </button>
+          </div>
+        </div>
         <div v-if="downloading" class="progress w-100 mt-2">
           <div
             class="progress-bar progress-bar-striped"
