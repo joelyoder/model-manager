@@ -40,6 +40,7 @@ func main() {
 		apiGroup.POST("/versions/:id/refresh", api.RefreshVersion)
 		apiGroup.POST("/versions/:id/main-image/:imageId", api.SetVersionMainImage)
 		apiGroup.DELETE("/versions/:id", api.DeleteVersion)
+		apiGroup.POST("/import", api.ImportModels)
 	}
 
 	// Vue SPA fallback for all other routes (no wildcard)

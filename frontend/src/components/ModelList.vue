@@ -119,6 +119,24 @@
             {{ downloadProgress }}%
           </div>
         </div>
+
+        <div class="input-group mt-2">
+          <input
+            type="file"
+            accept=".json"
+            @change="onFileChange"
+            class="form-control"
+          />
+          <div class="input-group-append">
+            <button
+              @click="importJson"
+              :disabled="!importFile"
+              class="btn btn-primary"
+            >
+              Import
+            </button>
+          </div>
+        </div>
       </div>
     </div>
   </div>
@@ -189,6 +207,7 @@ const selectedVersionId = ref("");
 const loading = ref(false);
 const downloading = ref(false);
 const downloadProgress = ref(0);
+const importFile = ref(null);
 let progressInterval = null;
 const router = useRouter();
 
@@ -397,5 +416,26 @@ const goToModel = (modelId, versionId) => {
 const loadMore = async () => {
   page.value += 1;
   await fetchModels();
+};
+
+const onFileChange = (e) => {
+  importFile.value = e.target.files[0] || null;
+};
+
+const importJson = async () => {
+  if (!importFile.value) return;
+  const form = new FormData();
+  form.append("file", importFile.value);
+  try {
+    await axios.post("/api/import", form);
+    page.value = 1;
+    await fetchModels(true);
+    showToast("Import successful", "success");
+  } catch (err) {
+    console.error(err);
+    showToast("Import failed", "danger");
+  } finally {
+    importFile.value = null;
+  }
 };
 </script>

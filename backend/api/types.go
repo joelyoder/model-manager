@@ -62,3 +62,20 @@ type VersionInfo struct {
 	Created              string   `json:"createdAt"`
 	Updated              string   `json:"updatedAt"`
 }
+
+// ImportRecord represents a single entry in the JSON import file.
+// Only a subset of fields are mapped into the database.
+type ImportRecord struct {
+	Name            string   `json:"name"`
+	BaseModel       string   `json:"base_model"`
+	ModelType       string   `json:"model_type"`
+	DownloadURL     string   `json:"download_url"`
+	URL             string   `json:"url"`
+	PreviewURL      string   `json:"preview_url"`
+	Description     string   `json:"description"`
+	PositivePrompts string   `json:"positive_prompts"`
+	SHA256Hash      string   `json:"sha256_hash"`
+	CreatedAt       float64  `json:"created_at"`
+	Groups          []string `json:"groups"`
+	Location        string   `json:"location"`
+}
