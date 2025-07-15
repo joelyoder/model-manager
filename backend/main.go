@@ -37,6 +37,7 @@ func main() {
 		apiGroup.GET("/model/:id/versions", api.GetModelVersions)
 		apiGroup.GET("/versions/:id", api.GetVersion)
 		apiGroup.PUT("/versions/:id", api.UpdateVersion)
+		apiGroup.POST("/versions/:id/refresh", api.RefreshVersion)
 		apiGroup.DELETE("/versions/:id", api.DeleteVersion)
 	}
 
