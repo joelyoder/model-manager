@@ -52,9 +52,13 @@ type ModelImage struct {
 // It contains the basic fields required for display and selection when downloading
 // a specific model version.
 type VersionInfo struct {
-	ID           int      `json:"id"`
-	Name         string   `json:"name"`
-	BaseModel    string   `json:"baseModel"`
-	SizeKB       float64  `json:"sizeKB"`
-	TrainedWords []string `json:"trainedWords"`
+	ID                   int      `json:"id"`
+	Name                 string   `json:"name"`
+	BaseModel            string   `json:"baseModel"`
+	SizeKB               float64  `json:"sizeKB"`
+	TrainedWords         []string `json:"trainedWords"`
+	EarlyAccessTimeFrame int      `json:"earlyAccessTimeFrame"`
+	SHA256               string   `json:"sha256"`
+	Created              string   `json:"createdAt"`
+	Updated              string   `json:"updatedAt"`
 }

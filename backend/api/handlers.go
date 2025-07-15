@@ -121,16 +121,25 @@ func GetModelVersions(c *gin.Context) {
 		}
 
 		sizeKB := 0.0
+		sha := ""
+		created := ver.Created
+		updated := ver.Updated
+		eaf := ver.EarlyAccessTimeFrame
 		if len(ver.ModelFiles) > 0 {
 			sizeKB = ver.ModelFiles[0].SizeKB
+			sha = ver.ModelFiles[0].Hashes.SHA256
 		}
 
 		versions = append(versions, VersionInfo{
-			ID:           ver.ID,
-			Name:         ver.Name,
-			BaseModel:    ver.BaseModel,
-			SizeKB:       sizeKB,
-			TrainedWords: ver.TrainedWords,
+			ID:                   ver.ID,
+			Name:                 ver.Name,
+			BaseModel:            ver.BaseModel,
+			SizeKB:               sizeKB,
+			TrainedWords:         ver.TrainedWords,
+			EarlyAccessTimeFrame: eaf,
+			SHA256:               sha,
+			Created:              created,
+			Updated:              updated,
 		})
 	}
 
@@ -150,6 +159,11 @@ func SyncVersionByID(c *gin.Context) {
 	verData, err := FetchModelVersion(apiKey, id)
 	if err != nil {
 		c.JSON(500, gin.H{"error": "Failed to fetch version"})
+		return
+	}
+
+	if verData.EarlyAccessTimeFrame > 0 {
+		c.JSON(http.StatusForbidden, gin.H{"error": "Model is still in early access"})
 		return
 	}
 

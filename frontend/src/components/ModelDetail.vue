@@ -65,11 +65,11 @@
               </tr>
               <tr v-if="version.createdAt">
                 <th>Created</th>
-                <td>{{ version.createdAt }}</td>
+                <td>{{ createdAtReadable }}</td>
               </tr>
               <tr v-if="version.updatedAt">
                 <th>Updated</th>
-                <td>{{ version.updatedAt }}</td>
+                <td>{{ updatedAtReadable }}</td>
               </tr>
               <tr v-if="version.sha256">
                 <th>SHA256</th>
@@ -252,6 +252,16 @@ const galleryImages = computed(() => {
 const fileName = computed(() => {
   if (!version.value.filePath) return "";
   return version.value.filePath.split("/").pop();
+});
+
+const createdAtReadable = computed(() => {
+  if (!version.value.createdAt) return "";
+  return new Date(version.value.createdAt).toLocaleString();
+});
+
+const updatedAtReadable = computed(() => {
+  if (!version.value.updatedAt) return "";
+  return new Date(version.value.updatedAt).toLocaleString();
 });
 
 const fetchData = async () => {
