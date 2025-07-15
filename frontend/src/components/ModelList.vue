@@ -136,8 +136,16 @@
               Import
             </button>
           </div>
+          <div class="input-group-append">
+            <button
+              class="btn btn-outline-secondary"
+              @click="showImportOptions = !showImportOptions"
+            >
+              {{ showImportOptions ? "Hide Options" : "Options" }}
+            </button>
+          </div>
         </div>
-        <div class="d-flex gap-2 mt-1">
+        <div v-if="showImportOptions" class="d-flex gap-2 mt-1">
           <div class="form-check">
             <input
               class="form-check-input"
@@ -240,6 +248,7 @@ const importFile = ref(null);
 const pullImages = ref(false);
 const pullMeta = ref(false);
 const pullDesc = ref(false);
+const showImportOptions = ref(false);
 let progressInterval = null;
 const router = useRouter();
 
