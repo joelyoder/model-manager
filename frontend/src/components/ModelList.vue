@@ -354,13 +354,6 @@ const downloadSelectedVersion = async () => {
     if (duplicate) {
       showToast("Model with the same hash already exists", "warning");
     }
-    if (ver.earlyAccessTimeFrame > 0) {
-      showToast(
-        "Cannot download this version: it is still in early access",
-        "warning",
-      );
-      return;
-    }
   }
 
   loading.value = true;

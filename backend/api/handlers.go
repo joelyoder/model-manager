@@ -162,11 +162,6 @@ func SyncVersionByID(c *gin.Context) {
 		return
 	}
 
-	if verData.EarlyAccessTimeFrame > 0 {
-		c.JSON(http.StatusForbidden, gin.H{"error": "Model is still in early access"})
-		return
-	}
-
 	var existingVersion models.Version
 	database.DB.Unscoped().Where("version_id = ?", id).Find(&existingVersion)
 	if existingVersion.ID > 0 {
@@ -183,6 +178,7 @@ func SyncVersionByID(c *gin.Context) {
 		model = models.Model{
 			CivitID: modelData.ID,
 			Name:    modelData.Name,
+			Type:    modelData.Type,
 		}
 		database.DB.Create(&model)
 	}
@@ -194,6 +190,11 @@ func SyncVersionByID(c *gin.Context) {
 	if len(verData.ModelFiles) > 0 {
 		downloadURL = verData.ModelFiles[0].DownloadURL
 		filePath, _ = DownloadFile(downloadURL, "./backend/downloads/"+model.Type, verData.ModelFiles[0].Name)
+		if info, err := os.Stat(filePath); err == nil && info.Size() < 110 {
+			os.Remove(filePath)
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Downloaded file too small"})
+			return
+		}
 		fileSHA = verData.ModelFiles[0].Hashes.SHA256
 	}
 
@@ -270,6 +271,7 @@ func processModels(items []CivitModel, apiKey string) {
 			existing = models.Model{
 				CivitID: item.ID,
 				Name:    item.Name,
+				Type:    item.Type,
 			}
 			database.DB.Create(&existing)
 		}
@@ -295,6 +297,11 @@ func processModels(items []CivitModel, apiKey string) {
 				downloadURL = verData.ModelFiles[0].DownloadURL
 				fileName := verData.ModelFiles[0].Name
 				filePath, _ = DownloadFile(downloadURL, "./backend/downloads/"+item.Type, fileName)
+				if info, err := os.Stat(filePath); err == nil && info.Size() < 110 {
+					os.Remove(filePath)
+					log.Printf("downloaded %s is too small", fileName)
+					continue
+				}
 				fileSHA = verData.ModelFiles[0].Hashes.SHA256
 			}
 
