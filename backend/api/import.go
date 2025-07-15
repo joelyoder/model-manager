@@ -19,6 +19,8 @@ var modelIDRegex = regexp.MustCompile(`models/(\d+)`)
 var versionIDRegex = regexp.MustCompile(`modelVersionId=(\d+)`)
 
 // ImportModels handles JSON file uploads and inserts records into the database.
+// If the optional "fields" query parameter is provided, each imported version
+// will immediately be refreshed using the same semantics as the refresh API.
 func ImportModels(c *gin.Context) {
 	file, _, err := c.Request.FormFile("file")
 	if err != nil {
@@ -32,6 +34,8 @@ func ImportModels(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "failed to read file"})
 		return
 	}
+
+	fields := c.DefaultQuery("fields", "")
 
 	var records []ImportRecord
 	if err := json.Unmarshal(data, &records); err != nil {
@@ -104,6 +108,9 @@ func ImportModels(c *gin.Context) {
 			CivitCreatedAt: createdStr,
 		}
 		database.DB.Create(&ver)
+		if fields != "" {
+			_ = refreshVersionData(int(ver.ID), fields)
+		}
 	}
 
 	c.JSON(http.StatusOK, gin.H{"message": "import complete"})
