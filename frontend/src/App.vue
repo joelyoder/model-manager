@@ -1,6 +1,6 @@
 <template>
   <div class="min-vh-100">
-    <div class="d-inline-flex p-4 gap-2">
+    <div class="d-inline-flex p-4 gap-3 align-items-center">
       <svg
         width="30px"
         height="30px"

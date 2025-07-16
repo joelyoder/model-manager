@@ -45,7 +45,7 @@ func refreshVersionData(id int, fields string) error {
 		}
 	}
 
-	apiKey := os.Getenv("CIVIT_API_KEY")
+	apiKey := getCivitaiAPIKey()
 	modelData, err := FetchCivitModel(apiKey, model.CivitID)
 	if err != nil {
 		return err

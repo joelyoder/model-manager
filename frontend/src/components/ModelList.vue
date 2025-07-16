@@ -112,6 +112,9 @@
             <label class="form-check-label" for="pull-desc">Description</label>
           </div>
         </div>
+        <router-link to="/settings" class="btn btn-outline-secondary"
+        >Settings</router-link
+        >
       </div>
       <div class="col-md-6 d-flex align-content-start flex-wrap gap-2">
         <div class="input-group">
