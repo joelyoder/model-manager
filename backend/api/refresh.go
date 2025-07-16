@@ -113,7 +113,8 @@ func refreshVersionData(id int, fields string) error {
 				continue
 			}
 			imgPath, _ := DownloadFile(imageURL, filepath.Join(database.GetImagesPath(), modelType), fmt.Sprintf("%d_%d.jpg", verData.ID, idx))
-			relImg, _ := filepath.Rel(database.GetImagesPath(), imgPath)
+			imgBaseAbs, _ := filepath.Abs(database.GetImagesPath())
+			relImg, _ := filepath.Rel(imgBaseAbs, imgPath)
 			imgPath = relImg
 			w, h, _ := GetImageDimensions(filepath.Join(database.GetImagesPath(), imgPath))
 			hash, _ := FileHash(filepath.Join(database.GetImagesPath(), imgPath))

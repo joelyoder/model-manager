@@ -199,7 +199,8 @@ func SyncVersionByID(c *gin.Context) {
 	if len(verData.ModelFiles) > 0 {
 		downloadURL = verData.ModelFiles[0].DownloadURL
 		filePath, _ = DownloadFile(downloadURL, filepath.Join(database.GetModelsPath(), modelType), verData.ModelFiles[0].Name)
-		rel, _ := filepath.Rel(database.GetModelsPath(), filePath)
+		baseAbs, _ := filepath.Abs(database.GetModelsPath())
+		rel, _ := filepath.Rel(baseAbs, filePath)
 		filePath = rel
 		if info, err := os.Stat(filepath.Join(database.GetModelsPath(), filePath)); err == nil && info.Size() < 110 {
 			os.Remove(filepath.Join(database.GetModelsPath(), filePath))
@@ -240,7 +241,8 @@ func SyncVersionByID(c *gin.Context) {
 			continue
 		}
 		imgPath, _ := DownloadFile(imageURL, filepath.Join(database.GetImagesPath(), modelType), fmt.Sprintf("%d_%d.jpg", verData.ID, idx))
-		relImg, _ := filepath.Rel(database.GetImagesPath(), imgPath)
+		imgBaseAbs, _ := filepath.Abs(database.GetImagesPath())
+		relImg, _ := filepath.Rel(imgBaseAbs, imgPath)
 		imgPath = relImg
 		w, h, _ := GetImageDimensions(filepath.Join(database.GetImagesPath(), imgPath))
 		hash, _ := FileHash(filepath.Join(database.GetImagesPath(), imgPath))
@@ -314,7 +316,8 @@ func processModels(items []CivitModel, apiKey string) {
 				downloadURL = verData.ModelFiles[0].DownloadURL
 				fileName := verData.ModelFiles[0].Name
 				filePath, _ = DownloadFile(downloadURL, filepath.Join(database.GetModelsPath(), item.Type), fileName)
-				rel, _ := filepath.Rel(database.GetModelsPath(), filePath)
+				baseAbs, _ := filepath.Abs(database.GetModelsPath())
+				rel, _ := filepath.Rel(baseAbs, filePath)
 				filePath = rel
 				if info, err := os.Stat(filepath.Join(database.GetModelsPath(), filePath)); err == nil && info.Size() < 110 {
 					os.Remove(filepath.Join(database.GetModelsPath(), filePath))
@@ -355,7 +358,8 @@ func processModels(items []CivitModel, apiKey string) {
 					continue
 				}
 				imgPath, _ := DownloadFile(imageURL, filepath.Join(database.GetImagesPath(), item.Type), fmt.Sprintf("%d_%d.jpg", verData.ID, idx))
-				relImg, _ := filepath.Rel(database.GetImagesPath(), imgPath)
+				imgBaseAbs, _ := filepath.Abs(database.GetImagesPath())
+				relImg, _ := filepath.Rel(imgBaseAbs, imgPath)
 				imgPath = relImg
 				w, h, _ := GetImageDimensions(filepath.Join(database.GetImagesPath(), imgPath))
 				hash, _ := FileHash(filepath.Join(database.GetImagesPath(), imgPath))
