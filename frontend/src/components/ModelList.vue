@@ -236,6 +236,7 @@ import { ref, computed, onMounted, watch } from "vue";
 import { useRouter } from "vue-router";
 import axios from "axios";
 import { showToast, showConfirm } from "../utils/ui";
+import debounce from "../utils/debounce";
 
 const models = ref([]);
 const search = ref("");
@@ -291,12 +292,14 @@ const fetchModels = async (reset = false) => {
   hasMore.value = fetched.length === limit;
 };
 
+const debouncedFetchModels = debounce(() => fetchModels(true), 300);
+
 onMounted(() => fetchModels(true));
 
 watch(search, () => {
   page.value = 1;
   hasMore.value = true;
-  fetchModels(true);
+  debouncedFetchModels();
 });
 
 const baseModels = computed(() => {
