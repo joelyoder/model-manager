@@ -16,10 +16,12 @@
 
 <script setup>
 import { ref, onMounted } from "vue";
+import { useRouter } from "vue-router";
 import axios from "axios";
 import { showToast } from "../utils/ui";
 
 const apiKey = ref("");
+const router = useRouter();
 
 onMounted(async () => {
   const res = await axios.get("/api/settings");
@@ -33,5 +35,9 @@ async function save() {
     value: apiKey.value,
   });
   showToast("Settings saved");
+}
+
+function goBack() {
+  router.push("/");
 }
 </script>
