@@ -32,7 +32,11 @@
           stroke-linejoin="round"
         ></path>
       </svg>
-      <h1 class="h5 text-primary-emphasis my-auto fw-bold">Model Manager</h1>
+      <router-link
+        to="/"
+        class="h5 text-primary-emphasis my-auto fw-bold text-decoration-none"
+        >Model Manager</router-link
+      >
     </div>
     <router-view />
     <div
