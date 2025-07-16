@@ -1,5 +1,9 @@
 <template>
   <div class="container px-4">
+    <div class="mb-2 d-flex gap-2 pb-2">
+      <button @click="goBack" class="btn btn-secondary">Back</button>
+      <button class="btn btn-primary" @click="save">Save</button>
+    </div>
     <h2 class="mb-3">Settings</h2>
     <div class="mb-3 row">
       <label class="col-sm-3 col-form-label">Civitai API Key</label>
@@ -7,7 +11,6 @@
         <input v-model="apiKey" type="text" class="form-control" />
       </div>
     </div>
-    <button class="btn btn-primary" @click="save">Save</button>
   </div>
 </template>
 

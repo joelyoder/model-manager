@@ -33,9 +33,6 @@
         ></path>
       </svg>
       <h1 class="h5 text-primary-emphasis my-auto fw-bold">Model Manager</h1>
-      <router-link to="/settings" class="btn btn-outline-light btn-sm"
-        >Settings</router-link
-      >
     </div>
     <router-view />
     <div
