@@ -56,7 +56,7 @@ func GetModel(c *gin.Context) {
 }
 
 func SyncCivitModels(c *gin.Context) {
-	apiKey := os.Getenv("CIVIT_API_KEY")
+	apiKey := getCivitaiAPIKey()
 	items, err := FetchCivitModels(apiKey)
 	if err != nil {
 		c.JSON(500, gin.H{"error": "Failed to fetch models"})
@@ -68,7 +68,7 @@ func SyncCivitModels(c *gin.Context) {
 
 func SyncCivitModelByID(c *gin.Context) {
 	log.Println("Hit /api/sync/:id")
-	apiKey := os.Getenv("CIVIT_API_KEY")
+	apiKey := getCivitaiAPIKey()
 	id := c.Param("id")
 
 	modelID, err := strconv.Atoi(id)
@@ -98,7 +98,7 @@ func SyncCivitModelByID(c *gin.Context) {
 }
 
 func GetModelVersions(c *gin.Context) {
-	apiKey := os.Getenv("CIVIT_API_KEY")
+	apiKey := getCivitaiAPIKey()
 	modelID := c.Param("id")
 
 	id, err := strconv.Atoi(modelID)
@@ -147,7 +147,7 @@ func GetModelVersions(c *gin.Context) {
 }
 
 func SyncVersionByID(c *gin.Context) {
-	apiKey := os.Getenv("CIVIT_API_KEY")
+	apiKey := getCivitaiAPIKey()
 	versionID := c.Param("versionId")
 
 	id, err := strconv.Atoi(versionID)

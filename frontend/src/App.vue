@@ -1,6 +1,6 @@
 <template>
   <div class="min-vh-100">
-    <div class="d-inline-flex p-4 gap-2">
+    <div class="d-inline-flex p-4 gap-3 align-items-center">
       <svg
         width="30px"
         height="30px"
@@ -33,6 +33,9 @@
         ></path>
       </svg>
       <h1 class="h5 text-primary-emphasis my-auto fw-bold">Model Manager</h1>
+      <router-link to="/settings" class="btn btn-outline-light btn-sm"
+        >Settings</router-link
+      >
     </div>
     <router-view />
     <div
