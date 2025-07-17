@@ -43,78 +43,18 @@
           </div>
         </div>
 
-        <div class="form-check form-switch d-flex ps-2">
-          <input
+        <div class="form-check form-switch d-flex gap-2 align-items-center m-2">
+          <input 
+            class="form-check-input"
             type="checkbox"
+            role="switch"
             id="hide-nsfw"
-            class="btn-check"
-            autocomplete="off"
             v-model="hideNsfw"
           />
-          <label class="btn btn-outline-secondary" for="hide-nsfw"
+          <label class="form-check-label" for="hide-nsfw"
             >Hide NSFW</label
           >
         </div>
-
-        <div class="">
-          <button
-            class="btn btn-outline-secondary"
-            @click="showImport = !showImport"
-          >
-            {{ showImport ? "Hide Import" : "Import Models" }}
-          </button>
-        </div>
-
-        <div v-if="showImport" class="input-group mt-2">
-          <input
-            type="file"
-            accept=".json"
-            @change="onFileChange"
-            class="form-control"
-          />
-          <div class="input-group-append">
-            <button
-              @click="importJson"
-              :disabled="!importFile"
-              class="btn btn-primary"
-            >
-              Import
-            </button>
-          </div>
-        </div>
-        <div v-if="showImport" class="d-flex gap-2 mt-1">
-          <span>Update: </span>
-          <div class="form-check">
-            <input
-              class="form-check-input"
-              type="checkbox"
-              id="pull-images"
-              v-model="pullImages"
-            />
-            <label class="form-check-label" for="pull-images">Images</label>
-          </div>
-          <div class="form-check">
-            <input
-              class="form-check-input"
-              type="checkbox"
-              id="pull-meta"
-              v-model="pullMeta"
-            />
-            <label class="form-check-label" for="pull-meta">Metadata</label>
-          </div>
-          <div class="form-check">
-            <input
-              class="form-check-input"
-              type="checkbox"
-              id="pull-desc"
-              v-model="pullDesc"
-            />
-            <label class="form-check-label" for="pull-desc">Description</label>
-          </div>
-        </div>
-        <router-link to="/settings" class="btn btn-outline-secondary"
-        >Settings</router-link
-        >
       </div>
       <div class="col-md-6 d-flex align-content-start flex-wrap gap-2">
         <div class="input-group">
@@ -250,11 +190,6 @@ const selectedVersionId = ref("");
 const loading = ref(false);
 const downloading = ref(false);
 const downloadProgress = ref(0);
-const importFile = ref(null);
-const pullImages = ref(false);
-const pullMeta = ref(false);
-const pullDesc = ref(false);
-const showImport = ref(false);
 let progressInterval = null;
 const router = useRouter();
 
@@ -467,29 +402,4 @@ const loadMore = async () => {
   await fetchModels();
 };
 
-const onFileChange = (e) => {
-  importFile.value = e.target.files[0] || null;
-};
-
-const importJson = async () => {
-  if (!importFile.value) return;
-  const form = new FormData();
-  form.append("file", importFile.value);
-  try {
-    const params = [];
-    if (pullMeta.value) params.push("metadata");
-    if (pullDesc.value) params.push("description");
-    if (pullImages.value) params.push("images");
-    const query = params.length ? `?fields=${params.join(",")}` : "";
-    await axios.post(`/api/import${query}`, form);
-    page.value = 1;
-    await fetchModels(true);
-    showToast("Import successful", "success");
-  } catch (err) {
-    console.error(err);
-    showToast("Import failed", "danger");
-  } finally {
-    importFile.value = null;
-  }
-};
 </script>
