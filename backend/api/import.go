@@ -54,9 +54,6 @@ func ImportModels(c *gin.Context) {
 	for _, r := range records {
 		modelID := extractID(modelIDRegex, r.URL)
 		versionID := extractID(versionIDRegex, r.URL)
-		if modelID == 0 || versionID == 0 {
-			continue
-		}
 
 		modelName, verName := splitName(r.Name)
 		tags := strings.Join(r.Groups, ",")
@@ -68,26 +65,7 @@ func ImportModels(c *gin.Context) {
 			}
 		}
 
-		baseModel := r.BaseModel
-		if strings.TrimSpace(baseModel) == "" {
-			for _, g := range r.Groups {
-				if strings.EqualFold(g, "Illustrious") {
-					baseModel = "Illustrious"
-					break
-				}
-			}
-			if strings.TrimSpace(baseModel) == "" {
-				for _, g := range r.Groups {
-					if strings.EqualFold(g, "Pony") {
-						baseModel = "Pony"
-						break
-					}
-				}
-			}
-			if strings.TrimSpace(baseModel) == "" {
-				baseModel = "SD 1.5"
-			}
-		}
+		baseModel := resolveBaseModel(r.BaseModel, r.Groups)
 
 		var model models.Model
 		err = database.DB.Session(&gorm.Session{Logger: logger.Default.LogMode(logger.Silent)}).
@@ -146,7 +124,7 @@ func ImportModels(c *gin.Context) {
 			CivitCreatedAt: createdStr,
 		}
 		database.DB.Create(&ver)
-		if fields != "" {
+		if fields != "" && versionID != 0 {
 			_ = refreshVersionData(int(ver.ID), fields)
 		}
 	}
@@ -161,6 +139,22 @@ func extractID(re *regexp.Regexp, url string) int {
 		return id
 	}
 	return 0
+}
+
+func resolveBaseModel(base string, groups []string) string {
+	base = strings.TrimSpace(base)
+	if base != "" {
+		return base
+	}
+	for _, g := range groups {
+		if strings.EqualFold(g, "Illustrious") {
+			return "Illustrious"
+		}
+		if strings.EqualFold(g, "Pony") {
+			return "Pony"
+		}
+	}
+	return "SD 1.5"
 }
 
 func splitName(name string) (string, string) {
