@@ -544,6 +544,7 @@ func UpdateModel(c *gin.Context) {
 		return
 	}
 
+	model.CivitID = input.CivitID
 	model.Name = input.Name
 	model.Type = input.Type
 	model.Tags = input.Tags
@@ -583,6 +584,16 @@ func UpdateVersion(c *gin.Context) {
 		return
 	}
 
+	if version.VersionID != input.VersionID {
+		var existing models.Version
+		database.DB.Where("version_id = ?", input.VersionID).Not("id = ?", version.ID).First(&existing)
+		if existing.ID > 0 {
+			c.JSON(http.StatusConflict, gin.H{"error": "version id already exists"})
+			return
+		}
+	}
+
+	version.VersionID = input.VersionID
 	version.Name = input.Name
 	version.BaseModel = input.BaseModel
 	version.EarlyAccessTimeFrame = input.EarlyAccessTimeFrame
@@ -594,6 +605,10 @@ func UpdateVersion(c *gin.Context) {
 	version.Description = input.Description
 	version.Mode = input.Mode
 	version.ModelURL = input.ModelURL
+	version.CivitCreatedAt = input.CivitCreatedAt
+	version.CivitUpdatedAt = input.CivitUpdatedAt
+	version.SHA256 = input.SHA256
+	version.DownloadURL = input.DownloadURL
 	version.ImagePath = input.ImagePath
 	version.FilePath = input.FilePath
 

@@ -152,6 +152,60 @@
         <input v-model="model.name" class="form-control" />
       </div>
       <div class="mb-3">
+        <label class="form-label">Civit ID</label>
+        <input
+          v-model.number="model.civitId"
+          type="number"
+          class="form-control"
+        />
+      </div>
+      <div class="mb-3">
+        <label class="form-label">Type</label>
+        <input v-model="model.type" class="form-control" />
+      </div>
+      <div class="mb-3">
+        <label class="form-label">Tags</label>
+        <input v-model="model.tags" class="form-control" />
+      </div>
+      <div class="form-check mb-3">
+        <input
+          type="checkbox"
+          class="form-check-input"
+          id="model-nsfw"
+          v-model="model.nsfw"
+        />
+        <label class="form-check-label" for="model-nsfw">NSFW</label>
+      </div>
+      <div class="mb-3">
+        <label class="form-label">Description</label>
+        <input v-model="model.description" class="form-control" />
+      </div>
+      <div class="mb-3">
+        <label class="form-label">Image Path</label>
+        <input v-model="model.imagePath" class="form-control" />
+      </div>
+      <div class="mb-3">
+        <label class="form-label">File Path</label>
+        <input v-model="model.filePath" class="form-control" />
+      </div>
+      <div class="mb-3">
+        <label class="form-label">Image Width</label>
+        <input
+          v-model.number="model.imageWidth"
+          type="number"
+          class="form-control"
+        />
+      </div>
+      <div class="mb-3">
+        <label class="form-label">Image Height</label>
+        <input
+          v-model.number="model.imageHeight"
+          type="number"
+          class="form-control"
+        />
+      </div>
+      <hr />
+      <div class="mb-3">
         <label class="form-label">Version Name</label>
         <input v-model="version.name" class="form-control" />
       </div>
@@ -199,6 +253,46 @@
       <div class="mb-3">
         <label class="form-label">Model URL</label>
         <input v-model="version.modelUrl" class="form-control" />
+      </div>
+      <div class="mb-3">
+        <label class="form-label">Version ID</label>
+        <input
+          v-model.number="version.versionId"
+          type="number"
+          class="form-control"
+        />
+      </div>
+      <div class="mb-3">
+        <label class="form-label">Early Access Time Frame</label>
+        <input
+          v-model.number="version.earlyAccessTimeFrame"
+          type="number"
+          class="form-control"
+        />
+      </div>
+      <div class="mb-3">
+        <label class="form-label">Mode</label>
+        <input v-model="version.mode" class="form-control" />
+      </div>
+      <div class="mb-3">
+        <label class="form-label">Created At</label>
+        <input v-model="version.createdAt" class="form-control" />
+      </div>
+      <div class="mb-3">
+        <label class="form-label">Updated At</label>
+        <input v-model="version.updatedAt" class="form-control" />
+      </div>
+      <div class="mb-3">
+        <label class="form-label">SHA256</label>
+        <input v-model="version.sha256" class="form-control" />
+      </div>
+      <div class="mb-3">
+        <label class="form-label">Download URL</label>
+        <input v-model="version.downloadUrl" class="form-control" />
+      </div>
+      <div class="mb-3">
+        <label class="form-label">Image Path</label>
+        <input v-model="version.imagePath" class="form-control" />
       </div>
     </div>
   </div>
@@ -301,7 +395,15 @@ const saveEdit = async () => {
     version.value.description = quill.root.innerHTML;
   }
   await axios.put(`/api/models/${model.value.ID}`, model.value);
-  await axios.put(`/api/versions/${version.value.ID}`, version.value);
+  try {
+    await axios.put(`/api/versions/${version.value.ID}`, version.value);
+  } catch (err) {
+    if (err.response && err.response.status === 409) {
+      showToast("Version ID already exists", "danger");
+      return;
+    }
+    throw err;
+  }
   isEditing.value = false;
   await fetchData();
   showToast("Saved", "success");
