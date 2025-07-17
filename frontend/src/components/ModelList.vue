@@ -43,25 +43,18 @@
           </div>
         </div>
 
-        <div class="form-check form-switch d-flex ps-2">
-          <input
+        <div class="form-check form-switch d-flex gap-2 align-items-center m-2">
+          <input 
+            class="form-check-input"
             type="checkbox"
+            role="switch"
             id="hide-nsfw"
-            class="btn-check"
-            autocomplete="off"
             v-model="hideNsfw"
           />
-          <label class="btn btn-outline-secondary" for="hide-nsfw"
+          <label class="form-check-label" for="hide-nsfw"
             >Hide NSFW</label
           >
         </div>
-
-        <router-link to="/data" class="btn btn-outline-secondary"
-          >Import/Export</router-link
-        >
-        <router-link to="/settings" class="btn btn-outline-secondary"
-          >Settings</router-link
-        >
       </div>
       <div class="col-md-6 d-flex align-content-start flex-wrap gap-2">
         <div class="input-group">

@@ -1,6 +1,6 @@
 <template>
   <div class="min-vh-100">
-    <div class="d-inline-flex p-4 gap-3 align-items-center">
+    <div class="d-flex p-4 gap-3 align-items-center">
       <svg
         width="30px"
         height="30px"
@@ -34,8 +34,14 @@
       </svg>
       <router-link
         to="/"
-        class="h5 text-primary-emphasis my-auto fw-bold text-decoration-none"
+        class="h5 text-primary-emphasis my-auto fw-bold text-decoration-none me-auto"
         >Model Manager</router-link
+      >
+      <router-link to="/data" class="btn btn-outline-secondary btn-sm"
+        >Import/Export</router-link
+      >
+      <router-link to="/settings" class="btn btn-outline-secondary btn-sm"
+        >Settings</router-link
       >
     </div>
     <router-view />
