@@ -2,6 +2,7 @@ package api
 
 import (
 	"encoding/json"
+	"errors"
 	"io"
 	"net/http"
 	"regexp"
@@ -13,6 +14,8 @@ import (
 	"model-manager/backend/models"
 
 	"github.com/gin-gonic/gin"
+	"gorm.io/gorm"
+	"gorm.io/gorm/logger"
 )
 
 var modelIDRegex = regexp.MustCompile(`models/(\d+)`)
@@ -87,7 +90,14 @@ func ImportModels(c *gin.Context) {
 		}
 
 		var model models.Model
-		database.DB.Where("civit_id = ?", modelID).First(&model)
+		err = database.DB.Session(&gorm.Session{Logger: logger.Default.LogMode(logger.Silent)}).
+			Where("civit_id = ?", modelID).First(&model).Error
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			err = nil
+		}
+		if err != nil {
+			continue
+		}
 		if model.ID == 0 {
 			model = models.Model{
 				CivitID:     modelID,
@@ -101,7 +111,14 @@ func ImportModels(c *gin.Context) {
 		}
 
 		var ver models.Version
-		database.DB.Unscoped().Where("version_id = ?", versionID).First(&ver)
+		err = database.DB.Session(&gorm.Session{Logger: logger.Default.LogMode(logger.Silent)}).
+			Unscoped().Where("version_id = ?", versionID).First(&ver).Error
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			err = nil
+		}
+		if err != nil {
+			continue
+		}
 		if ver.ID != 0 {
 			continue
 		}
