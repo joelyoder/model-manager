@@ -3,7 +3,7 @@
     <div class="mb-2 d-flex gap-2 pb-2" v-if="!isEditing">
       <button @click="goBack" class="btn btn-secondary">Back</button>
       <button @click="startEdit" class="btn btn-primary">Edit</button>
-      <button @click="deleteVersion" class="btn btn-danger ms-auto">
+      <button @click="deleteVersion" class="btn btn-outline-danger ms-auto">
         Delete
       </button>
     </div>

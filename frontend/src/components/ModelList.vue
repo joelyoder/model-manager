@@ -152,13 +152,13 @@
           <button
             v-if="card.version.filePath"
             @click="goToModel(card.model.ID, card.version.ID)"
-            class="btn btn-primary"
+            class="btn btn-outline-primary"
           >
             More details
           </button>
           <button
             @click="deleteVersion(card.version.ID)"
-            class="btn btn-danger ms-auto"
+            class="btn btn-outline-danger ms-auto"
           >
             Delete
           </button>
