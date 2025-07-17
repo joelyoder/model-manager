@@ -65,6 +65,27 @@ func ImportModels(c *gin.Context) {
 			}
 		}
 
+		baseModel := r.BaseModel
+		if strings.TrimSpace(baseModel) == "" {
+			for _, g := range r.Groups {
+				if strings.EqualFold(g, "Illustrious") {
+					baseModel = "Illustrious"
+					break
+				}
+			}
+			if strings.TrimSpace(baseModel) == "" {
+				for _, g := range r.Groups {
+					if strings.EqualFold(g, "Pony") {
+						baseModel = "Pony"
+						break
+					}
+				}
+			}
+			if strings.TrimSpace(baseModel) == "" {
+				baseModel = "SD 1.5"
+			}
+		}
+
 		var model models.Model
 		database.DB.Where("civit_id = ?", modelID).First(&model)
 		if model.ID == 0 {
@@ -95,7 +116,7 @@ func ImportModels(c *gin.Context) {
 			ModelID:        model.ID,
 			VersionID:      versionID,
 			Name:           verName,
-			BaseModel:      r.BaseModel,
+			BaseModel:      baseModel,
 			TrainedWords:   r.PositivePrompts,
 			Nsfw:           nsfw,
 			Type:           r.ModelType,
@@ -126,6 +147,13 @@ func extractID(re *regexp.Regexp, url string) int {
 }
 
 func splitName(name string) (string, string) {
+	if strings.HasSuffix(name, "]") {
+		if i := strings.LastIndex(name, "["); i != -1 {
+			model := strings.TrimSpace(name[:i])
+			ver := strings.TrimRight(strings.TrimSpace(name[i+1:]), "]")
+			return model, ver
+		}
+	}
 	if strings.HasSuffix(name, ")") {
 		if i := strings.LastIndex(name, "("); i != -1 {
 			model := strings.TrimSpace(name[:i])
