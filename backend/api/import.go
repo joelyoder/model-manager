@@ -2,7 +2,10 @@ package api
 
 import (
 	"encoding/json"
+	"errors"
+	"fmt"
 	"io"
+	"log"
 	"net/http"
 	"regexp"
 	"strconv"
@@ -13,6 +16,8 @@ import (
 	"model-manager/backend/models"
 
 	"github.com/gin-gonic/gin"
+	"gorm.io/gorm"
+	"gorm.io/gorm/logger"
 )
 
 var modelIDRegex = regexp.MustCompile(`models/(\d+)`)
@@ -48,11 +53,15 @@ func ImportModels(c *gin.Context) {
 		}
 	}
 
+	successCount := 0
+	failures := make([]string, 0)
+
 	for _, r := range records {
 		modelID := extractID(modelIDRegex, r.URL)
-		versionID := extractID(versionIDRegex, r.URL)
-		if modelID == 0 || versionID == 0 {
-			continue
+		origVerID := extractID(versionIDRegex, r.URL)
+		versionID := origVerID
+		if versionID == 0 {
+			versionID = -int(time.Now().UnixNano())
 		}
 
 		modelName, verName := splitName(r.Name)
@@ -65,8 +74,19 @@ func ImportModels(c *gin.Context) {
 			}
 		}
 
+		baseModel := resolveBaseModel(r.BaseModel, r.Groups)
+
 		var model models.Model
-		database.DB.Where("civit_id = ?", modelID).First(&model)
+		err = database.DB.Session(&gorm.Session{Logger: logger.Default.LogMode(logger.Silent)}).
+			Where("civit_id = ?", modelID).First(&model).Error
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			err = nil
+		}
+		if err != nil {
+			log.Printf("failed to load model %s: %v", r.Name, err)
+			failures = append(failures, fmt.Sprintf("%s: %v", r.Name, err))
+			continue
+		}
 		if model.ID == 0 {
 			model = models.Model{
 				CivitID:     modelID,
@@ -76,13 +96,29 @@ func ImportModels(c *gin.Context) {
 				Nsfw:        nsfw,
 				Description: r.Description,
 			}
-			database.DB.Create(&model)
+			if err = database.DB.Create(&model).Error; err != nil {
+				log.Printf("failed to create model %s: %v", r.Name, err)
+				failures = append(failures, fmt.Sprintf("%s: %v", r.Name, err))
+				continue
+			}
 		}
 
 		var ver models.Version
-		database.DB.Unscoped().Where("version_id = ?", versionID).First(&ver)
-		if ver.ID != 0 {
-			continue
+		if origVerID != 0 {
+			err = database.DB.Session(&gorm.Session{Logger: logger.Default.LogMode(logger.Silent)}).
+				Unscoped().Where("version_id = ?", origVerID).First(&ver).Error
+			if errors.Is(err, gorm.ErrRecordNotFound) {
+				err = nil
+			}
+			if err != nil {
+				log.Printf("failed to check version for %s: %v", r.Name, err)
+				failures = append(failures, fmt.Sprintf("%s: %v", r.Name, err))
+				continue
+			}
+			if ver.ID != 0 {
+				// Version already exists, skip
+				continue
+			}
 		}
 
 		createdStr := ""
@@ -95,7 +131,7 @@ func ImportModels(c *gin.Context) {
 			ModelID:        model.ID,
 			VersionID:      versionID,
 			Name:           verName,
-			BaseModel:      r.BaseModel,
+			BaseModel:      baseModel,
 			TrainedWords:   r.PositivePrompts,
 			Nsfw:           nsfw,
 			Type:           r.ModelType,
@@ -107,10 +143,21 @@ func ImportModels(c *gin.Context) {
 			FilePath:       r.Location,
 			CivitCreatedAt: createdStr,
 		}
-		database.DB.Create(&ver)
-		if fields != "" {
+		if err = database.DB.Create(&ver).Error; err != nil {
+			log.Printf("failed to create version for %s: %v", r.Name, err)
+			failures = append(failures, fmt.Sprintf("%s: %v", r.Name, err))
+			continue
+		}
+		successCount++
+
+		if fields != "" && origVerID != 0 {
 			_ = refreshVersionData(int(ver.ID), fields)
 		}
+	}
+
+	log.Printf("Import complete: %d succeeded, %d failed", successCount, len(failures))
+	if len(failures) > 0 {
+		log.Printf("Failed models: %s", strings.Join(failures, ", "))
 	}
 
 	c.JSON(http.StatusOK, gin.H{"message": "import complete"})
@@ -125,7 +172,30 @@ func extractID(re *regexp.Regexp, url string) int {
 	return 0
 }
 
+func resolveBaseModel(base string, groups []string) string {
+	base = strings.TrimSpace(base)
+	if base != "" {
+		return base
+	}
+	for _, g := range groups {
+		if strings.EqualFold(g, "Illustrious") {
+			return "Illustrious"
+		}
+		if strings.EqualFold(g, "Pony") {
+			return "Pony"
+		}
+	}
+	return "SD 1.5"
+}
+
 func splitName(name string) (string, string) {
+	if strings.HasSuffix(name, "]") {
+		if i := strings.LastIndex(name, "["); i != -1 {
+			model := strings.TrimSpace(name[:i])
+			ver := strings.TrimRight(strings.TrimSpace(name[i+1:]), "]")
+			return model, ver
+		}
+	}
 	if strings.HasSuffix(name, ")") {
 		if i := strings.LastIndex(name, "("); i != -1 {
 			model := strings.TrimSpace(name[:i])
