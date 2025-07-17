@@ -6,7 +6,7 @@ import "gorm.io/gorm"
 // including its local path and metadata extracted from CivitAI.
 type VersionImage struct {
 	gorm.Model
-	VersionID uint   `json:"versionId"`
+	VersionID uint   `gorm:"index" json:"versionId"`
 	Path      string `json:"path"`
 	Width     int    `json:"width"`
 	Height    int    `json:"height"`

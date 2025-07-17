@@ -9,11 +9,13 @@ import (
 	"os"
 	"strconv"
 	"strings"
+	"sync"
 
 	"model-manager/backend/database"
 	"model-manager/backend/models"
 
 	"github.com/gin-gonic/gin"
+	"gorm.io/gorm"
 )
 
 func GetModels(c *gin.Context) {
@@ -29,7 +31,12 @@ func GetModels(c *gin.Context) {
 	search := c.Query("search")
 
 	var modelsList []models.Model
-	q := database.DB.Preload("Versions")
+	q := database.DB
+	if c.DefaultQuery("includeVersions", "1") == "1" {
+		q = q.Preload("Versions", func(db *gorm.DB) *gorm.DB {
+			return db.Order("id DESC").Limit(5)
+		})
+	}
 	if search != "" {
 		q = q.Where("LOWER(name) LIKE ?", "%"+strings.ToLower(search)+"%")
 	}
@@ -271,115 +278,129 @@ func SyncVersionByID(c *gin.Context) {
 	c.JSON(200, gin.H{"message": "Version synced", "versionId": verData.ID})
 }
 
-func processModels(items []CivitModel, apiKey string) {
-	for _, item := range items {
-		var existing models.Model
-		database.DB.Where("civit_id = ?", item.ID).Find(&existing)
-		if existing.ID == 0 {
-			existing = models.Model{
-				CivitID: item.ID,
-				Name:    item.Name,
-				Type:    item.Type,
-			}
-			database.DB.Create(&existing)
-		} else if existing.Type == "" {
-			// populate missing type on older records
-			existing.Type = item.Type
-			database.DB.Save(&existing)
+func processModel(item CivitModel, apiKey string) {
+	var existing models.Model
+	database.DB.Where("civit_id = ?", item.ID).Find(&existing)
+	if existing.ID == 0 {
+		existing = models.Model{
+			CivitID: item.ID,
+			Name:    item.Name,
+			Type:    item.Type,
 		}
-
-		for _, version := range item.ModelVersions {
-			verData, err := FetchModelVersion(apiKey, version.ID)
-			if err != nil {
-				continue
-			}
-
-			var versionExists models.Version
-			database.DB.Unscoped().Where("version_id = ?", verData.ID).Find(&versionExists)
-			if versionExists.ID > 0 {
-				log.Printf("Skipping download: version %d already exists", verData.ID)
-				continue
-			}
-
-			var filePath, imagePath string
-			var imgW, imgH int
-			var fileSHA string
-			var downloadURL string
-			if len(verData.ModelFiles) > 0 {
-				downloadURL = verData.ModelFiles[0].DownloadURL
-				fileName := verData.ModelFiles[0].Name
-				filePath, _ = DownloadFile(downloadURL, "./backend/downloads/"+item.Type, fileName)
-				if info, err := os.Stat(filePath); err == nil && info.Size() < 110 {
-					os.Remove(filePath)
-					log.Printf("downloaded %s is too small", fileName)
-					continue
-				}
-				fileSHA = verData.ModelFiles[0].Hashes.SHA256
-			}
-
-			versionRec := models.Version{
-				ModelID:              existing.ID,
-				VersionID:            verData.ID,
-				Name:                 verData.Name,
-				BaseModel:            verData.BaseModel,
-				EarlyAccessTimeFrame: verData.EarlyAccessTimeFrame,
-				SizeKB:               verData.ModelFiles[0].SizeKB,
-				TrainedWords:         strings.Join(verData.TrainedWords, ","),
-				Nsfw:                 item.Nsfw,
-				Type:                 item.Type,
-				Tags:                 strings.Join(item.Tags, ","),
-				Description:          item.Description,
-				Mode:                 item.Mode,
-				ModelURL:             fmt.Sprintf("https://civitai.com/models/%d?modelVersionId=%d", item.ID, verData.ID),
-				CivitCreatedAt:       verData.Created,
-				CivitUpdatedAt:       verData.Updated,
-				SHA256:               fileSHA,
-				DownloadURL:          downloadURL,
-				FilePath:             filePath,
-			}
-			database.DB.Create(&versionRec)
-
-			for idx, img := range verData.Images {
-				imageURL := img.URL
-				if imageURL == "" {
-					imageURL = img.URLSmall
-				}
-				if imageURL == "" {
-					continue
-				}
-				imgPath, _ := DownloadFile(imageURL, "./backend/images/"+item.Type, fmt.Sprintf("%d_%d.jpg", verData.ID, idx))
-				w, h, _ := GetImageDimensions(imgPath)
-				hash, _ := FileHash(imgPath)
-				metaBytes, _ := json.Marshal(img.Meta)
-				database.DB.Create(&models.VersionImage{
-					VersionID: versionRec.ID,
-					Path:      imgPath,
-					Width:     w,
-					Height:    h,
-					Hash:      hash,
-					Meta:      string(metaBytes),
-				})
-				if idx == 0 {
-					imagePath = imgPath
-					imgW = w
-					imgH = h
-				}
-			}
-
-			versionRec.ImagePath = imagePath
-			database.DB.Save(&versionRec)
-
-			if existing.ImagePath == "" && imagePath != "" {
-				existing.ImagePath = imagePath
-				existing.ImageWidth = imgW
-				existing.ImageHeight = imgH
-			}
-			if existing.FilePath == "" && filePath != "" {
-				existing.FilePath = filePath
-			}
-			database.DB.Save(&existing)
-		}
+		database.DB.Create(&existing)
+	} else if existing.Type == "" {
+		// populate missing type on older records
+		existing.Type = item.Type
+		database.DB.Save(&existing)
 	}
+
+	for _, version := range item.ModelVersions {
+		verData, err := FetchModelVersion(apiKey, version.ID)
+		if err != nil {
+			continue
+		}
+
+		var versionExists models.Version
+		database.DB.Unscoped().Where("version_id = ?", verData.ID).Find(&versionExists)
+		if versionExists.ID > 0 {
+			log.Printf("Skipping download: version %d already exists", verData.ID)
+			continue
+		}
+
+		var filePath, imagePath string
+		var imgW, imgH int
+		var fileSHA string
+		var downloadURL string
+		if len(verData.ModelFiles) > 0 {
+			downloadURL = verData.ModelFiles[0].DownloadURL
+			fileName := verData.ModelFiles[0].Name
+			filePath, _ = DownloadFile(downloadURL, "./backend/downloads/"+item.Type, fileName)
+			if info, err := os.Stat(filePath); err == nil && info.Size() < 110 {
+				os.Remove(filePath)
+				log.Printf("downloaded %s is too small", fileName)
+				continue
+			}
+			fileSHA = verData.ModelFiles[0].Hashes.SHA256
+		}
+
+		versionRec := models.Version{
+			ModelID:              existing.ID,
+			VersionID:            verData.ID,
+			Name:                 verData.Name,
+			BaseModel:            verData.BaseModel,
+			EarlyAccessTimeFrame: verData.EarlyAccessTimeFrame,
+			SizeKB:               verData.ModelFiles[0].SizeKB,
+			TrainedWords:         strings.Join(verData.TrainedWords, ","),
+			Nsfw:                 item.Nsfw,
+			Type:                 item.Type,
+			Tags:                 strings.Join(item.Tags, ","),
+			Description:          item.Description,
+			Mode:                 item.Mode,
+			ModelURL:             fmt.Sprintf("https://civitai.com/models/%d?modelVersionId=%d", item.ID, verData.ID),
+			CivitCreatedAt:       verData.Created,
+			CivitUpdatedAt:       verData.Updated,
+			SHA256:               fileSHA,
+			DownloadURL:          downloadURL,
+			FilePath:             filePath,
+		}
+		database.DB.Create(&versionRec)
+
+		for idx, img := range verData.Images {
+			imageURL := img.URL
+			if imageURL == "" {
+				imageURL = img.URLSmall
+			}
+			if imageURL == "" {
+				continue
+			}
+			imgPath, _ := DownloadFile(imageURL, "./backend/images/"+item.Type, fmt.Sprintf("%d_%d.jpg", verData.ID, idx))
+			w, h, _ := GetImageDimensions(imgPath)
+			hash, _ := FileHash(imgPath)
+			metaBytes, _ := json.Marshal(img.Meta)
+			database.DB.Create(&models.VersionImage{
+				VersionID: versionRec.ID,
+				Path:      imgPath,
+				Width:     w,
+				Height:    h,
+				Hash:      hash,
+				Meta:      string(metaBytes),
+			})
+			if idx == 0 {
+				imagePath = imgPath
+				imgW = w
+				imgH = h
+			}
+		}
+
+		versionRec.ImagePath = imagePath
+		database.DB.Save(&versionRec)
+
+		if existing.ImagePath == "" && imagePath != "" {
+			existing.ImagePath = imagePath
+			existing.ImageWidth = imgW
+			existing.ImageHeight = imgH
+		}
+		if existing.FilePath == "" && filePath != "" {
+			existing.FilePath = filePath
+		}
+		database.DB.Save(&existing)
+	}
+}
+
+func processModels(items []CivitModel, apiKey string) {
+	sem := make(chan struct{}, 4)
+	var wg sync.WaitGroup
+	for _, item := range items {
+		itemCopy := item
+		sem <- struct{}{}
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			processModel(itemCopy, apiKey)
+			<-sem
+		}()
+	}
+	wg.Wait()
 }
 
 // DeleteModel removes a model and its versions from the database. It also deletes any associated files and images stored on disk.

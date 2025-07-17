@@ -44,16 +44,14 @@
         </div>
 
         <div class="form-check form-switch d-flex gap-2 align-items-center m-2">
-          <input 
+          <input
             class="form-check-input"
             type="checkbox"
             role="switch"
             id="hide-nsfw"
             v-model="hideNsfw"
           />
-          <label class="form-check-label" for="hide-nsfw"
-            >Hide NSFW</label
-          >
+          <label class="form-check-label" for="hide-nsfw">Hide NSFW</label>
         </div>
       </div>
       <div class="col-md-6 d-flex align-content-start flex-wrap gap-2">
@@ -215,7 +213,7 @@ const mapModel = (model) => {
 };
 
 const fetchModels = async (reset = false) => {
-  const params = { page: page.value, limit };
+  const params = { page: page.value, limit, includeVersions: 1 };
   if (search.value) params.search = search.value;
   const res = await axios.get("/api/models", { params });
   const fetched = res.data.map(mapModel);
@@ -401,5 +399,4 @@ const loadMore = async () => {
   page.value += 1;
   await fetchModels();
 };
-
 </script>

@@ -4,9 +4,9 @@ import "gorm.io/gorm"
 
 type Version struct {
 	gorm.Model
-	ModelID              uint    `json:"modelId"`
+	ModelID              uint    `gorm:"index" json:"modelId"`
 	VersionID            int     `gorm:"uniqueIndex" json:"versionId"`
-	Name                 string  `json:"name"`
+	Name                 string  `gorm:"index" json:"name"`
 	BaseModel            string  `json:"baseModel"`
 	EarlyAccessTimeFrame int     `json:"earlyAccessTimeFrame"`
 	SizeKB               float64 `json:"sizeKB"`
