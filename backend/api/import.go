@@ -3,7 +3,9 @@ package api
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io"
+	"log"
 	"net/http"
 	"regexp"
 	"strconv"
@@ -51,9 +53,16 @@ func ImportModels(c *gin.Context) {
 		}
 	}
 
+	successCount := 0
+	failures := make([]string, 0)
+
 	for _, r := range records {
 		modelID := extractID(modelIDRegex, r.URL)
-		versionID := extractID(versionIDRegex, r.URL)
+		origVerID := extractID(versionIDRegex, r.URL)
+		versionID := origVerID
+		if versionID == 0 {
+			versionID = -int(time.Now().UnixNano())
+		}
 
 		modelName, verName := splitName(r.Name)
 		tags := strings.Join(r.Groups, ",")
@@ -74,6 +83,8 @@ func ImportModels(c *gin.Context) {
 			err = nil
 		}
 		if err != nil {
+			log.Printf("failed to load model %s: %v", r.Name, err)
+			failures = append(failures, fmt.Sprintf("%s: %v", r.Name, err))
 			continue
 		}
 		if model.ID == 0 {
@@ -85,20 +96,29 @@ func ImportModels(c *gin.Context) {
 				Nsfw:        nsfw,
 				Description: r.Description,
 			}
-			database.DB.Create(&model)
+			if err = database.DB.Create(&model).Error; err != nil {
+				log.Printf("failed to create model %s: %v", r.Name, err)
+				failures = append(failures, fmt.Sprintf("%s: %v", r.Name, err))
+				continue
+			}
 		}
 
 		var ver models.Version
-		err = database.DB.Session(&gorm.Session{Logger: logger.Default.LogMode(logger.Silent)}).
-			Unscoped().Where("version_id = ?", versionID).First(&ver).Error
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			err = nil
-		}
-		if err != nil {
-			continue
-		}
-		if ver.ID != 0 {
-			continue
+		if origVerID != 0 {
+			err = database.DB.Session(&gorm.Session{Logger: logger.Default.LogMode(logger.Silent)}).
+				Unscoped().Where("version_id = ?", origVerID).First(&ver).Error
+			if errors.Is(err, gorm.ErrRecordNotFound) {
+				err = nil
+			}
+			if err != nil {
+				log.Printf("failed to check version for %s: %v", r.Name, err)
+				failures = append(failures, fmt.Sprintf("%s: %v", r.Name, err))
+				continue
+			}
+			if ver.ID != 0 {
+				// Version already exists, skip
+				continue
+			}
 		}
 
 		createdStr := ""
@@ -123,10 +143,21 @@ func ImportModels(c *gin.Context) {
 			FilePath:       r.Location,
 			CivitCreatedAt: createdStr,
 		}
-		database.DB.Create(&ver)
-		if fields != "" && versionID != 0 {
+		if err = database.DB.Create(&ver).Error; err != nil {
+			log.Printf("failed to create version for %s: %v", r.Name, err)
+			failures = append(failures, fmt.Sprintf("%s: %v", r.Name, err))
+			continue
+		}
+		successCount++
+
+		if fields != "" && origVerID != 0 {
 			_ = refreshVersionData(int(ver.ID), fields)
 		}
+	}
+
+	log.Printf("Import complete: %d succeeded, %d failed", successCount, len(failures))
+	if len(failures) > 0 {
+		log.Printf("Failed models: %s", strings.Join(failures, ", "))
 	}
 
 	c.JSON(http.StatusOK, gin.H{"message": "import complete"})
