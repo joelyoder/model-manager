@@ -44,16 +44,14 @@
         </div>
 
         <div class="form-check form-switch d-flex gap-2 align-items-center m-2">
-          <input 
+          <input
             class="form-check-input"
             type="checkbox"
             role="switch"
             id="hide-nsfw"
             v-model="hideNsfw"
           />
-          <label class="form-check-label" for="hide-nsfw"
-            >Hide NSFW</label
-          >
+          <label class="form-check-label" for="hide-nsfw">Hide NSFW</label>
         </div>
       </div>
       <div class="col-md-6 d-flex align-content-start flex-wrap gap-2">
@@ -125,47 +123,54 @@
 
   <div class="m-4 text-center" v-if="models.length === 0">No models found.</div>
 
-  <div class="row row-cols-1 row-cols-md-3 row-cols-lg-5 g-4 p-4">
-    <div v-for="card in versionCards" :key="card.version.ID" class="col">
-      <div class="card h-100">
-        <img
-          v-if="card.imageUrl"
-          :src="card.imageUrl"
-          :width="card.model.imageWidth"
-          :height="card.model.imageHeight"
-          class="img-fluid card-img-top"
-        />
-        <div class="card-img-overlay z-2">
-          <span class="badge rounded-pill text-bg-primary">{{
-            card.version.type
-          }}</span>
-          <span class="ms-1 badge rounded-pill text-bg-success">{{
-            card.version.baseModel
-          }}</span>
-        </div>
-        <div class="card-body z-3">
-          <h3 class="card-title h5">
-            {{ card.model.name }} - {{ card.version.name }}
-          </h3>
-        </div>
-        <div class="mb-2 d-flex gap-2 card-footer z-2">
-          <button
-            v-if="card.version.filePath"
-            @click="goToModel(card.model.ID, card.version.ID)"
-            class="btn btn-outline-primary"
-          >
-            More details
-          </button>
-          <button
-            @click="deleteVersion(card.version.ID)"
-            class="btn btn-outline-danger ms-auto"
-          >
-            Delete
-          </button>
+  <RecycleScroller
+    :items="versionCards"
+    :item-size="320"
+    key-field="version.ID"
+    class="row row-cols-1 row-cols-md-3 row-cols-lg-5 g-4 p-4"
+  >
+    <template #default="{ item: card }">
+      <div class="col">
+        <div class="card h-100">
+          <img
+            v-if="card.imageUrl"
+            :src="card.imageUrl"
+            :width="card.model.imageWidth"
+            :height="card.model.imageHeight"
+            class="img-fluid card-img-top"
+          />
+          <div class="card-img-overlay z-2">
+            <span class="badge rounded-pill text-bg-primary">{{
+              card.version.type
+            }}</span>
+            <span class="ms-1 badge rounded-pill text-bg-success">{{
+              card.version.baseModel
+            }}</span>
+          </div>
+          <div class="card-body z-3">
+            <h3 class="card-title h5">
+              {{ card.model.name }} - {{ card.version.name }}
+            </h3>
+          </div>
+          <div class="mb-2 d-flex gap-2 card-footer z-2">
+            <button
+              v-if="card.version.filePath"
+              @click="goToModel(card.model.ID, card.version.ID)"
+              class="btn btn-outline-primary"
+            >
+              More details
+            </button>
+            <button
+              @click="deleteVersion(card.version.ID)"
+              class="btn btn-outline-danger ms-auto"
+            >
+              Delete
+            </button>
+          </div>
         </div>
       </div>
-    </div>
-  </div>
+    </template>
+  </RecycleScroller>
   <div v-if="hasMore" class="text-center mb-4">
     <button @click="loadMore" class="btn btn-secondary">Load More</button>
   </div>
@@ -175,6 +180,8 @@
 import { ref, computed, onMounted, watch } from "vue";
 import { useRouter } from "vue-router";
 import axios from "axios";
+import { RecycleScroller } from "vue-virtual-scroller";
+import "vue-virtual-scroller/dist/style.css";
 import { showToast, showConfirm } from "../utils/ui";
 import debounce from "../utils/debounce";
 
@@ -215,7 +222,7 @@ const mapModel = (model) => {
 };
 
 const fetchModels = async (reset = false) => {
-  const params = { page: page.value, limit };
+  const params = { page: page.value, limit, includeVersions: 1 };
   if (search.value) params.search = search.value;
   const res = await axios.get("/api/models", { params });
   const fetched = res.data.map(mapModel);
@@ -401,5 +408,4 @@ const loadMore = async () => {
   page.value += 1;
   await fetchModels();
 };
-
 </script>
