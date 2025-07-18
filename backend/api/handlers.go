@@ -34,7 +34,7 @@ func GetModels(c *gin.Context) {
 	q := database.DB
 	if c.DefaultQuery("includeVersions", "1") == "1" {
 		q = q.Preload("Versions", func(db *gorm.DB) *gorm.DB {
-			return db.Order("id DESC").Limit(5)
+			return db.Order("id DESC").Limit(limit)
 		})
 	}
 	if search != "" {
@@ -42,6 +42,18 @@ func GetModels(c *gin.Context) {
 	}
 	q.Limit(limit).Offset((page - 1) * limit).Find(&modelsList)
 	c.JSON(http.StatusOK, modelsList)
+}
+
+// GetModelsCount returns the total number of models matching the optional search query
+func GetModelsCount(c *gin.Context) {
+	search := c.Query("search")
+	var count int64
+	q := database.DB.Model(&models.Model{})
+	if search != "" {
+		q = q.Where("LOWER(name) LIKE ?", "%"+strings.ToLower(search)+"%")
+	}
+	q.Count(&count)
+	c.JSON(http.StatusOK, gin.H{"count": count})
 }
 
 // GetModel returns a single model by ID with its versions
