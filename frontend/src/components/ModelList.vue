@@ -368,7 +368,7 @@ const loadVersions = async () => {
     const vid = extractVersionId(modelUrl.value);
     if (vid && res.data.some((v) => v.id === Number(vid))) {
       selectedVersionId.value = vid;
-    } else if (res.data.length) {
+    } else if (res.data.length === 1) {
       selectedVersionId.value = String(res.data[0].id);
     } else {
       selectedVersionId.value = "";
