@@ -1,3 +1,21 @@
 body {
   margin: 0;
 }
+
+.model-grid {
+  display: grid;
+  gap: 1.5rem;
+  grid-template-columns: repeat(auto-fill, minmax(min(350px, 100%), 1fr));
+  justify-content: center;
+}
+
+.model-card {
+  width: 100%;
+  max-width: 350px;
+}
+
+.model-card img {
+  width: 100%;
+  height: 450px;
+  object-fit: cover;
+}

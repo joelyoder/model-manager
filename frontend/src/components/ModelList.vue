@@ -115,10 +115,8 @@
             :style="{ width: downloadProgress + '%' }"
           >
             {{ downloadProgress }}%
-          </div>
         </div>
       </div>
-    </div>
   </div>
 
   <nav v-if="totalPages > 1" class="mb-4">
@@ -142,16 +140,14 @@
 
   <div class="m-4 text-center" v-if="models.length === 0">No models found.</div>
 
-  <div class="row row-cols-1 row-cols-md-3 row-cols-lg-5 g-4 p-4">
-    <div v-for="card in versionCards" :key="card.version.ID" class="col">
-      <div class="card h-100">
-        <img
-          v-if="card.imageUrl"
-          :src="card.imageUrl"
-          :width="card.model.imageWidth"
-          :height="card.model.imageHeight"
-          class="img-fluid card-img-top"
-        />
+  <div class="model-grid p-4">
+    <div v-for="card in versionCards" :key="card.version.ID" class="model-card card h-100">
+      <img
+        v-if="card.imageUrl"
+        :src="card.imageUrl"
+        class="card-img-top"
+        style="width: 100%; height: 450px; object-fit: cover"
+      />
         <div class="card-img-overlay z-2">
           <span class="badge rounded-pill text-bg-primary">{{
             card.version.type
@@ -180,7 +176,6 @@
           </button>
         </div>
       </div>
-    </div>
   </div>
   <nav v-if="totalPages > 1" class="mb-4">
     <ul class="pagination justify-content-center">
