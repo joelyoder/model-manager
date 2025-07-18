@@ -148,7 +148,6 @@
         </div>
         <div class="mb-2 d-flex gap-2 card-footer z-2">
           <button
-            v-if="card.version.filePath"
             @click="goToModel(card.model.ID, card.version.ID)"
             class="btn btn-outline-primary"
           >
