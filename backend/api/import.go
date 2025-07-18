@@ -7,6 +7,8 @@ import (
 	"io"
 	"log"
 	"net/http"
+	"os"
+	"path/filepath"
 	"regexp"
 	"strconv"
 	"strings"
@@ -127,6 +129,23 @@ func ImportModels(c *gin.Context) {
 			createdStr = t.Format(time.RFC3339)
 		}
 
+		// Look for a preview image located next to the model file
+		var imagePath string
+		var imgW, imgH int
+		if r.Location != "" {
+			base := strings.TrimSuffix(r.Location, filepath.Ext(r.Location))
+			for _, ext := range []string{".jpg", ".jpeg", ".png"} {
+				cand := base + ext
+				if _, err := os.Stat(cand); err == nil {
+					imagePath = cand
+					w, h, _ := GetImageDimensions(cand)
+					imgW = w
+					imgH = h
+					break
+				}
+			}
+		}
+
 		ver = models.Version{
 			ModelID:        model.ID,
 			VersionID:      versionID,
@@ -141,12 +160,20 @@ func ImportModels(c *gin.Context) {
 			SHA256:         r.SHA256Hash,
 			DownloadURL:    r.DownloadURL,
 			FilePath:       r.Location,
+			ImagePath:      imagePath,
 			CivitCreatedAt: createdStr,
 		}
 		if err = database.DB.Create(&ver).Error; err != nil {
 			log.Printf("failed to create version for %s: %v", r.Name, err)
 			failures = append(failures, fmt.Sprintf("%s: %v", r.Name, err))
 			continue
+		}
+
+		if model.ImagePath == "" && imagePath != "" {
+			model.ImagePath = imagePath
+			model.ImageWidth = imgW
+			model.ImageHeight = imgH
+			database.DB.Save(&model)
 		}
 		successCount++
 
