@@ -129,14 +129,15 @@ func ImportModels(c *gin.Context) {
 			createdStr = t.Format(time.RFC3339)
 		}
 
-		// Look for a preview image located next to the model file
+		// Look for a preview image stored under /images/<type>/
 		var imagePath string
 		var imgW, imgH int
 		if r.Location != "" {
-			base := strings.TrimSuffix(r.Location, filepath.Ext(r.Location))
+			base := strings.TrimSuffix(filepath.Base(r.Location), filepath.Ext(r.Location))
+			imgDir := filepath.Join("./backend/images", r.ModelType)
 			for _, ext := range []string{".jpg", ".jpeg", ".png"} {
-				cand := base + ext
-				if _, err := os.Stat(cand); err == nil {
+				cand := filepath.Join(imgDir, base+ext)
+				if info, err := os.Stat(cand); err == nil && !info.IsDir() {
 					imagePath = cand
 					w, h, _ := GetImageDimensions(cand)
 					imgW = w
