@@ -61,6 +61,15 @@ func ImportModels(c *gin.Context) {
 	for _, r := range records {
 		modelID := extractID(modelIDRegex, r.URL)
 		origVerID := extractID(versionIDRegex, r.URL)
+
+		if origVerID == 0 && modelID != 0 {
+			apiKey := getCivitaiAPIKey()
+			modelData, err := FetchCivitModel(apiKey, modelID)
+			if err == nil && len(modelData.ModelVersions) == 1 {
+				origVerID = modelData.ModelVersions[0].ID
+			}
+		}
+
 		versionID := origVerID
 		if versionID == 0 {
 			versionID = -int(time.Now().UnixNano())
