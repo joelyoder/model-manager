@@ -115,8 +115,10 @@
             :style="{ width: downloadProgress + '%' }"
           >
             {{ downloadProgress }}%
+          </div>
         </div>
       </div>
+    </div>
   </div>
 
   <nav v-if="totalPages > 1" class="mb-4">
