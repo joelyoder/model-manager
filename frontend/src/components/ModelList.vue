@@ -121,6 +121,25 @@
     </div>
   </div>
 
+  <nav v-if="totalPages > 1" class="mb-4">
+    <ul class="pagination justify-content-center">
+      <li class="page-item" :class="{ disabled: page === 1 }">
+        <a class="page-link" href="#" @click.prevent="changePage(page - 1)">Previous</a>
+      </li>
+      <li
+        v-for="p in totalPages"
+        :key="p"
+        class="page-item"
+        :class="{ active: p === page }"
+      >
+        <a class="page-link" href="#" @click.prevent="changePage(p)">{{ p }}</a>
+      </li>
+      <li class="page-item" :class="{ disabled: page === totalPages }">
+        <a class="page-link" href="#" @click.prevent="changePage(page + 1)">Next</a>
+      </li>
+    </ul>
+  </nav>
+
   <div class="m-4 text-center" v-if="models.length === 0">No models found.</div>
 
   <div class="row row-cols-1 row-cols-md-3 row-cols-lg-5 g-4 p-4">
