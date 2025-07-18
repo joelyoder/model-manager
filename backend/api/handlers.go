@@ -34,7 +34,7 @@ func GetModels(c *gin.Context) {
 	q := database.DB
 	if c.DefaultQuery("includeVersions", "1") == "1" {
 		q = q.Preload("Versions", func(db *gorm.DB) *gorm.DB {
-			return db.Order("id DESC").Limit(5)
+			return db.Order("id DESC").Limit(limit)
 		})
 	}
 	if search != "" {
