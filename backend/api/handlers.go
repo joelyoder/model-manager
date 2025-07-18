@@ -44,6 +44,18 @@ func GetModels(c *gin.Context) {
 	c.JSON(http.StatusOK, modelsList)
 }
 
+// GetModelsCount returns the total number of models matching the optional search query
+func GetModelsCount(c *gin.Context) {
+	search := c.Query("search")
+	var count int64
+	q := database.DB.Model(&models.Model{})
+	if search != "" {
+		q = q.Where("LOWER(name) LIKE ?", "%"+strings.ToLower(search)+"%")
+	}
+	q.Count(&count)
+	c.JSON(http.StatusOK, gin.H{"count": count})
+}
+
 // GetModel returns a single model by ID with its versions
 func GetModel(c *gin.Context) {
 	idStr := c.Param("id")

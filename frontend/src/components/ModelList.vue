@@ -163,9 +163,24 @@
       </div>
     </div>
   </div>
-  <div v-if="hasMore" class="text-center mb-4">
-    <button @click="loadMore" class="btn btn-secondary">Load More</button>
-  </div>
+  <nav v-if="totalPages > 1" class="mb-4">
+    <ul class="pagination justify-content-center">
+      <li class="page-item" :class="{ disabled: page === 1 }">
+        <a class="page-link" href="#" @click.prevent="changePage(page - 1)">Previous</a>
+      </li>
+      <li
+        v-for="p in totalPages"
+        :key="p"
+        class="page-item"
+        :class="{ active: p === page }"
+      >
+        <a class="page-link" href="#" @click.prevent="changePage(p)">{{ p }}</a>
+      </li>
+      <li class="page-item" :class="{ disabled: page === totalPages }">
+        <a class="page-link" href="#" @click.prevent="changePage(page + 1)">Next</a>
+      </li>
+    </ul>
+  </nav>
 </template>
 
 <script setup>
@@ -192,7 +207,7 @@ const router = useRouter();
 
 const page = ref(1);
 const limit = 50;
-const hasMore = ref(true);
+const total = ref(0);
 
 const mapModel = (model) => {
   const imageUrl = model.imagePath
@@ -211,27 +226,33 @@ const mapModel = (model) => {
   };
 };
 
-const fetchModels = async (reset = false) => {
+const fetchModels = async () => {
   const params = { page: page.value, limit, includeVersions: 1 };
   if (search.value) params.search = search.value;
   const res = await axios.get("/api/models", { params });
-  const fetched = res.data.map(mapModel);
-  if (reset) {
-    models.value = fetched;
-  } else {
-    models.value = [...models.value, ...fetched];
-  }
-  hasMore.value = fetched.length === limit;
+  models.value = res.data.map(mapModel);
 };
 
-const debouncedFetchModels = debounce(() => fetchModels(true), 300);
+const fetchTotal = async () => {
+  const params = {};
+  if (search.value) params.search = search.value;
+  const res = await axios.get("/api/models/count", { params });
+  total.value = res.data.count || 0;
+};
 
-onMounted(() => fetchModels(true));
+const debouncedUpdate = debounce(async () => {
+  page.value = 1;
+  await fetchTotal();
+  await fetchModels();
+}, 300);
+
+onMounted(async () => {
+  await fetchTotal();
+  await fetchModels();
+});
 
 watch(search, () => {
-  page.value = 1;
-  hasMore.value = true;
-  debouncedFetchModels();
+  debouncedUpdate();
 });
 
 const baseModels = computed(() => {
@@ -253,6 +274,8 @@ const modelTypes = computed(() => {
   });
   return Array.from(set);
 });
+
+const totalPages = computed(() => Math.ceil(total.value / limit));
 
 const filteredModels = computed(() => {
   if (!search.value) return models.value;
@@ -366,7 +389,8 @@ const downloadSelectedVersion = async () => {
   try {
     await axios.post(`/api/sync/version/${selectedVersionId.value}`);
     page.value = 1;
-    await fetchModels(true);
+    await fetchTotal();
+    await fetchModels();
     showToast("Version downloaded successfully", "success");
   } catch (err) {
     console.error(err);
@@ -387,15 +411,17 @@ const deleteVersion = async (id) => {
   if (!(await showConfirm("Delete this version and all files?"))) return;
   await axios.delete(`/api/versions/${id}`);
   page.value = 1;
-  await fetchModels(true);
+  await fetchTotal();
+  await fetchModels();
 };
 
 const goToModel = (modelId, versionId) => {
   router.push(`/model/${modelId}/version/${versionId}`);
 };
 
-const loadMore = async () => {
-  page.value += 1;
+const changePage = async (p) => {
+  if (p < 1 || p > totalPages.value) return;
+  page.value = p;
   await fetchModels();
 };
 </script>
