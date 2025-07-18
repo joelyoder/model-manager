@@ -59,14 +59,24 @@ func ImportModels(c *gin.Context) {
 	failures := make([]string, 0)
 
 	for _, r := range records {
+		modelName, verName := splitName(r.Name)
 		modelID := extractID(modelIDRegex, r.URL)
 		origVerID := extractID(versionIDRegex, r.URL)
 
 		if origVerID == 0 && modelID != 0 {
 			apiKey := getCivitaiAPIKey()
 			modelData, err := FetchCivitModel(apiKey, modelID)
-			if err == nil && len(modelData.ModelVersions) == 1 {
-				origVerID = modelData.ModelVersions[0].ID
+			if err == nil {
+				if len(modelData.ModelVersions) == 1 {
+					origVerID = modelData.ModelVersions[0].ID
+				} else if len(modelData.ModelVersions) > 1 && verName != "" {
+					for _, mv := range modelData.ModelVersions {
+						if strings.EqualFold(strings.TrimSpace(mv.Name), strings.TrimSpace(verName)) {
+							origVerID = mv.ID
+							break
+						}
+					}
+				}
 			}
 		}
 
@@ -75,7 +85,6 @@ func ImportModels(c *gin.Context) {
 			versionID = -int(time.Now().UnixNano())
 		}
 
-		modelName, verName := splitName(r.Name)
 		tags := strings.Join(r.Groups, ",")
 		nsfw := false
 		for _, g := range r.Groups {
