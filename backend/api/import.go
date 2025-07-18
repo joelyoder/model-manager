@@ -7,6 +7,8 @@ import (
 	"io"
 	"log"
 	"net/http"
+	"os"
+	"path/filepath"
 	"regexp"
 	"strconv"
 	"strings"
@@ -127,6 +129,47 @@ func ImportModels(c *gin.Context) {
 			createdStr = t.Format(time.RFC3339)
 		}
 
+		// Determine local file path under /downloads/<type>/
+		var filePath string
+		if r.Location != "" {
+			baseName := filepath.Base(r.Location)
+			cand := filepath.Join("./backend/downloads", r.ModelType, baseName)
+			if info, err := os.Stat(cand); err == nil && !info.IsDir() {
+				if abs, aerr := filepath.Abs(cand); aerr == nil {
+					filePath = abs
+				} else {
+					filePath = cand
+				}
+			} else if r.Location != "" {
+				log.Printf("model file not found: %s", cand)
+			}
+		}
+
+		// Look for a preview image stored under /images/<type>/
+		var imagePath string
+		var imgW, imgH int
+		if r.Location != "" {
+			base := strings.TrimSuffix(filepath.Base(r.Location), filepath.Ext(r.Location))
+			imgDir := filepath.Join("./backend/images", r.ModelType)
+			for _, ext := range []string{".jpg", ".jpeg", ".png"} {
+				cand := filepath.Join(imgDir, base+ext)
+				if info, err := os.Stat(cand); err == nil && !info.IsDir() {
+					if abs, aerr := filepath.Abs(cand); aerr == nil {
+						imagePath = abs
+					} else {
+						imagePath = cand
+					}
+					w, h, _ := GetImageDimensions(imagePath)
+					imgW = w
+					imgH = h
+					break
+				}
+			}
+			if imagePath == "" {
+				log.Printf("preview image not found for %s", r.Name)
+			}
+		}
+
 		ver = models.Version{
 			ModelID:        model.ID,
 			VersionID:      versionID,
@@ -140,13 +183,29 @@ func ImportModels(c *gin.Context) {
 			ModelURL:       r.URL,
 			SHA256:         r.SHA256Hash,
 			DownloadURL:    r.DownloadURL,
-			FilePath:       r.Location,
+			FilePath:       filePath,
+			ImagePath:      imagePath,
 			CivitCreatedAt: createdStr,
 		}
 		if err = database.DB.Create(&ver).Error; err != nil {
 			log.Printf("failed to create version for %s: %v", r.Name, err)
 			failures = append(failures, fmt.Sprintf("%s: %v", r.Name, err))
 			continue
+		}
+
+		updated := false
+		if model.ImagePath == "" && imagePath != "" {
+			model.ImagePath = imagePath
+			model.ImageWidth = imgW
+			model.ImageHeight = imgH
+			updated = true
+		}
+		if model.FilePath == "" && filePath != "" {
+			model.FilePath = filePath
+			updated = true
+		}
+		if updated {
+			database.DB.Save(&model)
 		}
 		successCount++
 
