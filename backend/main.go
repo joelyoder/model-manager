@@ -45,6 +45,7 @@ func main() {
 		apiGroup.GET("/export", api.ExportModels)
 		apiGroup.GET("/settings", api.GetSettings)
 		apiGroup.POST("/settings", api.UpdateSetting)
+		apiGroup.GET("/orphan-files", api.GetOrphanFiles)
 	}
 
 	// Vue SPA fallback for all other routes (no wildcard)
