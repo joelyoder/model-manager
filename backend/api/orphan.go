@@ -1,8 +1,8 @@
 package api
 
 import (
+	"io/fs"
 	"net/http"
-	"os"
 	"path/filepath"
 	"strings"
 
@@ -17,26 +17,35 @@ import (
 // of file names that have no associated record.
 func GetOrphanFiles(c *gin.Context) {
 	var orphans []string
-	root := "./backend/downloads"
-	filepath.Walk(root, func(path string, info os.FileInfo, err error) error {
-		if err != nil || info == nil {
+	root := filepath.Join("backend", "downloads")
+	rootAbs, _ := filepath.Abs(root)
+
+	filepath.WalkDir(rootAbs, func(path string, d fs.DirEntry, err error) error {
+		if err != nil || d == nil {
 			return nil
 		}
-		if info.IsDir() {
+		if d.IsDir() {
 			return nil
 		}
-		ext := strings.ToLower(filepath.Ext(info.Name()))
+		ext := strings.ToLower(filepath.Ext(d.Name()))
 		if ext != ".safetensors" && ext != ".pt" {
 			return nil
 		}
-		abs, _ := filepath.Abs(path)
+
+		abs := filepath.Clean(path)
+		norm := filepath.ToSlash(abs)
+
 		var count int64
-		database.DB.Model(&models.Version{}).Where("file_path = ?", abs).Or("file_path = ?", path).Count(&count)
+		database.DB.Model(&models.Version{}).Where("file_path = ?", norm).Or("file_path = ?", abs).Count(&count)
 		if count == 0 {
-			database.DB.Model(&models.Model{}).Where("file_path = ?", abs).Or("file_path = ?", path).Count(&count)
+			database.DB.Model(&models.Model{}).Where("file_path = ?", norm).Or("file_path = ?", abs).Count(&count)
 		}
 		if count == 0 {
-			orphans = append(orphans, info.Name())
+			rel, relErr := filepath.Rel(rootAbs, abs)
+			if relErr != nil {
+				rel = d.Name()
+			}
+			orphans = append(orphans, rel)
 		}
 		return nil
 	})
