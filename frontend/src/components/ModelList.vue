@@ -122,20 +122,30 @@
   </div>
 
   <nav v-if="totalPages > 1" class="mb-4">
-    <ul class="pagination justify-content-center">
+    <ul class="pagination justify-content-center align-items-center gap-1">
+      <li class="page-item" :class="{ disabled: page === 1 }">
+        <a class="page-link" href="#" @click.prevent="changePage(1)">First</a>
+      </li>
       <li class="page-item" :class="{ disabled: page === 1 }">
         <a class="page-link" href="#" @click.prevent="changePage(page - 1)">Previous</a>
       </li>
-      <li
-        v-for="p in totalPages"
-        :key="p"
-        class="page-item"
-        :class="{ active: p === page }"
-      >
-        <a class="page-link" href="#" @click.prevent="changePage(p)">{{ p }}</a>
+      <li class="d-flex align-items-center">
+        <input
+          type="number"
+          min="1"
+          :max="totalPages"
+          v-model.number="pageInput"
+          @keyup.enter="goToPage"
+          class="form-control"
+          style="width: 80px"
+        />
+        <span class="ms-1">/ {{ totalPages }}</span>
       </li>
       <li class="page-item" :class="{ disabled: page === totalPages }">
         <a class="page-link" href="#" @click.prevent="changePage(page + 1)">Next</a>
+      </li>
+      <li class="page-item" :class="{ disabled: page === totalPages }">
+        <a class="page-link" href="#" @click.prevent="changePage(totalPages)">Last</a>
       </li>
     </ul>
   </nav>
@@ -180,20 +190,30 @@
       </div>
   </div>
   <nav v-if="totalPages > 1" class="mb-4">
-    <ul class="pagination justify-content-center">
+    <ul class="pagination justify-content-center align-items-center gap-1">
+      <li class="page-item" :class="{ disabled: page === 1 }">
+        <a class="page-link" href="#" @click.prevent="changePage(1)">First</a>
+      </li>
       <li class="page-item" :class="{ disabled: page === 1 }">
         <a class="page-link" href="#" @click.prevent="changePage(page - 1)">Previous</a>
       </li>
-      <li
-        v-for="p in totalPages"
-        :key="p"
-        class="page-item"
-        :class="{ active: p === page }"
-      >
-        <a class="page-link" href="#" @click.prevent="changePage(p)">{{ p }}</a>
+      <li class="d-flex align-items-center">
+        <input
+          type="number"
+          min="1"
+          :max="totalPages"
+          v-model.number="pageInput"
+          @keyup.enter="goToPage"
+          class="form-control"
+          style="width: 80px"
+        />
+        <span class="ms-1">/ {{ totalPages }}</span>
       </li>
       <li class="page-item" :class="{ disabled: page === totalPages }">
         <a class="page-link" href="#" @click.prevent="changePage(page + 1)">Next</a>
+      </li>
+      <li class="page-item" :class="{ disabled: page === totalPages }">
+        <a class="page-link" href="#" @click.prevent="changePage(totalPages)">Last</a>
       </li>
     </ul>
   </nav>
@@ -222,6 +242,7 @@ let progressInterval = null;
 const router = useRouter();
 
 const page = ref(1);
+const pageInput = ref(1);
 const limit = 50;
 const total = ref(0);
 
@@ -269,6 +290,10 @@ onMounted(async () => {
 
 watch(search, () => {
   debouncedUpdate();
+});
+
+watch(page, () => {
+  pageInput.value = page.value;
 });
 
 const baseModels = computed(() => {
@@ -439,5 +464,9 @@ const changePage = async (p) => {
   if (p < 1 || p > totalPages.value) return;
   page.value = p;
   await fetchModels();
+};
+
+const goToPage = async () => {
+  await changePage(pageInput.value);
 };
 </script>
