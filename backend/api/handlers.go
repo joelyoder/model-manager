@@ -40,7 +40,7 @@ func GetModels(c *gin.Context) {
 	if search != "" {
 		q = q.Where("LOWER(name) LIKE ?", "%"+strings.ToLower(search)+"%")
 	}
-	q.Limit(limit).Offset((page - 1) * limit).Find(&modelsList)
+	q.Order("id DESC").Limit(limit).Offset((page - 1) * limit).Find(&modelsList)
 	c.JSON(http.StatusOK, modelsList)
 }
 

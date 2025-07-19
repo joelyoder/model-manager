@@ -326,44 +326,50 @@ const filteredModels = computed(() => {
 });
 
 const versionCards = computed(() => {
-  return filteredModels.value
-    .flatMap((model) =>
-      model.versions
-        .filter((v) => {
-          if (
-            selectedBaseModel.value &&
-            v.baseModel !== selectedBaseModel.value
-          )
-            return false;
-          if (selectedModelType.value && v.type !== selectedModelType.value)
-            return false;
-          if (hideNsfw.value && v.nsfw) return false;
+  const sortedModels = filteredModels.value
+    .slice()
+    .sort((a, b) => b.ID - a.ID);
 
-          if (tagsSearch.value.trim()) {
-            const tags = (v.tags || "")
-              .split(",")
-              .map((t) => t.trim().toLowerCase());
-            const searchTags = tagsSearch.value
-              .split(/[, ]+/)
-              .map((t) => t.trim().toLowerCase())
-              .filter(Boolean);
-            if (!searchTags.every((t) => tags.includes(t))) return false;
-          }
-          return true;
-        })
-        .map((v) => {
-          let trained = v.trainedWords;
-          if (typeof trained === "string") {
-            trained = trained ? trained.split(",") : [];
-          }
-          return {
-            model,
-            version: { ...v, trainedWordsArr: trained },
-            imageUrl: v.imageUrl || model.imageUrl,
-          };
-        }),
-    )
-    .sort((a, b) => b.version.ID - a.version.ID);
+  return sortedModels.flatMap((model) => {
+    const versionsSorted = (model.versions || [])
+      .slice()
+      .sort((a, b) => b.ID - a.ID);
+
+    return versionsSorted
+      .filter((v) => {
+        if (
+          selectedBaseModel.value &&
+          v.baseModel !== selectedBaseModel.value
+        )
+          return false;
+        if (selectedModelType.value && v.type !== selectedModelType.value)
+          return false;
+        if (hideNsfw.value && v.nsfw) return false;
+
+        if (tagsSearch.value.trim()) {
+          const tags = (v.tags || "")
+            .split(",")
+            .map((t) => t.trim().toLowerCase());
+          const searchTags = tagsSearch.value
+            .split(/[, ]+/)
+            .map((t) => t.trim().toLowerCase())
+            .filter(Boolean);
+          if (!searchTags.every((t) => tags.includes(t))) return false;
+        }
+        return true;
+      })
+      .map((v) => {
+        let trained = v.trainedWords;
+        if (typeof trained === "string") {
+          trained = trained ? trained.split(",") : [];
+        }
+        return {
+          model,
+          version: { ...v, trainedWordsArr: trained },
+          imageUrl: v.imageUrl || model.imageUrl,
+        };
+      });
+  });
 });
 
 const extractModelId = (url) => {
