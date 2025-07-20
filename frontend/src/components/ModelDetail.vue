@@ -147,6 +147,7 @@
       </div>
     </div>
     <div v-else>
+      <h5 class="mt-2 mb-3">Model Details</h5>
       <div class="mb-3">
         <label class="form-label">Name</label>
         <input v-model="model.name" class="form-control" />
@@ -160,32 +161,15 @@
         />
       </div>
       <div class="mb-3">
-        <label class="form-label">Type</label>
+        <label class="form-label">Model Type</label>
         <input v-model="model.type" class="form-control" />
       </div>
       <div class="mb-3">
-        <label class="form-label">Tags</label>
-        <input v-model="model.tags" class="form-control" />
-      </div>
-      <div class="form-check mb-3">
-        <input
-          type="checkbox"
-          class="form-check-input"
-          id="model-nsfw"
-          v-model="model.nsfw"
-        />
-        <label class="form-check-label" for="model-nsfw">NSFW</label>
-      </div>
-      <div class="mb-3">
-        <label class="form-label">Description</label>
-        <input v-model="model.description" class="form-control" />
-      </div>
-      <div class="mb-3">
-        <label class="form-label">Image Path</label>
+        <label class="form-label">Model Image Path</label>
         <input v-model="model.imagePath" class="form-control" />
       </div>
       <div class="mb-3">
-        <label class="form-label">File Path</label>
+        <label class="form-label">Model File Path</label>
         <input v-model="model.filePath" class="form-control" />
       </div>
       <div class="mb-3">
@@ -205,16 +189,25 @@
         />
       </div>
       <hr />
+      <h5 class="mt-2 mb-3">Version Details</h5>
       <div class="mb-3">
         <label class="form-label">Version Name</label>
         <input v-model="version.name" class="form-control" />
       </div>
       <div class="mb-3">
-        <label class="form-label">Tags</label>
+        <label class="form-label">Version ID</label>
+        <input
+          v-model.number="version.versionId"
+          type="number"
+          class="form-control"
+        />
+      </div>
+      <div class="mb-3">
+        <label class="form-label">Version Tags</label>
         <input v-model="version.tags" class="form-control" />
       </div>
       <div class="mb-3">
-        <label class="form-label">Type</label>
+        <label class="form-label">Version Type</label>
         <input v-model="version.type" class="form-control" />
       </div>
       <div class="form-check mb-3">
@@ -224,10 +217,10 @@
           id="nsfw"
           v-model="version.nsfw"
         />
-        <label class="form-check-label" for="nsfw">NSFW</label>
+        <label class="form-check-label" for="nsfw">Version NSFW</label>
       </div>
       <div class="mb-3">
-        <label class="form-label">Description</label>
+        <label class="form-label">Version Description</label>
         <div ref="editor" style="height: 200px"></div>
       </div>
       <div class="mb-3">
@@ -239,7 +232,11 @@
         <input v-model="version.trainedWords" class="form-control" />
       </div>
       <div class="mb-3">
-        <label class="form-label">File Path</label>
+        <label class="form-label">Version Image Path</label>
+        <input v-model="version.imagePath" class="form-control" />
+      </div>
+      <div class="mb-3">
+        <label class="form-label">Version File Path</label>
         <input v-model="version.filePath" class="form-control" />
       </div>
       <div class="mb-3">
@@ -253,14 +250,6 @@
       <div class="mb-3">
         <label class="form-label">Model URL</label>
         <input v-model="version.modelUrl" class="form-control" />
-      </div>
-      <div class="mb-3">
-        <label class="form-label">Version ID</label>
-        <input
-          v-model.number="version.versionId"
-          type="number"
-          class="form-control"
-        />
       </div>
       <div class="mb-3">
         <label class="form-label">Early Access Time Frame</label>
@@ -289,10 +278,6 @@
       <div class="mb-3">
         <label class="form-label">Download URL</label>
         <input v-model="version.downloadUrl" class="form-control" />
-      </div>
-      <div class="mb-3">
-        <label class="form-label">Image Path</label>
-        <input v-model="version.imagePath" class="form-control" />
       </div>
     </div>
   </div>
