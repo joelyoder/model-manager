@@ -29,31 +29,121 @@ func GetModels(c *gin.Context) {
 	}
 
 	search := c.Query("search")
+	baseModel := c.Query("baseModel")
+	modelType := c.Query("modelType")
+	hideNsfw := c.Query("hideNsfw") == "1"
+	tags := c.Query("tags")
 
 	var modelsList []models.Model
-	q := database.DB
+	q := database.DB.Model(&models.Model{})
+
+	// Filter models by versions when filters are provided
+	needJoin := baseModel != "" || modelType != "" || hideNsfw || tags != ""
+	if needJoin {
+		q = q.Joins("JOIN versions ON versions.model_id = models.id")
+	}
+
+	if search != "" {
+		q = q.Where("LOWER(models.name) LIKE ?", "%"+strings.ToLower(search)+"%")
+	}
+	if baseModel != "" {
+		q = q.Where("versions.base_model = ?", baseModel)
+	}
+	if modelType != "" {
+		q = q.Where("versions.type = ?", modelType)
+	}
+	if hideNsfw {
+		q = q.Where("versions.nsfw = 0")
+	}
+	if tags != "" {
+		for _, t := range strings.Split(tags, ",") {
+			t = strings.TrimSpace(strings.ToLower(t))
+			if t != "" {
+				q = q.Where("LOWER(versions.tags) LIKE ?", "%"+t+"%")
+			}
+		}
+	}
+
 	if c.DefaultQuery("includeVersions", "1") == "1" {
 		q = q.Preload("Versions", func(db *gorm.DB) *gorm.DB {
-			return db.Order("id DESC").Limit(limit)
+			if baseModel != "" {
+				db = db.Where("base_model = ?", baseModel)
+			}
+			if modelType != "" {
+				db = db.Where("type = ?", modelType)
+			}
+			if hideNsfw {
+				db = db.Where("nsfw = 0")
+			}
+			if tags != "" {
+				for _, t := range strings.Split(tags, ",") {
+					t = strings.TrimSpace(strings.ToLower(t))
+					if t != "" {
+						db = db.Where("LOWER(tags) LIKE ?", "%"+t+"%")
+					}
+				}
+			}
+			return db.Order("id DESC")
 		})
 	}
-	if search != "" {
-		q = q.Where("LOWER(name) LIKE ?", "%"+strings.ToLower(search)+"%")
+
+	if needJoin {
+		q = q.Group("models.id")
 	}
-	q.Order("id DESC").Limit(limit).Offset((page - 1) * limit).Find(&modelsList)
+
+	q.Order("models.id DESC").Limit(limit).Offset((page - 1) * limit).Find(&modelsList)
 	c.JSON(http.StatusOK, modelsList)
 }
 
 // GetModelsCount returns the total number of models matching the optional search query
 func GetModelsCount(c *gin.Context) {
 	search := c.Query("search")
+	baseModel := c.Query("baseModel")
+	modelType := c.Query("modelType")
+	hideNsfw := c.Query("hideNsfw") == "1"
+	tags := c.Query("tags")
+
 	var count int64
 	q := database.DB.Model(&models.Model{})
+	needJoin := baseModel != "" || modelType != "" || hideNsfw || tags != ""
+	if needJoin {
+		q = q.Joins("JOIN versions ON versions.model_id = models.id")
+	}
 	if search != "" {
-		q = q.Where("LOWER(name) LIKE ?", "%"+strings.ToLower(search)+"%")
+		q = q.Where("LOWER(models.name) LIKE ?", "%"+strings.ToLower(search)+"%")
+	}
+	if baseModel != "" {
+		q = q.Where("versions.base_model = ?", baseModel)
+	}
+	if modelType != "" {
+		q = q.Where("versions.type = ?", modelType)
+	}
+	if hideNsfw {
+		q = q.Where("versions.nsfw = 0")
+	}
+	if tags != "" {
+		for _, t := range strings.Split(tags, ",") {
+			t = strings.TrimSpace(strings.ToLower(t))
+			if t != "" {
+				q = q.Where("LOWER(versions.tags) LIKE ?", "%"+t+"%")
+			}
+		}
+	}
+	if needJoin {
+		q = q.Group("models.id")
 	}
 	q.Count(&count)
 	c.JSON(http.StatusOK, gin.H{"count": count})
+}
+
+// GetBaseModels returns a list of distinct base models from all versions
+func GetBaseModels(c *gin.Context) {
+	var baseModels []string
+	database.DB.Model(&models.Version{}).
+		Distinct().
+		Order("base_model").
+		Pluck("base_model", &baseModels)
+	c.JSON(http.StatusOK, baseModels)
 }
 
 // GetModel returns a single model by ID with its versions
