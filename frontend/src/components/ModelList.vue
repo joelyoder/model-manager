@@ -127,7 +127,9 @@
         <a class="page-link" href="#" @click.prevent="changePage(1)">First</a>
       </li>
       <li class="page-item" :class="{ disabled: page === 1 }">
-        <a class="page-link" href="#" @click.prevent="changePage(page - 1)">Previous</a>
+        <a class="page-link" href="#" @click.prevent="changePage(page - 1)"
+          >Previous</a
+        >
       </li>
       <li class="d-flex align-items-center">
         <input
@@ -142,10 +144,14 @@
         <span class="ms-1">/ {{ totalPages }}</span>
       </li>
       <li class="page-item" :class="{ disabled: page === totalPages }">
-        <a class="page-link" href="#" @click.prevent="changePage(page + 1)">Next</a>
+        <a class="page-link" href="#" @click.prevent="changePage(page + 1)"
+          >Next</a
+        >
       </li>
       <li class="page-item" :class="{ disabled: page === totalPages }">
-        <a class="page-link" href="#" @click.prevent="changePage(totalPages)">Last</a>
+        <a class="page-link" href="#" @click.prevent="changePage(totalPages)"
+          >Last</a
+        >
       </li>
     </ul>
   </nav>
@@ -153,41 +159,45 @@
   <div class="m-4 text-center" v-if="models.length === 0">No models found.</div>
 
   <div class="model-grid p-4">
-    <div v-for="card in versionCards" :key="card.version.ID" class="model-card card h-100">
+    <div
+      v-for="card in versionCards"
+      :key="card.version.ID"
+      class="model-card card h-100"
+    >
       <img
         v-if="card.imageUrl"
         :src="card.imageUrl"
         class="card-img-top"
         style="width: 100%; height: 450px; object-fit: cover"
       />
-        <div class="card-img-overlay z-2">
-          <span class="badge rounded-pill text-bg-primary">{{
-            card.version.type
-          }}</span>
-          <span class="ms-1 badge rounded-pill text-bg-success">{{
-            card.version.baseModel
-          }}</span>
-        </div>
-        <div class="card-body z-3">
-          <h3 class="card-title h5">
-            {{ card.model.name }} - {{ card.version.name }}
-          </h3>
-        </div>
-        <div class="mb-2 d-flex gap-2 card-footer z-2">
-          <button
-            @click="goToModel(card.model.ID, card.version.ID)"
-            class="btn btn-outline-primary"
-          >
-            More details
-          </button>
-          <button
-            @click="deleteVersion(card.version.ID)"
-            class="btn btn-outline-danger ms-auto"
-          >
-            Delete
-          </button>
-        </div>
+      <div class="card-img-overlay z-2">
+        <span class="badge rounded-pill text-bg-primary">{{
+          card.version.type
+        }}</span>
+        <span class="ms-1 badge rounded-pill text-bg-success">{{
+          card.version.baseModel
+        }}</span>
       </div>
+      <div class="card-body z-3">
+        <h3 class="card-title h5">
+          {{ card.model.name }} - {{ card.version.name }}
+        </h3>
+      </div>
+      <div class="mb-2 d-flex gap-2 card-footer z-2">
+        <button
+          @click="goToModel(card.model.ID, card.version.ID)"
+          class="btn btn-outline-primary"
+        >
+          More details
+        </button>
+        <button
+          @click="deleteVersion(card.version.ID)"
+          class="btn btn-outline-danger ms-auto"
+        >
+          Delete
+        </button>
+      </div>
+    </div>
   </div>
   <nav v-if="totalPages > 1" class="mb-4">
     <ul class="pagination justify-content-center align-items-center gap-1">
@@ -195,7 +205,9 @@
         <a class="page-link" href="#" @click.prevent="changePage(1)">First</a>
       </li>
       <li class="page-item" :class="{ disabled: page === 1 }">
-        <a class="page-link" href="#" @click.prevent="changePage(page - 1)">Previous</a>
+        <a class="page-link" href="#" @click.prevent="changePage(page - 1)"
+          >Previous</a
+        >
       </li>
       <li class="d-flex align-items-center">
         <input
@@ -210,17 +222,21 @@
         <span class="ms-1">/ {{ totalPages }}</span>
       </li>
       <li class="page-item" :class="{ disabled: page === totalPages }">
-        <a class="page-link" href="#" @click.prevent="changePage(page + 1)">Next</a>
+        <a class="page-link" href="#" @click.prevent="changePage(page + 1)"
+          >Next</a
+        >
       </li>
       <li class="page-item" :class="{ disabled: page === totalPages }">
-        <a class="page-link" href="#" @click.prevent="changePage(totalPages)">Last</a>
+        <a class="page-link" href="#" @click.prevent="changePage(totalPages)"
+          >Last</a
+        >
       </li>
     </ul>
   </nav>
 </template>
 
 <script setup>
-import { ref, computed, onMounted, watch } from "vue";
+import { ref, computed, onMounted, onUnmounted, watch } from "vue";
 import { useRouter } from "vue-router";
 import axios from "axios";
 import { showToast, showConfirm } from "../utils/ui";
@@ -245,6 +261,7 @@ const page = ref(1);
 const pageInput = ref(1);
 const limit = 50;
 const total = ref(0);
+const localStorageKey = "modelListState";
 
 const mapModel = (model) => {
   const imageUrl = model.imagePath
@@ -266,6 +283,10 @@ const mapModel = (model) => {
 const fetchModels = async () => {
   const params = { page: page.value, limit, includeVersions: 1 };
   if (search.value) params.search = search.value;
+  if (selectedBaseModel.value) params.baseModel = selectedBaseModel.value;
+  if (selectedModelType.value) params.modelType = selectedModelType.value;
+  if (hideNsfw.value) params.hideNsfw = 1;
+  if (tagsSearch.value.trim()) params.tags = tagsSearch.value;
   const res = await axios.get("/api/models", { params });
   models.value = res.data.map(mapModel);
 };
@@ -273,6 +294,10 @@ const fetchModels = async () => {
 const fetchTotal = async () => {
   const params = {};
   if (search.value) params.search = search.value;
+  if (selectedBaseModel.value) params.baseModel = selectedBaseModel.value;
+  if (selectedModelType.value) params.modelType = selectedModelType.value;
+  if (hideNsfw.value) params.hideNsfw = 1;
+  if (tagsSearch.value.trim()) params.tags = tagsSearch.value;
   const res = await axios.get("/api/models/count", { params });
   total.value = res.data.count || 0;
 };
@@ -284,11 +309,52 @@ const debouncedUpdate = debounce(async () => {
 }, 300);
 
 onMounted(async () => {
+  const saved = JSON.parse(localStorage.getItem(localStorageKey) || "{}");
+  if (saved.search !== undefined) search.value = saved.search;
+  if (saved.tagsSearch !== undefined) tagsSearch.value = saved.tagsSearch;
+  if (saved.selectedBaseModel !== undefined)
+    selectedBaseModel.value = saved.selectedBaseModel;
+  if (saved.selectedModelType !== undefined)
+    selectedModelType.value = saved.selectedModelType;
+  if (saved.hideNsfw !== undefined) hideNsfw.value = saved.hideNsfw;
+  if (saved.page !== undefined) page.value = saved.page;
+
+  await fetchBaseModels();
   await fetchTotal();
   await fetchModels();
 });
 
+onUnmounted(() => {
+  localStorage.setItem(
+    localStorageKey,
+    JSON.stringify({
+      search: search.value,
+      tagsSearch: tagsSearch.value,
+      selectedBaseModel: selectedBaseModel.value,
+      selectedModelType: selectedModelType.value,
+      hideNsfw: hideNsfw.value,
+      page: page.value,
+    }),
+  );
+});
+
 watch(search, () => {
+  debouncedUpdate();
+});
+
+watch(tagsSearch, () => {
+  debouncedUpdate();
+});
+
+watch(selectedBaseModel, () => {
+  debouncedUpdate();
+});
+
+watch(selectedModelType, () => {
+  debouncedUpdate();
+});
+
+watch(hideNsfw, () => {
   debouncedUpdate();
 });
 
@@ -296,25 +362,20 @@ watch(page, () => {
   pageInput.value = page.value;
 });
 
-const baseModels = computed(() => {
-  const set = new Set();
-  models.value.forEach((m) => {
-    (m.versions || []).forEach((v) => {
-      if (v.baseModel) set.add(v.baseModel);
-    });
-  });
-  return Array.from(set);
-});
+const baseModels = ref([]);
+const fetchBaseModels = async () => {
+  const res = await axios.get("/api/base-models");
+  baseModels.value = res.data || [];
+};
 
-const modelTypes = computed(() => {
-  const set = new Set();
-  models.value.forEach((m) => {
-    (m.versions || []).forEach((v) => {
-      if (v.type) set.add(v.type);
-    });
-  });
-  return Array.from(set);
-});
+const modelTypes = [
+  "LORA",
+  "LoCon",
+  "Checkpoint",
+  "VAE",
+  "TextualInversion",
+  "Hypernetwork",
+];
 
 const totalPages = computed(() => Math.ceil(total.value / limit));
 
@@ -326,9 +387,7 @@ const filteredModels = computed(() => {
 });
 
 const versionCards = computed(() => {
-  const sortedModels = filteredModels.value
-    .slice()
-    .sort((a, b) => b.ID - a.ID);
+  const sortedModels = filteredModels.value.slice().sort((a, b) => b.ID - a.ID);
 
   return sortedModels.flatMap((model) => {
     const versionsSorted = (model.versions || [])
@@ -337,10 +396,7 @@ const versionCards = computed(() => {
 
     return versionsSorted
       .filter((v) => {
-        if (
-          selectedBaseModel.value &&
-          v.baseModel !== selectedBaseModel.value
-        )
+        if (selectedBaseModel.value && v.baseModel !== selectedBaseModel.value)
           return false;
         if (selectedModelType.value && v.type !== selectedModelType.value)
           return false;
@@ -438,6 +494,7 @@ const downloadSelectedVersion = async () => {
     page.value = 1;
     await fetchTotal();
     await fetchModels();
+    await fetchBaseModels();
     showToast("Version downloaded successfully", "success");
   } catch (err) {
     console.error(err);
@@ -460,6 +517,7 @@ const deleteVersion = async (id) => {
   page.value = 1;
   await fetchTotal();
   await fetchModels();
+  await fetchBaseModels();
 };
 
 const goToModel = (modelId, versionId) => {
