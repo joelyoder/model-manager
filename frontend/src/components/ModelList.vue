@@ -308,6 +308,8 @@ const debouncedUpdate = debounce(async () => {
   await fetchModels();
 }, 300);
 
+const initialized = ref(false);
+
 onMounted(async () => {
   const saved = JSON.parse(localStorage.getItem(localStorageKey) || "{}");
   if (saved.search !== undefined) search.value = saved.search;
@@ -322,6 +324,7 @@ onMounted(async () => {
   await fetchBaseModels();
   await fetchTotal();
   await fetchModels();
+  initialized.value = true;
 });
 
 onUnmounted(() => {
@@ -339,23 +342,23 @@ onUnmounted(() => {
 });
 
 watch(search, () => {
-  debouncedUpdate();
+  if (initialized.value) debouncedUpdate();
 });
 
 watch(tagsSearch, () => {
-  debouncedUpdate();
+  if (initialized.value) debouncedUpdate();
 });
 
 watch(selectedBaseModel, () => {
-  debouncedUpdate();
+  if (initialized.value) debouncedUpdate();
 });
 
 watch(selectedModelType, () => {
-  debouncedUpdate();
+  if (initialized.value) debouncedUpdate();
 });
 
 watch(hideNsfw, () => {
-  debouncedUpdate();
+  if (initialized.value) debouncedUpdate();
 });
 
 watch(page, () => {
@@ -364,8 +367,12 @@ watch(page, () => {
 
 const baseModels = ref([]);
 const fetchBaseModels = async () => {
-  const res = await axios.get("/api/base-models");
-  baseModels.value = res.data || [];
+  try {
+    const res = await axios.get("/api/base-models");
+    baseModels.value = Array.isArray(res.data) ? res.data : [];
+  } catch {
+    baseModels.value = [];
+  }
 };
 
 const modelTypes = [
