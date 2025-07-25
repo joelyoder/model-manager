@@ -75,7 +75,7 @@
           </div>
         </div>
 
-        <div class="input-group">
+        <div class="input-group mb-2">
           <!-- Version selector -->
           <select
             v-if="versions.length"
@@ -109,7 +109,7 @@
             </button>
           </div>
         </div>
-        <div v-if="downloading" class="progress w-100 mt-2">
+        <div v-if="downloading" class="progress w-100 mb-2">
           <div
             class="progress-bar progress-bar-striped"
             :style="{ width: downloadProgress + '%' }"

@@ -2,15 +2,16 @@
   <div class="container px-4">
     <div class="mb-2 d-flex gap-2 pb-2">
       <button @click="goBack" class="btn btn-secondary">Back</button>
-      <button @click="importJson" :disabled="!importFile" class="btn btn-primary">
-        Import
-      </button>
-      <button @click="exportJson" class="btn btn-outline-primary ms-auto">
-        Export Models
-      </button>
     </div>
-    <div class="mb-3">
+    <h2 class="my-3">Utilities</h2>
+    <h3 class="h5 mt-5">Import JSON from Model Organizer</h3>
+    <div class="input-group mb-3">
       <input type="file" accept=".json" @change="onFileChange" class="form-control" />
+      <div class="input-group-append">
+        <button @click="importJson" :disabled="!importFile" class="btn btn-primary">
+        Import
+        </button>
+      </div>
     </div>
     <div class="d-flex gap-2 mb-3">
       <span>Update:</span>
@@ -26,6 +27,12 @@
         <input class="form-check-input" type="checkbox" id="ie-pull-desc" v-model="pullDesc" />
         <label class="form-check-label" for="ie-pull-desc">Description</label>
       </div>
+    </div>
+    <h3 class="h5 mt-5">Export Database as JSON</h3>
+    <div class="mb-3 d-flex gap-2">
+      <button @click="exportJson" class="btn btn-outline-primary">
+        Export Models
+      </button>
     </div>
   </div>
 </template>
