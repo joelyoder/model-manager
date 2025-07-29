@@ -17,7 +17,19 @@
         />
 
         <div class="row">
-          <div class="col-12 col-sm-6">
+          <div class="col-12 col-sm-4 mb-2">
+            <select
+              v-model="selectedCategory"
+              class="form-select"
+              style="min-width: 200px"
+            >
+              <option value="">All categories</option>
+              <option v-for="cat in categories" :key="cat" :value="cat">
+                {{ cat }}
+              </option>
+            </select>
+          </div>
+          <div class="col-12 col-sm-4 mb-2">
             <select
               v-model="selectedBaseModel"
               class="form-select"
@@ -29,7 +41,7 @@
               </option>
             </select>
           </div>
-          <div class="col-12 col-sm-6">
+          <div class="col-12 col-sm-4">
             <select
               v-model="selectedModelType"
               class="form-select"
@@ -245,6 +257,7 @@ import debounce from "../utils/debounce";
 const models = ref([]);
 const search = ref("");
 const tagsSearch = ref("");
+const selectedCategory = ref("");
 const selectedBaseModel = ref("");
 const selectedModelType = ref("");
 const hideNsfw = ref(false);
@@ -286,7 +299,10 @@ const fetchModels = async () => {
   if (selectedBaseModel.value) params.baseModel = selectedBaseModel.value;
   if (selectedModelType.value) params.modelType = selectedModelType.value;
   if (hideNsfw.value) params.hideNsfw = 1;
-  if (tagsSearch.value.trim()) params.tags = tagsSearch.value;
+  const tagParts = [];
+  if (selectedCategory.value) tagParts.push(selectedCategory.value);
+  if (tagsSearch.value.trim()) tagParts.push(tagsSearch.value);
+  if (tagParts.length) params.tags = tagParts.join(",");
   const res = await axios.get("/api/models", { params });
   models.value = res.data.map(mapModel);
 };
@@ -297,7 +313,10 @@ const fetchTotal = async () => {
   if (selectedBaseModel.value) params.baseModel = selectedBaseModel.value;
   if (selectedModelType.value) params.modelType = selectedModelType.value;
   if (hideNsfw.value) params.hideNsfw = 1;
-  if (tagsSearch.value.trim()) params.tags = tagsSearch.value;
+  const tagParts = [];
+  if (selectedCategory.value) tagParts.push(selectedCategory.value);
+  if (tagsSearch.value.trim()) tagParts.push(tagsSearch.value);
+  if (tagParts.length) params.tags = tagParts.join(",");
   const res = await axios.get("/api/models/count", { params });
   total.value = res.data.count || 0;
 };
@@ -314,6 +333,8 @@ onMounted(async () => {
   const saved = JSON.parse(localStorage.getItem(localStorageKey) || "{}");
   if (saved.search !== undefined) search.value = saved.search;
   if (saved.tagsSearch !== undefined) tagsSearch.value = saved.tagsSearch;
+  if (saved.selectedCategory !== undefined)
+    selectedCategory.value = saved.selectedCategory;
   if (saved.selectedBaseModel !== undefined)
     selectedBaseModel.value = saved.selectedBaseModel;
   if (saved.selectedModelType !== undefined)
@@ -333,6 +354,7 @@ onUnmounted(() => {
     JSON.stringify({
       search: search.value,
       tagsSearch: tagsSearch.value,
+      selectedCategory: selectedCategory.value,
       selectedBaseModel: selectedBaseModel.value,
       selectedModelType: selectedModelType.value,
       hideNsfw: hideNsfw.value,
@@ -346,6 +368,10 @@ watch(search, () => {
 });
 
 watch(tagsSearch, () => {
+  if (initialized.value) debouncedUpdate();
+});
+
+watch(selectedCategory, () => {
   if (initialized.value) debouncedUpdate();
 });
 
@@ -384,6 +410,23 @@ const modelTypes = [
   "Hypernetwork",
 ];
 
+const categories = [
+  "character",
+  "style",
+  "concept",
+  "clothing",
+  "base model",
+  "poses",
+  "background",
+  "tool",
+  "vehicle",
+  "buildings",
+  "objects",
+  "assets",
+  "animal",
+  "action",
+];
+
 const totalPages = computed(() => Math.ceil(total.value / limit));
 
 const filteredModels = computed(() => {
@@ -408,6 +451,13 @@ const versionCards = computed(() => {
         if (selectedModelType.value && v.type !== selectedModelType.value)
           return false;
         if (hideNsfw.value && v.nsfw) return false;
+
+        if (selectedCategory.value) {
+          const tags = (v.tags || "")
+            .split(",")
+            .map((t) => t.trim().toLowerCase());
+          if (!tags.includes(selectedCategory.value.toLowerCase())) return false;
+        }
 
         if (tagsSearch.value.trim()) {
           const tags = (v.tags || "")
