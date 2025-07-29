@@ -30,7 +30,7 @@
     </div>
     <h3 class="h5 mt-5">Export Database as JSON</h3>
     <div class="mb-3 d-flex gap-2">
-      <button @click="exportJson" class="btn btn-outline-primary">
+      <button @click="exportJson" class="btn btn-primary">
         Export Models
       </button>
     </div>
