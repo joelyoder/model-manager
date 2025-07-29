@@ -34,16 +34,27 @@
         Export Models
       </button>
     </div>
+    <h3 class="h5 mt-5">Import Database JSON</h3>
+    <div class="input-group mb-3">
+      <input type="file" accept=".json" @change="onDbFileChange" class="form-control" />
+      <div class="input-group-append">
+        <button @click="importDbJson" :disabled="!dbImportFile" class="btn btn-primary">
+        Import
+        </button>
+      </div>
+    </div>
   </div>
 </template>
 
 <script setup>
+ 
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 import axios from 'axios'
 import { showToast } from '../utils/ui'
 
 const importFile = ref(null)
+const dbImportFile = ref(null)
 const pullImages = ref(false)
 const pullMeta = ref(false)
 const pullDesc = ref(false)
@@ -51,6 +62,10 @@ const router = useRouter()
 
 const onFileChange = (e) => {
   importFile.value = e.target.files[0] || null
+}
+
+const onDbFileChange = (e) => {
+  dbImportFile.value = e.target.files[0] || null
 }
 
 const importJson = async () => {
@@ -70,6 +85,21 @@ const importJson = async () => {
     showToast('Import failed', 'danger')
   } finally {
     importFile.value = null
+  }
+}
+
+const importDbJson = async () => {
+  if (!dbImportFile.value) return
+  const form = new FormData()
+  form.append('file', dbImportFile.value)
+  try {
+    await axios.post('/api/import-db', form)
+    showToast('Database import successful', 'success')
+  } catch (err) {
+    console.error(err)
+    showToast('Database import failed', 'danger')
+  } finally {
+    dbImportFile.value = null
   }
 }
 
