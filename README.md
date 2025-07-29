@@ -11,7 +11,6 @@ This is a desktop application to download and manage models for local image gene
 
 ## Todo
 - Library management
-    - Filter models by the standard Civitai category tags
     - Add a tag to multiple models at once
     - Remove a tag from multiple models at once
     - A way to see all current tags in the library and see all models with that tag
