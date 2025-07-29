@@ -16,19 +16,20 @@
           style="min-width: 200px"
         />
 
-        <select
-          v-model="selectedCategory"
-          class="form-select"
-          style="min-width: 200px"
-        >
-          <option value="">All categories</option>
-          <option v-for="cat in categories" :key="cat" :value="cat">
-            {{ cat }}
-          </option>
-        </select>
-
         <div class="row">
-          <div class="col-12 col-sm-6">
+          <div class="col-12 col-sm-4 mb-2">
+            <select
+              v-model="selectedCategory"
+              class="form-select"
+              style="min-width: 200px"
+            >
+              <option value="">All categories</option>
+              <option v-for="cat in categories" :key="cat" :value="cat">
+                {{ cat }}
+              </option>
+            </select>
+          </div>
+          <div class="col-12 col-sm-4 mb-2">
             <select
               v-model="selectedBaseModel"
               class="form-select"
@@ -40,7 +41,7 @@
               </option>
             </select>
           </div>
-          <div class="col-12 col-sm-6">
+          <div class="col-12 col-sm-4">
             <select
               v-model="selectedModelType"
               class="form-select"
