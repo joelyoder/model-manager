@@ -9,7 +9,7 @@ This is a desktop application to download and manage models for local image gene
 3. In the main directory, run `go run .\backend\main.go`
 4. In the \frontend\ directory, run `npm run dev`
 
-## TODO
+## Todo
 - Library management
     - Filter models by the standard Civitai category tags
     - Add a tag to multiple models at once
