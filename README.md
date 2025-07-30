@@ -19,7 +19,6 @@ This is a desktop application to download and manage models for local image gene
 - Settings
     - Add a setting to change the models and image folder locations
 - Utilities
-    - A way to re-import the JSON database export
     - Statistics about the library size broken down by several different factors
         - Model Type
         - Base Model
