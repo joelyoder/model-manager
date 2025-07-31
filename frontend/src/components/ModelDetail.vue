@@ -108,9 +108,15 @@
           >
             Set as Main
           </button>
-          <span v-else class="badge text-bg-success d-block text-center mt-1">
+          <span v-else class="badge text-bg-success d-block text-center mt-1 py-2">
             Main Image
           </span>
+          <button
+            @click="removeImage(img)"
+            class="btn btn-outline-danger btn-sm mt-1 w-100"
+          >
+            Remove
+          </button>
           <div class="table-responsive">
             <table
               v-if="Object.keys(img.parsedMeta || {}).length"
@@ -125,6 +131,12 @@
             </table>
           </div>
         </div>
+      </div>
+      <div class="input-group mb-3">
+        <input type="file" @change="onGalleryFileChange" class="form-control" />
+        <button @click="uploadGallery" class="btn btn-secondary">
+          Add Image
+        </button>
       </div>
       <div
         class="mb-2 d-flex justify-content-center gap-2 pb-2"
@@ -305,6 +317,7 @@ const modelTypes = [
 
 const imageFile = ref(null);
 const modelFile = ref(null);
+const galleryFile = ref(null);
 
 const imageUrl = computed(() => {
   const path = version.value.imagePath || model.value.imagePath;
@@ -448,6 +461,38 @@ const setMainImage = async (img) => {
   await axios.post(`/api/versions/${version.value.ID}/main-image/${img.ID}`);
   await fetchData();
   showToast("Main image updated", "success");
+};
+
+const onGalleryFileChange = (e) => {
+  galleryFile.value = e.target.files[0] || null;
+};
+
+const uploadGallery = async () => {
+  if (!galleryFile.value) return;
+  const fd = new FormData();
+  fd.append("file", galleryFile.value);
+  const res = await axios.post(
+    `/api/versions/${version.value.ID}/images?type=${encodeURIComponent(version.value.type)}`,
+    fd,
+    { headers: { "Content-Type": "multipart/form-data" } },
+  );
+  version.value.images = version.value.images || [];
+  version.value.images.push(res.data);
+  galleryFile.value = null;
+  showToast("Image uploaded", "success");
+};
+
+const removeImage = async (img) => {
+  if (!(await showConfirm("Remove this image?"))) return;
+  await axios.delete(`/api/versions/${version.value.ID}/images/${img.ID}`);
+  if (version.value.imagePath === img.path) {
+    await fetchData();
+  } else {
+    version.value.images = (version.value.images || []).filter(
+      (i) => i.ID !== img.ID,
+    );
+  }
+  showToast("Image removed", "success");
 };
 
 watch(
