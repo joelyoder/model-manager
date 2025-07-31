@@ -14,11 +14,7 @@
     <div v-if="!isEditing">
       <div class="row">
         <div class="col-md-4">
-          <img
-            v-if="imageUrl"
-            :src="imageUrl"
-            class="img-fluid mb-4"
-          />
+          <img v-if="imageUrl" :src="imageUrl" class="img-fluid mb-4" />
         </div>
         <div class="col-md-8">
           <h2 class="fw-bold">{{ model.name }}</h2>
@@ -86,7 +82,7 @@
                 </tr>
               </tbody>
             </table>
-          </div>    
+          </div>
         </div>
       </div>
       <div
@@ -278,7 +274,7 @@ import { ref, onMounted, computed, nextTick, watch } from "vue";
 import { useRouter, useRoute } from "vue-router";
 import axios from "axios";
 import Quill from "quill";
-import { showToast, showConfirm } from "../utils/ui";
+import { showToast, showConfirm, showDeleteConfirm } from "../utils/ui";
 
 const router = useRouter();
 const route = useRoute();
@@ -378,8 +374,10 @@ watch(isEditing, async (val) => {
 });
 
 const deleteVersion = async () => {
-  if (!(await showConfirm("Delete this version and all files?"))) return;
-  await axios.delete(`/api/versions/${route.params.versionId}`);
+  const choice = await showDeleteConfirm("Delete this version?");
+  if (!choice) return;
+  const files = choice === "deleteFiles" ? 1 : 0;
+  await axios.delete(`/api/versions/${route.params.versionId}?files=${files}`);
   router.push("/");
 };
 

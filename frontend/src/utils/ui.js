@@ -17,8 +17,13 @@ export function showConfirm(message) {
   return new Promise((resolve) => {
     const el = document.getElementById("confirm-modal");
     el.querySelector(".modal-body").textContent = message;
-    const okBtn = el.querySelector(".btn-primary");
+    const okBtn = el.querySelector("#confirm-ok");
     const cancelBtn = el.querySelector(".btn-secondary");
+    const delBtn = el.querySelector("#confirm-delete");
+    const delFilesBtn = el.querySelector("#confirm-delete-files");
+    delBtn.classList.add("d-none");
+    delFilesBtn.classList.add("d-none");
+    okBtn.classList.remove("d-none");
     const modal = new Modal(el);
     const cleanup = (result) => {
       okBtn.removeEventListener("click", ok);
@@ -34,6 +39,43 @@ export function showConfirm(message) {
       cleanup(false);
     };
     okBtn.addEventListener("click", ok);
+    cancelBtn.addEventListener("click", cancel);
+    modal.show();
+  });
+}
+
+export function showDeleteConfirm(message) {
+  return new Promise((resolve) => {
+    const el = document.getElementById("confirm-modal");
+    el.querySelector(".modal-body").textContent = message;
+    const okBtn = el.querySelector("#confirm-ok");
+    const delBtn = el.querySelector("#confirm-delete");
+    const delFilesBtn = el.querySelector("#confirm-delete-files");
+    const cancelBtn = el.querySelector(".btn-secondary");
+    okBtn.classList.add("d-none");
+    delBtn.classList.remove("d-none");
+    delFilesBtn.classList.remove("d-none");
+    const modal = new Modal(el);
+    const cleanup = (result) => {
+      delBtn.removeEventListener("click", doDelete);
+      delFilesBtn.removeEventListener("click", doDeleteFiles);
+      cancelBtn.removeEventListener("click", cancel);
+      resolve(result);
+    };
+    const doDelete = () => {
+      modal.hide();
+      cleanup("delete");
+    };
+    const doDeleteFiles = () => {
+      modal.hide();
+      cleanup("deleteFiles");
+    };
+    const cancel = () => {
+      modal.hide();
+      cleanup(null);
+    };
+    delBtn.addEventListener("click", doDelete);
+    delFilesBtn.addEventListener("click", doDeleteFiles);
     cancelBtn.addEventListener("click", cancel);
     modal.show();
   });
