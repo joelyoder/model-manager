@@ -30,6 +30,7 @@ func main() {
 		apiGroup.GET("/models/count", api.GetModelsCount)
 		apiGroup.GET("/base-models", api.GetBaseModels)
 		apiGroup.GET("/models/:id", api.GetModel)
+		apiGroup.POST("/models", api.CreateModel)
 		apiGroup.PUT("/models/:id", api.UpdateModel)
 		apiGroup.DELETE("/models/:id", api.DeleteModel)
 		apiGroup.POST("/sync", api.SyncCivitModels)
