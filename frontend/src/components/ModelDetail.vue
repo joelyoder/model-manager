@@ -90,12 +90,6 @@
         v-html="version.description"
         class="mb-4"
       ></div>
-      <div class="input-group mb-3">
-        <input type="file" @change="onGalleryFileChange" class="form-control" />
-        <button @click="uploadGallery" class="btn btn-secondary">
-          Add Image
-        </button>
-      </div>
       <div
         v-if="galleryImages.length"
         class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4 mb-4"
@@ -114,12 +108,12 @@
           >
             Set as Main
           </button>
-          <span v-else class="badge text-bg-success d-block text-center mt-1">
+          <span v-else class="badge text-bg-success d-block text-center mt-1 py-2">
             Main Image
           </span>
           <button
             @click="removeImage(img)"
-            class="btn btn-danger btn-sm mt-1 w-100"
+            class="btn btn-outline-danger btn-sm mt-1 w-100"
           >
             Remove
           </button>
@@ -137,6 +131,12 @@
             </table>
           </div>
         </div>
+      </div>
+      <div class="input-group mb-3">
+        <input type="file" @change="onGalleryFileChange" class="form-control" />
+        <button @click="uploadGallery" class="btn btn-secondary">
+          Add Image
+        </button>
       </div>
       <div
         class="mb-2 d-flex justify-content-center gap-2 pb-2"
