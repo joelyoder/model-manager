@@ -1,60 +1,64 @@
 <template>
   <div class="mx-4">
-    <div class="row">
-      <div class="col-md-6 d-flex align-content-start flex-wrap gap-2">
+    <div class="row gap-2">
+      <div class="col">
         <input
           v-model="search"
           placeholder="Search models..."
           class="form-control w-200 flex-grow-1"
           style="min-width: 200px"
         />
-
+      </div>
+      <div
+        class="col"
+      >
         <input
           v-model="tagsSearch"
           placeholder="Search tags (comma separated)"
           class="form-control"
           style="min-width: 200px"
         />
+      </div>
+    </div>
+    <div class="row gap-2 my-2">
+      <div class="col">
+        <select
+          v-model="selectedCategory"
+          class="form-select"
+          style="min-width: 250px"
+        >
+          <option value="">All categories</option>
+          <option v-for="cat in categories" :key="cat" :value="cat">
+            {{ cat }}
+          </option>
+        </select>
+      </div>
+      <div class="col">
+        <select
+          v-model="selectedBaseModel"
+          class="form-select"
+          style="min-width: 250px"
+        >
+          <option value="">All base models</option>
+          <option v-for="bm in baseModels" :key="bm" :value="bm">
+            {{ bm }}
+          </option>
+        </select>
+      </div>
+      <div class="col">
+        <select
+          v-model="selectedModelType"
+          class="form-select"
+          style="min-width: 250px"
+        >
+          <option value="">All model types</option>
+          <option v-for="t in modelTypes" :key="t" :value="t">
+            {{ t }}
+          </option>
+        </select>
+      </div>
 
-        <div class="row">
-          <div class="col-12 col-sm-4 mb-2">
-            <select
-              v-model="selectedCategory"
-              class="form-select"
-              style="min-width: 200px"
-            >
-              <option value="">All categories</option>
-              <option v-for="cat in categories" :key="cat" :value="cat">
-                {{ cat }}
-              </option>
-            </select>
-          </div>
-          <div class="col-12 col-sm-4 mb-2">
-            <select
-              v-model="selectedBaseModel"
-              class="form-select"
-              style="min-width: 200px"
-            >
-              <option value="">All base models</option>
-              <option v-for="bm in baseModels" :key="bm" :value="bm">
-                {{ bm }}
-              </option>
-            </select>
-          </div>
-          <div class="col-12 col-sm-4">
-            <select
-              v-model="selectedModelType"
-              class="form-select"
-              style="min-width: 200px"
-            >
-              <option value="">All model types</option>
-              <option v-for="t in modelTypes" :key="t" :value="t">
-                {{ t }}
-              </option>
-            </select>
-          </div>
-        </div>
-
+      <div class="col">
         <div class="form-check form-switch d-flex gap-2 align-items-center m-2">
           <input
             class="form-check-input"
@@ -66,77 +70,89 @@
           <label class="form-check-label" for="hide-nsfw">Hide NSFW</label>
         </div>
       </div>
-      <div class="col-md-6 d-flex align-content-start flex-wrap gap-2">
-        <div class="input-group">
-          <!-- Paste URL and fetch versions -->
-          <input
-            v-model="modelUrl"
-            placeholder="Paste CivitAI model URL"
-            class="form-control"
-            style="min-width: 200px"
-            @keyup.enter="loadVersions"
-          />
-          <div class="input-group-append">
-            <button
-              @click="loadVersions"
-              :disabled="loading || !modelUrl"
-              class="btn btn-primary"
-            >
-              Load Versions
-            </button>
-          </div>
-        </div>
 
-        <div class="input-group mb-2">
-          <!-- Version selector -->
-          <select
-            v-if="versions.length"
-            v-model="selectedVersionId"
-            class="form-select"
-            style="min-width: 200px"
-          >
-            <option disabled value="">Select version</option>
-            <option v-for="v in versions" :value="v.id" :key="v.id">
-              {{ v.name }} | {{ v.baseModel }} |
-              {{ ((v.sizeKB || 0) / 1024).toFixed(2) }} MB
-            </option>
-          </select>
-          <div class="input-group-append">
-            <!-- Download version -->
-            <button
-              v-if="selectedVersionId"
-              @click="downloadSelectedVersion"
-              :disabled="loading"
-              class="btn btn-primary"
-            >
-              <span
-                v-if="loading"
-                class="spinner-border spinner-border-sm"
-                aria-hidden="true"
-              ></span>
-              <span v-if="loading" role="status" class="ps-2"
-                >Downloading...</span
-              >
-              <span v-else>Download</span>
-            </button>
-          </div>
+      <div class="col d-flex justify-content-end">
+        <button
+          class="btn btn-outline-primary"
+          @click="showAddPanel = !showAddPanel"
+        >
+          {{ showAddPanel ? "Hide Imports" : "Import Models" }}
+        </button>
+      </div>
+    </div>
+    <div v-show="showAddPanel" class="card card-body my-3">
+      <div class="row g-3">
+        <div class="col-md-2">
+          <button @click="createManualModel" class="btn btn-outline-primary w-100">
+            Add Model
+          </button>
         </div>
-        <div v-if="downloading" class="progress w-100 mb-2">
-          <div
-            class="progress-bar progress-bar-striped"
-            :style="{ width: downloadProgress + '%' }"
-          >
-            {{ downloadProgress }}%
+        <div class="col">
+          <div class="input-group">
+            <!-- Paste URL and fetch versions -->
+            <input
+              v-model="modelUrl"
+              placeholder="Paste CivitAI model URL"
+              class="form-control"
+              style="min-width: 200px"
+              @keyup.enter="loadVersions"
+            />
+            <div class="input-group-append">
+              <button
+                @click="loadVersions"
+                :disabled="loading || !modelUrl"
+                class="btn btn-primary"
+              >
+                Load Versions
+              </button>
+            </div>
+          </div>
+
+          <div class="input-group mb-2">
+            <!-- Version selector -->
+            <select
+              v-if="versions.length"
+              v-model="selectedVersionId"
+              class="form-select"
+              style="min-width: 200px"
+            >
+              <option disabled value="">Select version</option>
+              <option v-for="v in versions" :value="v.id" :key="v.id">
+                {{ v.name }} | {{ v.baseModel }} |
+                {{ ((v.sizeKB || 0) / 1024).toFixed(2) }} MB
+              </option>
+            </select>
+            <div class="input-group-append">
+              <!-- Download version -->
+              <button
+                v-if="selectedVersionId"
+                @click="downloadSelectedVersion"
+                :disabled="loading"
+                class="btn btn-primary"
+              >
+                <span
+                  v-if="loading"
+                  class="spinner-border spinner-border-sm"
+                  aria-hidden="true"
+                ></span>
+                <span v-if="loading" role="status" class="ps-2"
+                  >Downloading...</span
+                >
+                <span v-else>Download</span>
+              </button>
+            </div>
+          </div>
+          <div v-if="downloading" class="progress w-100 mb-2">
+            <div
+              class="progress-bar progress-bar-striped"
+              :style="{ width: downloadProgress + '%' }"
+            >
+              {{ downloadProgress }}%
+            </div>
           </div>
         </div>
       </div>
     </div>
-  </div>
-
-  <div class="text-end my-3">
-    <button @click="createManualModel" class="btn btn-primary">
-      Add Model
-    </button>
   </div>
 
   <nav v-if="totalPages > 1" class="mb-4">
@@ -267,6 +283,7 @@ const selectedCategory = ref("");
 const selectedBaseModel = ref("");
 const selectedModelType = ref("");
 const hideNsfw = ref(false);
+const showAddPanel = ref(false);
 const modelUrl = ref("");
 const versions = ref([]);
 const selectedVersionId = ref("");

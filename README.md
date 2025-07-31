@@ -14,8 +14,7 @@ This is a desktop application to download and manage models for local image gene
     - Add a tag to multiple models at once
     - Remove a tag from multiple models at once
     - A way to see all current tags in the library and see all models with that tag
-    - Manually add a new model and version
-    - Add/remove images associated with the model version
+    - Add/remove gallery images associated with the model version
 - Settings
     - Add a setting to change the models and image folder locations
 - Utilities
