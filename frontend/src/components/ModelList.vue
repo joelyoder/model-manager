@@ -9,9 +9,7 @@
           style="min-width: 200px"
         />
       </div>
-      <div
-        class="col"
-      >
+      <div class="col">
         <input
           v-model="tagsSearch"
           placeholder="Search tags (comma separated)"
@@ -83,7 +81,10 @@
     <div v-show="showAddPanel" class="card card-body my-3">
       <div class="row g-3">
         <div class="col-md-2">
-          <button @click="createManualModel" class="btn btn-outline-primary w-100">
+          <button
+            @click="createManualModel"
+            class="btn btn-outline-primary w-100"
+          >
             Add Model
           </button>
         </div>
@@ -273,7 +274,7 @@
 import { ref, computed, onMounted, onUnmounted, watch } from "vue";
 import { useRouter } from "vue-router";
 import axios from "axios";
-import { showToast, showConfirm } from "../utils/ui";
+import { showToast, showDeleteConfirm } from "../utils/ui";
 import debounce from "../utils/debounce";
 
 const models = ref([]);
@@ -603,8 +604,10 @@ const downloadSelectedVersion = async () => {
 };
 
 const deleteVersion = async (id) => {
-  if (!(await showConfirm("Delete this version and all files?"))) return;
-  await axios.delete(`/api/versions/${id}`);
+  const choice = await showDeleteConfirm("Delete this version?");
+  if (!choice) return;
+  const files = choice === "deleteFiles" ? 1 : 0;
+  await axios.delete(`/api/versions/${id}?files=${files}`);
   page.value = 1;
   await fetchTotal();
   await fetchModels();

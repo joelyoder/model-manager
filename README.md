@@ -15,7 +15,6 @@ This is a desktop application to download and manage models for local image gene
     - Remove a tag from multiple models at once
     - A way to see all current tags in the library and see all models with that tag
     - Add/remove gallery images associated with the model version
-    - Add option to only delete record without deleting files
 - Civitai Import
     - Add check to ensure that model files with the same name don't overrite existing models in the folder
 - Settings

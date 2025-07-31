@@ -590,37 +590,45 @@ func DeleteVersion(c *gin.Context) {
 		return
 	}
 
-	if version.FilePath != "" {
-		os.Remove(version.FilePath)
-	}
-	if version.ImagePath != "" {
-		os.Remove(version.ImagePath)
-	}
+	deleteFiles := c.DefaultQuery("files", "1") != "0"
+
 	var imgs []models.VersionImage
 	database.DB.Where("version_id = ?", version.ID).Find(&imgs)
-	for _, img := range imgs {
-		if img.Path != "" {
-			os.Remove(img.Path)
+
+	if deleteFiles {
+		if version.FilePath != "" {
+			os.Remove(version.FilePath)
+		}
+		if version.ImagePath != "" {
+			os.Remove(version.ImagePath)
+		}
+		for _, img := range imgs {
+			if img.Path != "" {
+				os.Remove(img.Path)
+			}
 		}
 	}
+
 	database.DB.Where("version_id = ?", version.ID).Delete(&models.VersionImage{})
 
 	database.DB.Unscoped().Delete(&models.Version{}, version.ID)
 
-	var remaining int64
-	database.DB.Model(&models.Version{}).Where("model_id = ?", version.ModelID).Count(&remaining)
-	if remaining == 0 {
-		var model models.Model
-		if err := database.DB.First(&model, version.ModelID).Error; err == nil {
-			if model.FilePath != "" && model.FilePath == version.FilePath {
-				os.Remove(model.FilePath)
-				model.FilePath = ""
+	if deleteFiles {
+		var remaining int64
+		database.DB.Model(&models.Version{}).Where("model_id = ?", version.ModelID).Count(&remaining)
+		if remaining == 0 {
+			var model models.Model
+			if err := database.DB.First(&model, version.ModelID).Error; err == nil {
+				if model.FilePath != "" && model.FilePath == version.FilePath {
+					os.Remove(model.FilePath)
+					model.FilePath = ""
+				}
+				if model.ImagePath != "" && model.ImagePath == version.ImagePath {
+					os.Remove(model.ImagePath)
+					model.ImagePath = ""
+				}
+				database.DB.Save(&model)
 			}
-			if model.ImagePath != "" && model.ImagePath == version.ImagePath {
-				os.Remove(model.ImagePath)
-				model.ImagePath = ""
-			}
-			database.DB.Save(&model)
 		}
 	}
 
@@ -632,7 +640,7 @@ func DeleteVersion(c *gin.Context) {
 // populated with negative timestamps to avoid unique conflicts.
 func CreateModel(c *gin.Context) {
 	civitID := -int(time.Now().UnixNano())
-    model := models.Model{CivitID: civitID, Name: "New Model", Type: "Checkpoint"}
+	model := models.Model{CivitID: civitID, Name: "New Model", Type: "Checkpoint"}
 	if err := database.DB.Create(&model).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create model"})
 		return
@@ -854,16 +862,16 @@ func UploadVersionFile(c *gin.Context) {
 		return
 	}
 
-    modelType := c.Query("type")
-    if modelType == "" {
-            modelType = version.Type
-    }
-    if modelType == "" {
-            modelType = model.Type
-    }
-    if modelType == "" {
-            modelType = "Checkpoint"
-    }
+	modelType := c.Query("type")
+	if modelType == "" {
+		modelType = version.Type
+	}
+	if modelType == "" {
+		modelType = model.Type
+	}
+	if modelType == "" {
+		modelType = "Checkpoint"
+	}
 
 	destDir := "./backend/downloads/" + modelType
 	if kind == "image" {
