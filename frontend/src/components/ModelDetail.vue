@@ -164,30 +164,6 @@
         <label class="form-label">Model Type</label>
         <input v-model="model.type" class="form-control" />
       </div>
-      <div class="mb-3">
-        <label class="form-label">Model Image Path</label>
-        <input v-model="model.imagePath" class="form-control" />
-      </div>
-      <div class="mb-3">
-        <label class="form-label">Model File Path</label>
-        <input v-model="model.filePath" class="form-control" />
-      </div>
-      <div class="mb-3">
-        <label class="form-label">Image Width</label>
-        <input
-          v-model.number="model.imageWidth"
-          type="number"
-          class="form-control"
-        />
-      </div>
-      <div class="mb-3">
-        <label class="form-label">Image Height</label>
-        <input
-          v-model.number="model.imageHeight"
-          type="number"
-          class="form-control"
-        />
-      </div>
       <hr />
       <h5 class="mt-2 mb-3">Version Details</h5>
       <div class="mb-3">
