@@ -111,7 +111,7 @@
             <button
               id="confirm-delete"
               type="button"
-              class="btn btn-primary d-none"
+              class="btn btn-warning d-none"
             >
               Delete Version
             </button>
