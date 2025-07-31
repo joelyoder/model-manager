@@ -160,10 +160,6 @@
           class="form-control"
         />
       </div>
-      <div class="mb-3">
-        <label class="form-label">Model Type</label>
-        <input v-model="model.type" class="form-control" />
-      </div>
       <hr />
       <h5 class="mt-2 mb-3">Version Details</h5>
       <div class="mb-3">
@@ -184,7 +180,9 @@
       </div>
       <div class="mb-3">
         <label class="form-label">Version Type</label>
-        <input v-model="version.type" class="form-control" />
+        <select v-model="version.type" class="form-select">
+          <option v-for="t in modelTypes" :key="t" :value="t">{{ t }}</option>
+        </select>
       </div>
       <div class="form-check mb-3">
         <input
@@ -208,8 +206,22 @@
         <input v-model="version.trainedWords" class="form-control" />
       </div>
       <div class="mb-3">
+        <label class="form-label">Upload Image File</label>
+        <div class="input-group">
+          <input type="file" @change="onImageFileChange" class="form-control" />
+          <button @click="uploadImage" class="btn btn-secondary">Upload</button>
+        </div>
+      </div>
+      <div class="mb-3">
         <label class="form-label">Version Image Path</label>
         <input v-model="version.imagePath" class="form-control" />
+      </div>
+      <div class="mb-3">
+        <label class="form-label">Upload Model File</label>
+        <div class="input-group">
+          <input type="file" @change="onModelFileChange" class="form-control" />
+          <button @click="uploadModel" class="btn btn-secondary">Upload</button>
+        </div>
       </div>
       <div class="mb-3">
         <label class="form-label">Version File Path</label>
@@ -273,6 +285,28 @@ const version = ref({});
 const isEditing = ref(false);
 const editor = ref(null);
 let quill;
+
+const modelTypes = [
+  "Checkpoint",
+  "TextualInversion",
+  "Hypernetwork",
+  "AestheticGradient",
+  "LORA",
+  "LoCon",
+  "DoRA",
+  "Controlnet",
+  "Upscaler",
+  "MotionModule",
+  "VAE",
+  "Wildcards",
+  "Poses",
+  "Workflows",
+  "Detection",
+  "Other",
+];
+
+const imageFile = ref(null);
+const modelFile = ref(null);
 
 const imageUrl = computed(() => {
   const path = version.value.imagePath || model.value.imagePath;
@@ -414,5 +448,41 @@ const setMainImage = async (img) => {
   await axios.post(`/api/versions/${version.value.ID}/main-image/${img.ID}`);
   await fetchData();
   showToast("Main image updated", "success");
+};
+
+const onImageFileChange = (e) => {
+  imageFile.value = e.target.files[0] || null;
+};
+
+const onModelFileChange = (e) => {
+  modelFile.value = e.target.files[0] || null;
+};
+
+const uploadImage = async () => {
+  if (!imageFile.value) return;
+  const fd = new FormData();
+  fd.append("file", imageFile.value);
+  const res = await axios.post(
+    `/api/versions/${version.value.ID}/upload?kind=image`,
+    fd,
+    { headers: { "Content-Type": "multipart/form-data" } },
+  );
+  version.value.imagePath = res.data.path;
+  imageFile.value = null;
+  showToast("Image uploaded", "success");
+};
+
+const uploadModel = async () => {
+  if (!modelFile.value) return;
+  const fd = new FormData();
+  fd.append("file", modelFile.value);
+  const res = await axios.post(
+    `/api/versions/${version.value.ID}/upload?kind=file`,
+    fd,
+    { headers: { "Content-Type": "multipart/form-data" } },
+  );
+  version.value.filePath = res.data.path;
+  modelFile.value = null;
+  showToast("File uploaded", "success");
 };
 </script>
