@@ -916,3 +916,129 @@ func UploadVersionFile(c *gin.Context) {
 
 	c.JSON(http.StatusOK, gin.H{"path": absPath})
 }
+
+// UploadVersionImage allows uploading an additional gallery image for a version.
+func UploadVersionImage(c *gin.Context) {
+	verIDStr := c.Param("id")
+	verID, err := strconv.Atoi(verIDStr)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid version ID"})
+		return
+	}
+
+	file, header, err := c.Request.FormFile("file")
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "file required"})
+		return
+	}
+	defer file.Close()
+
+	var version models.Version
+	if err := database.DB.First(&version, verID).Error; err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "Version not found"})
+		return
+	}
+
+	var model models.Model
+	if err := database.DB.First(&model, version.ModelID).Error; err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "Model not found"})
+		return
+	}
+
+	modelType := c.Query("type")
+	if modelType == "" {
+		modelType = version.Type
+	}
+	if modelType == "" {
+		modelType = model.Type
+	}
+	if modelType == "" {
+		modelType = "Checkpoint"
+	}
+
+	destDir := "./backend/images/" + modelType
+	os.MkdirAll(destDir, os.ModePerm)
+	filename := filepath.Base(header.Filename)
+	destPath := filepath.Join(destDir, filename)
+
+	out, err := os.Create(destPath)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to save"})
+		return
+	}
+	if _, err := io.Copy(out, file); err != nil {
+		out.Close()
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to save"})
+		return
+	}
+	out.Close()
+
+	absPath, _ := filepath.Abs(destPath)
+	w, h, _ := GetImageDimensions(absPath)
+	hash, _ := FileHash(absPath)
+	metaMap, _ := ExtractImageMetadata(absPath)
+	metaBytes, _ := json.Marshal(metaMap)
+
+	img := models.VersionImage{
+		VersionID: version.ID,
+		Path:      absPath,
+		Width:     w,
+		Height:    h,
+		Hash:      hash,
+		Meta:      string(metaBytes),
+	}
+	database.DB.Create(&img)
+	c.JSON(http.StatusOK, img)
+}
+
+// DeleteVersionImage removes a gallery image from a version and disk.
+func DeleteVersionImage(c *gin.Context) {
+	verIDStr := c.Param("verId")
+	verID, err := strconv.Atoi(verIDStr)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid version ID"})
+		return
+	}
+	imgIDStr := c.Param("imgId")
+	imgID, err := strconv.Atoi(imgIDStr)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid image ID"})
+		return
+	}
+
+	var version models.Version
+	if err := database.DB.First(&version, verID).Error; err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "Version not found"})
+		return
+	}
+
+	var image models.VersionImage
+	if err := database.DB.First(&image, imgID).Error; err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "Image not found"})
+		return
+	}
+	if image.VersionID != version.ID {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Image does not belong to this version"})
+		return
+	}
+
+	if image.Path != "" {
+		os.Remove(image.Path)
+	}
+	database.DB.Delete(&image)
+
+	if version.ImagePath == image.Path {
+		oldPath := version.ImagePath
+		version.ImagePath = ""
+		database.DB.Save(&version)
+		var model models.Model
+		if err := database.DB.First(&model, version.ModelID).Error; err == nil {
+			if model.ImagePath == oldPath {
+				model.ImagePath = ""
+				database.DB.Save(&model)
+			}
+		}
+	}
+
+	c.JSON(http.StatusOK, gin.H{"message": "Image deleted"})
+}
