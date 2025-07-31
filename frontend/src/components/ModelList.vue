@@ -1,60 +1,64 @@
 <template>
   <div class="mx-4">
-    <div class="row">
-      <div class="col-md-6 d-flex align-content-start flex-wrap gap-2">
+    <div class="row gap-2">
+      <div class="col">
         <input
           v-model="search"
           placeholder="Search models..."
           class="form-control w-200 flex-grow-1"
           style="min-width: 200px"
         />
-
+      </div>
+      <div
+        class="col"
+      >
         <input
           v-model="tagsSearch"
           placeholder="Search tags (comma separated)"
           class="form-control"
           style="min-width: 200px"
         />
+      </div>
+    </div>
+    <div class="row gap-2 my-2">
+      <div class="col">
+        <select
+          v-model="selectedCategory"
+          class="form-select"
+          style="min-width: 250px"
+        >
+          <option value="">All categories</option>
+          <option v-for="cat in categories" :key="cat" :value="cat">
+            {{ cat }}
+          </option>
+        </select>
+      </div>
+      <div class="col">
+        <select
+          v-model="selectedBaseModel"
+          class="form-select"
+          style="min-width: 250px"
+        >
+          <option value="">All base models</option>
+          <option v-for="bm in baseModels" :key="bm" :value="bm">
+            {{ bm }}
+          </option>
+        </select>
+      </div>
+      <div class="col">
+        <select
+          v-model="selectedModelType"
+          class="form-select"
+          style="min-width: 250px"
+        >
+          <option value="">All model types</option>
+          <option v-for="t in modelTypes" :key="t" :value="t">
+            {{ t }}
+          </option>
+        </select>
+      </div>
 
-        <div class="row">
-          <div class="col-12 col-sm-4 mb-2">
-            <select
-              v-model="selectedCategory"
-              class="form-select"
-              style="min-width: 200px"
-            >
-              <option value="">All categories</option>
-              <option v-for="cat in categories" :key="cat" :value="cat">
-                {{ cat }}
-              </option>
-            </select>
-          </div>
-          <div class="col-12 col-sm-4 mb-2">
-            <select
-              v-model="selectedBaseModel"
-              class="form-select"
-              style="min-width: 200px"
-            >
-              <option value="">All base models</option>
-              <option v-for="bm in baseModels" :key="bm" :value="bm">
-                {{ bm }}
-              </option>
-            </select>
-          </div>
-          <div class="col-12 col-sm-4">
-            <select
-              v-model="selectedModelType"
-              class="form-select"
-              style="min-width: 200px"
-            >
-              <option value="">All model types</option>
-              <option v-for="t in modelTypes" :key="t" :value="t">
-                {{ t }}
-              </option>
-            </select>
-          </div>
-        </div>
-
+      <div class="col">
         <div class="form-check form-switch d-flex gap-2 align-items-center m-2">
           <input
             class="form-check-input"
@@ -66,20 +70,24 @@
           <label class="form-check-label" for="hide-nsfw">Hide NSFW</label>
         </div>
       </div>
-      <div
-        class="col-md-6 d-flex justify-content-end align-content-start flex-wrap gap-2"
-      >
+
+      <div class="col d-flex justify-content-end">
         <button
-          class="btn btn-outline-secondary mb-2"
+          class="btn btn-outline-primary"
           @click="showAddPanel = !showAddPanel"
         >
-          {{ showAddPanel ? "Hide Add Panel" : "Show Add Panel" }}
+          {{ showAddPanel ? "Hide Imports" : "Import Models" }}
         </button>
       </div>
     </div>
-    <div v-show="showAddPanel" class="card card-body mb-3 mt-2">
-      <div class="row g-2">
-        <div class="col-md-8 d-flex align-content-start flex-wrap gap-2">
+    <div v-show="showAddPanel" class="card card-body my-3">
+      <div class="row g-3">
+        <div class="col-md-2">
+          <button @click="createManualModel" class="btn btn-outline-primary w-100">
+            Add Model
+          </button>
+        </div>
+        <div class="col">
           <div class="input-group">
             <!-- Paste URL and fetch versions -->
             <input
@@ -142,11 +150,6 @@
               {{ downloadProgress }}%
             </div>
           </div>
-        </div>
-        <div class="col-md-4 text-end">
-          <button @click="createManualModel" class="btn btn-primary w-100">
-            Add Model
-          </button>
         </div>
       </div>
     </div>
