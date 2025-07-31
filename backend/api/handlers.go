@@ -993,7 +993,7 @@ func UploadVersionImage(c *gin.Context) {
 
 // DeleteVersionImage removes a gallery image from a version and disk.
 func DeleteVersionImage(c *gin.Context) {
-	verIDStr := c.Param("verId")
+	verIDStr := c.Param("id")
 	verID, err := strconv.Atoi(verIDStr)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid version ID"})

@@ -17,7 +17,7 @@ and displayed alongside the image.
 ### API Endpoints
 - `POST /api/versions/:id/images` – upload a gallery image. Form field `file`
   should contain the image. Returns the created `VersionImage` record.
-- `DELETE /api/versions/:verId/images/:imgId` – remove a gallery image.
+- `DELETE /api/versions/:id/images/:imgId` – remove a gallery image.
 
 ## Todo
 - Library management
