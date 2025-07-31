@@ -76,7 +76,7 @@
           class="btn btn-outline-primary"
           @click="showAddPanel = !showAddPanel"
         >
-          {{ showAddPanel ? "Hide Imports" : "Import Models" }}
+          {{ showAddPanel ? "Hide Panel" : "Add Models" }}
         </button>
       </div>
     </div>
