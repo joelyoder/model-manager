@@ -66,77 +66,90 @@
           <label class="form-check-label" for="hide-nsfw">Hide NSFW</label>
         </div>
       </div>
-      <div class="col-md-6 d-flex align-content-start flex-wrap gap-2">
-        <div class="input-group">
-          <!-- Paste URL and fetch versions -->
-          <input
-            v-model="modelUrl"
-            placeholder="Paste CivitAI model URL"
-            class="form-control"
-            style="min-width: 200px"
-            @keyup.enter="loadVersions"
-          />
-          <div class="input-group-append">
-            <button
-              @click="loadVersions"
-              :disabled="loading || !modelUrl"
-              class="btn btn-primary"
-            >
-              Load Versions
-            </button>
-          </div>
-        </div>
-
-        <div class="input-group mb-2">
-          <!-- Version selector -->
-          <select
-            v-if="versions.length"
-            v-model="selectedVersionId"
-            class="form-select"
-            style="min-width: 200px"
-          >
-            <option disabled value="">Select version</option>
-            <option v-for="v in versions" :value="v.id" :key="v.id">
-              {{ v.name }} | {{ v.baseModel }} |
-              {{ ((v.sizeKB || 0) / 1024).toFixed(2) }} MB
-            </option>
-          </select>
-          <div class="input-group-append">
-            <!-- Download version -->
-            <button
-              v-if="selectedVersionId"
-              @click="downloadSelectedVersion"
-              :disabled="loading"
-              class="btn btn-primary"
-            >
-              <span
-                v-if="loading"
-                class="spinner-border spinner-border-sm"
-                aria-hidden="true"
-              ></span>
-              <span v-if="loading" role="status" class="ps-2"
-                >Downloading...</span
+      <div
+        class="col-md-6 d-flex justify-content-end align-content-start flex-wrap gap-2"
+      >
+        <button
+          class="btn btn-outline-secondary mb-2"
+          @click="showAddPanel = !showAddPanel"
+        >
+          {{ showAddPanel ? "Hide Add Panel" : "Show Add Panel" }}
+        </button>
+      </div>
+    </div>
+    <div v-show="showAddPanel" class="card card-body mb-3 mt-2">
+      <div class="row g-2">
+        <div class="col-md-8 d-flex align-content-start flex-wrap gap-2">
+          <div class="input-group">
+            <!-- Paste URL and fetch versions -->
+            <input
+              v-model="modelUrl"
+              placeholder="Paste CivitAI model URL"
+              class="form-control"
+              style="min-width: 200px"
+              @keyup.enter="loadVersions"
+            />
+            <div class="input-group-append">
+              <button
+                @click="loadVersions"
+                :disabled="loading || !modelUrl"
+                class="btn btn-primary"
               >
-              <span v-else>Download</span>
-            </button>
+                Load Versions
+              </button>
+            </div>
+          </div>
+
+          <div class="input-group mb-2">
+            <!-- Version selector -->
+            <select
+              v-if="versions.length"
+              v-model="selectedVersionId"
+              class="form-select"
+              style="min-width: 200px"
+            >
+              <option disabled value="">Select version</option>
+              <option v-for="v in versions" :value="v.id" :key="v.id">
+                {{ v.name }} | {{ v.baseModel }} |
+                {{ ((v.sizeKB || 0) / 1024).toFixed(2) }} MB
+              </option>
+            </select>
+            <div class="input-group-append">
+              <!-- Download version -->
+              <button
+                v-if="selectedVersionId"
+                @click="downloadSelectedVersion"
+                :disabled="loading"
+                class="btn btn-primary"
+              >
+                <span
+                  v-if="loading"
+                  class="spinner-border spinner-border-sm"
+                  aria-hidden="true"
+                ></span>
+                <span v-if="loading" role="status" class="ps-2"
+                  >Downloading...</span
+                >
+                <span v-else>Download</span>
+              </button>
+            </div>
+          </div>
+          <div v-if="downloading" class="progress w-100 mb-2">
+            <div
+              class="progress-bar progress-bar-striped"
+              :style="{ width: downloadProgress + '%' }"
+            >
+              {{ downloadProgress }}%
+            </div>
           </div>
         </div>
-        <div v-if="downloading" class="progress w-100 mb-2">
-          <div
-            class="progress-bar progress-bar-striped"
-            :style="{ width: downloadProgress + '%' }"
-          >
-            {{ downloadProgress }}%
-          </div>
+        <div class="col-md-4 text-end">
+          <button @click="createManualModel" class="btn btn-primary w-100">
+            Add Model
+          </button>
         </div>
       </div>
     </div>
-  </div>
-
-  <div class="text-end my-3">
-    <button @click="createManualModel" class="btn btn-primary">
-      Add Model
-    </button>
   </div>
 
   <nav v-if="totalPages > 1" class="mb-4">
@@ -267,6 +280,7 @@ const selectedCategory = ref("");
 const selectedBaseModel = ref("");
 const selectedModelType = ref("");
 const hideNsfw = ref(false);
+const showAddPanel = ref(false);
 const modelUrl = ref("");
 const versions = ref([]);
 const selectedVersionId = ref("");
