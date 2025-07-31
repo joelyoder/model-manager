@@ -408,12 +408,22 @@ const fetchBaseModels = async () => {
 };
 
 const modelTypes = [
-  "LORA",
-  "LoCon",
   "Checkpoint",
-  "VAE",
   "TextualInversion",
   "Hypernetwork",
+  "AestheticGradient",
+  "LORA",
+  "LoCon",
+  "DoRA",
+  "Controlnet",
+  "Upscaler",
+  "MotionModule",
+  "VAE",
+  "Wildcards",
+  "Poses",
+  "Workflows",
+  "Detection",
+  "Other",
 ];
 
 const categories = [
