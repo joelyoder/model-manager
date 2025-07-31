@@ -133,6 +133,12 @@
     </div>
   </div>
 
+  <div class="text-end my-3">
+    <button @click="createManualModel" class="btn btn-primary">
+      Add Model
+    </button>
+  </div>
+
   <nav v-if="totalPages > 1" class="mb-4">
     <ul class="pagination justify-content-center align-items-center gap-1">
       <li class="page-item" :class="{ disabled: page === 1 }">
@@ -456,7 +462,8 @@ const versionCards = computed(() => {
           const tags = (v.tags || "")
             .split(",")
             .map((t) => t.trim().toLowerCase());
-          if (!tags.includes(selectedCategory.value.toLowerCase())) return false;
+          if (!tags.includes(selectedCategory.value.toLowerCase()))
+            return false;
         }
 
         if (tagsSearch.value.trim()) {
@@ -589,5 +596,16 @@ const changePage = async (p) => {
 
 const goToPage = async () => {
   await changePage(pageInput.value);
+};
+
+const createManualModel = async () => {
+  try {
+    const res = await axios.post("/api/models");
+    const { modelId, versionId } = res.data;
+    router.push(`/model/${modelId}/version/${versionId}?edit=1`);
+  } catch (err) {
+    console.error(err);
+    showToast("Failed to create model", "danger");
+  }
 };
 </script>

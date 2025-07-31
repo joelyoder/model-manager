@@ -10,6 +10,7 @@ import (
 	"strconv"
 	"strings"
 	"sync"
+	"time"
 
 	"model-manager/backend/database"
 	"model-manager/backend/models"
@@ -623,6 +624,27 @@ func DeleteVersion(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, gin.H{"message": "Version deleted"})
+}
+
+// CreateModel inserts a new model and initial blank version
+// and returns their IDs. The CivitId and VersionId fields are
+// populated with negative timestamps to avoid unique conflicts.
+func CreateModel(c *gin.Context) {
+	civitID := -int(time.Now().UnixNano())
+	model := models.Model{CivitID: civitID, Name: "New Model"}
+	if err := database.DB.Create(&model).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create model"})
+		return
+	}
+
+	verID := -int(time.Now().UnixNano())
+	version := models.Version{ModelID: model.ID, VersionID: verID, Name: "v1"}
+	if err := database.DB.Create(&version).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create version"})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"modelId": model.ID, "versionId": version.ID})
 }
 
 // UpdateModel updates an existing model with new values

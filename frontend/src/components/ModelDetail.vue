@@ -350,7 +350,12 @@ const fetchData = async () => {
   version.value = res.data.version;
 };
 
-onMounted(fetchData);
+onMounted(async () => {
+  await fetchData();
+  if (route.query.edit === "1") {
+    startEdit();
+  }
+});
 
 watch(isEditing, async (val) => {
   if (val) {
