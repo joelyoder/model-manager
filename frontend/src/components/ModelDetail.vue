@@ -101,22 +101,28 @@
             :height="img.height"
             class="img-fluid"
           />
-          <button
-            v-if="img.path !== version.imagePath"
-            @click="setMainImage(img)"
-            class="btn btn-secondary btn-sm mt-1 w-100"
-          >
-            Set as Main
-          </button>
-          <span v-else class="badge text-bg-success d-block text-center mt-1 py-2">
-            Main Image
-          </span>
-          <button
-            @click="removeImage(img)"
-            class="btn btn-outline-danger btn-sm mt-1 w-100"
-          >
-            Remove
-          </button>
+          <div class="row g-1">
+            <div class="col">
+              <button
+                v-if="img.path !== version.imagePath"
+                @click="setMainImage(img)"
+                class="btn btn-outline-primary btn-sm mt-1 w-100"
+              >
+                Set as Main
+              </button>
+              <span v-else class="badge text-bg-success d-block text-center mt-1 py-2">
+                Main Image
+              </span>
+            </div>
+            <div class="col">
+              <button
+                @click="removeImage(img)"
+                class="btn btn-outline-danger btn-sm mt-1 w-100"
+              >
+                Remove
+              </button>
+            </div>
+          </div>
           <div class="table-responsive">
             <table
               v-if="Object.keys(img.parsedMeta || {}).length"
