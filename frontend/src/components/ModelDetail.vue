@@ -450,6 +450,13 @@ const setMainImage = async (img) => {
   showToast("Main image updated", "success");
 };
 
+watch(
+  () => version.value.type,
+  (val) => {
+    if (model.value) model.value.type = val;
+  },
+);
+
 const onImageFileChange = (e) => {
   imageFile.value = e.target.files[0] || null;
 };
@@ -463,7 +470,7 @@ const uploadImage = async () => {
   const fd = new FormData();
   fd.append("file", imageFile.value);
   const res = await axios.post(
-    `/api/versions/${version.value.ID}/upload?kind=image`,
+    `/api/versions/${version.value.ID}/upload?kind=image&type=${encodeURIComponent(version.value.type)}`,
     fd,
     { headers: { "Content-Type": "multipart/form-data" } },
   );
@@ -477,7 +484,7 @@ const uploadModel = async () => {
   const fd = new FormData();
   fd.append("file", modelFile.value);
   const res = await axios.post(
-    `/api/versions/${version.value.ID}/upload?kind=file`,
+    `/api/versions/${version.value.ID}/upload?kind=file&type=${encodeURIComponent(version.value.type)}`,
     fd,
     { headers: { "Content-Type": "multipart/form-data" } },
   );

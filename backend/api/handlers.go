@@ -632,7 +632,7 @@ func DeleteVersion(c *gin.Context) {
 // populated with negative timestamps to avoid unique conflicts.
 func CreateModel(c *gin.Context) {
 	civitID := -int(time.Now().UnixNano())
-	model := models.Model{CivitID: civitID, Name: "New Model", Type: "Other"}
+    model := models.Model{CivitID: civitID, Name: "New Model", Type: "Checkpoint"}
 	if err := database.DB.Create(&model).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create model"})
 		return
@@ -822,8 +822,9 @@ func SetVersionMainImage(c *gin.Context) {
 
 // UploadVersionFile handles manual uploads of model or image files for a version.
 // The "kind" query parameter should be "file" or "image" to determine which path
-// to update. The file will be copied under downloads/<type>/ or images/<type>/
-// based on the parent model's type. The new absolute path is returned as JSON.
+// to update. The "type" query parameter controls which model type folder the file
+// is placed under. The file will be copied under downloads/<type>/ or images/<type>/
+// based on that value. The new absolute path is returned as JSON.
 func UploadVersionFile(c *gin.Context) {
 	verIDStr := c.Param("id")
 	verID, err := strconv.Atoi(verIDStr)
@@ -853,10 +854,16 @@ func UploadVersionFile(c *gin.Context) {
 		return
 	}
 
-	modelType := model.Type
-	if modelType == "" {
-		modelType = "Other"
-	}
+    modelType := c.Query("type")
+    if modelType == "" {
+            modelType = version.Type
+    }
+    if modelType == "" {
+            modelType = model.Type
+    }
+    if modelType == "" {
+            modelType = "Checkpoint"
+    }
 
 	destDir := "./backend/downloads/" + modelType
 	if kind == "image" {
