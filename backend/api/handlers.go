@@ -7,6 +7,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"path/filepath"
 	"strconv"
 	"strings"
 	"sync"
@@ -631,14 +632,14 @@ func DeleteVersion(c *gin.Context) {
 // populated with negative timestamps to avoid unique conflicts.
 func CreateModel(c *gin.Context) {
 	civitID := -int(time.Now().UnixNano())
-	model := models.Model{CivitID: civitID, Name: "New Model"}
+    model := models.Model{CivitID: civitID, Name: "New Model", Type: "Checkpoint"}
 	if err := database.DB.Create(&model).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create model"})
 		return
 	}
 
 	verID := -int(time.Now().UnixNano())
-	version := models.Version{ModelID: model.ID, VersionID: verID, Name: "v1"}
+	version := models.Version{ModelID: model.ID, VersionID: verID, Name: "v1", Type: model.Type}
 	if err := database.DB.Create(&version).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create version"})
 		return
@@ -817,4 +818,93 @@ func SetVersionMainImage(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, gin.H{"message": "Main image updated"})
+}
+
+// UploadVersionFile handles manual uploads of model or image files for a version.
+// The "kind" query parameter should be "file" or "image" to determine which path
+// to update. The "type" query parameter controls which model type folder the file
+// is placed under. The file will be copied under downloads/<type>/ or images/<type>/
+// based on that value. The new absolute path is returned as JSON.
+func UploadVersionFile(c *gin.Context) {
+	verIDStr := c.Param("id")
+	verID, err := strconv.Atoi(verIDStr)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid version ID"})
+		return
+	}
+
+	kind := c.DefaultQuery("kind", "file")
+
+	file, header, err := c.Request.FormFile("file")
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "file required"})
+		return
+	}
+	defer file.Close()
+
+	var version models.Version
+	if err := database.DB.First(&version, verID).Error; err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "Version not found"})
+		return
+	}
+
+	var model models.Model
+	if err := database.DB.First(&model, version.ModelID).Error; err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "Model not found"})
+		return
+	}
+
+    modelType := c.Query("type")
+    if modelType == "" {
+            modelType = version.Type
+    }
+    if modelType == "" {
+            modelType = model.Type
+    }
+    if modelType == "" {
+            modelType = "Checkpoint"
+    }
+
+	destDir := "./backend/downloads/" + modelType
+	if kind == "image" {
+		destDir = "./backend/images/" + modelType
+	}
+	os.MkdirAll(destDir, os.ModePerm)
+	filename := filepath.Base(header.Filename)
+	destPath := filepath.Join(destDir, filename)
+
+	out, err := os.Create(destPath)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to save"})
+		return
+	}
+	if _, err := io.Copy(out, file); err != nil {
+		out.Close()
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to save"})
+		return
+	}
+	out.Close()
+
+	absPath, _ := filepath.Abs(destPath)
+
+	if kind == "image" {
+		version.ImagePath = absPath
+		if model.ImagePath == "" {
+			model.ImagePath = absPath
+			if w, h, err := GetImageDimensions(absPath); err == nil {
+				model.ImageWidth = w
+				model.ImageHeight = h
+			}
+		}
+	} else {
+		version.FilePath = absPath
+		if model.FilePath == "" {
+			model.FilePath = absPath
+		}
+	}
+
+	database.DB.Save(&version)
+	database.DB.Save(&model)
+
+	c.JSON(http.StatusOK, gin.H{"path": absPath})
 }

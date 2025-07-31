@@ -42,6 +42,7 @@ func main() {
 		apiGroup.PUT("/versions/:id", api.UpdateVersion)
 		apiGroup.POST("/versions/:id/refresh", api.RefreshVersion)
 		apiGroup.POST("/versions/:id/main-image/:imageId", api.SetVersionMainImage)
+		apiGroup.POST("/versions/:id/upload", api.UploadVersionFile)
 		apiGroup.DELETE("/versions/:id", api.DeleteVersion)
 		apiGroup.POST("/import", api.ImportModels)
 		apiGroup.POST("/import-db", api.ImportDatabase)
