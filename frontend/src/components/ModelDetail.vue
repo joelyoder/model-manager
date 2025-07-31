@@ -17,76 +17,76 @@
           <img
             v-if="imageUrl"
             :src="imageUrl"
-            :width="model.imageWidth"
-            :height="model.imageHeight"
             class="img-fluid mb-4"
           />
         </div>
         <div class="col-md-8">
           <h2 class="fw-bold">{{ model.name }}</h2>
           <h3 v-if="version.name" class="mb-2">{{ version.name }}</h3>
-          <table class="table mt-4">
-            <tbody>
-              <tr v-if="version.tags">
-                <th>Tags</th>
-                <td>{{ version.tags.split(",").join(", ") }}</td>
-              </tr>
-              <tr>
-                <th>Type</th>
-                <td>{{ version.type }}</td>
-              </tr>
-              <tr>
-                <th>NSFW</th>
-                <td>{{ version.nsfw }}</td>
-              </tr>
-              <tr>
-                <th>Base Model</th>
-                <td>{{ version.baseModel }}</td>
-              </tr>
-              <tr v-if="version.trainedWords">
-                <th>Trained Words</th>
-                <td>{{ version.trainedWords.split(",").join(", ") }}</td>
-              </tr>
-              <tr v-if="version.filePath">
-                <th>File</th>
-                <td>{{ fileName }}</td>
-              </tr>
-              <tr v-if="version.sizeKB">
-                <th>Size</th>
-                <td>{{ (version.sizeKB / 1024).toFixed(2) }} MB</td>
-              </tr>
-              <tr v-if="version.modelUrl">
-                <th>Model URL</th>
-                <td>
-                  <a :href="version.modelUrl" target="_blank">{{
-                    version.modelUrl
-                  }}</a>
-                </td>
-              </tr>
-              <tr v-if="version.createdAt">
-                <th>Created</th>
-                <td>{{ createdAtReadable }}</td>
-              </tr>
-              <tr v-if="version.updatedAt">
-                <th>Updated</th>
-                <td>{{ updatedAtReadable }}</td>
-              </tr>
-              <tr v-if="version.sha256">
-                <th>SHA256</th>
-                <td>
-                  <code>{{ version.sha256 }}</code>
-                </td>
-              </tr>
-              <tr v-if="version.downloadUrl">
-                <th>Download URL</th>
-                <td>
-                  <a :href="version.downloadUrl" target="_blank">{{
-                    version.downloadUrl
-                  }}</a>
-                </td>
-              </tr>
-            </tbody>
-          </table>
+          <div class="table-responsive">
+            <table class="table mt-4">
+              <tbody>
+                <tr v-if="version.tags">
+                  <th>Tags</th>
+                  <td>{{ version.tags.split(",").join(", ") }}</td>
+                </tr>
+                <tr>
+                  <th>Type</th>
+                  <td>{{ version.type }}</td>
+                </tr>
+                <tr>
+                  <th>NSFW</th>
+                  <td>{{ version.nsfw }}</td>
+                </tr>
+                <tr>
+                  <th>Base Model</th>
+                  <td>{{ version.baseModel }}</td>
+                </tr>
+                <tr v-if="version.trainedWords">
+                  <th>Trained Words</th>
+                  <td>{{ version.trainedWords.split(",").join(", ") }}</td>
+                </tr>
+                <tr v-if="version.filePath">
+                  <th>File</th>
+                  <td>{{ fileName }}</td>
+                </tr>
+                <tr v-if="version.sizeKB">
+                  <th>Size</th>
+                  <td>{{ (version.sizeKB / 1024).toFixed(2) }} MB</td>
+                </tr>
+                <tr v-if="version.modelUrl">
+                  <th>Model URL</th>
+                  <td>
+                    <a :href="version.modelUrl" target="_blank">{{
+                      version.modelUrl
+                    }}</a>
+                  </td>
+                </tr>
+                <tr v-if="version.createdAt">
+                  <th>Created</th>
+                  <td>{{ createdAtReadable }}</td>
+                </tr>
+                <tr v-if="version.updatedAt">
+                  <th>Updated</th>
+                  <td>{{ updatedAtReadable }}</td>
+                </tr>
+                <tr v-if="version.sha256">
+                  <th>SHA256</th>
+                  <td>
+                    <code>{{ version.sha256 }}</code>
+                  </td>
+                </tr>
+                <tr v-if="version.downloadUrl">
+                  <th>Download URL</th>
+                  <td>
+                    <a :href="version.downloadUrl" target="_blank">{{
+                      version.downloadUrl
+                    }}</a>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>    
         </div>
       </div>
       <div
@@ -115,17 +115,19 @@
           <span v-else class="badge text-bg-success d-block text-center mt-1">
             Main Image
           </span>
-          <table
-            v-if="Object.keys(img.parsedMeta || {}).length"
-            class="table table-sm bg-body-secondary rounded mb-0 mt-1"
-          >
-            <tbody>
-              <tr v-for="(value, key) in img.parsedMeta" :key="key">
-                <th class="fw-normal">{{ key }}</th>
-                <td>{{ value }}</td>
-              </tr>
-            </tbody>
-          </table>
+          <div class="table-responsive">
+            <table
+              v-if="Object.keys(img.parsedMeta || {}).length"
+              class="table table-sm mb-0 mt-1"
+            >
+              <tbody>
+                <tr v-for="(value, key) in img.parsedMeta" :key="key">
+                  <th class="fw-normal">{{ key }}</th>
+                  <td>{{ value }}</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
         </div>
       </div>
       <div
