@@ -89,6 +89,7 @@
       ></router-link>
     </div>
     <router-view />
+    <BackToTop />
     <div
       id="toast-container"
       class="toast-container position-fixed bottom-0 end-0 p-3"
@@ -129,4 +130,6 @@
   </div>
 </template>
 
-<script setup></script>
+<script setup>
+import BackToTop from "./components/BackToTop.vue";
+</script>
