@@ -6,119 +6,209 @@
     <h2 class="my-3">Utilities</h2>
     <h3 class="h5 mt-5">Import JSON from Model Organizer</h3>
     <div class="input-group mb-3">
-      <input type="file" accept=".json" @change="onFileChange" class="form-control" />
+      <input
+        type="file"
+        accept=".json"
+        @change="onFileChange"
+        class="form-control"
+      />
       <div class="input-group-append">
-        <button @click="importJson" :disabled="!importFile" class="btn btn-primary">
-        Import
+        <button
+          @click="importJson"
+          :disabled="!importFile"
+          class="btn btn-primary"
+        >
+          Import
         </button>
       </div>
     </div>
     <div class="d-flex gap-2 mb-3">
       <span>Update:</span>
       <div class="form-check">
-        <input class="form-check-input" type="checkbox" id="ie-pull-images" v-model="pullImages" />
+        <input
+          class="form-check-input"
+          type="checkbox"
+          id="ie-pull-images"
+          v-model="pullImages"
+        />
         <label class="form-check-label" for="ie-pull-images">Images</label>
       </div>
       <div class="form-check">
-        <input class="form-check-input" type="checkbox" id="ie-pull-meta" v-model="pullMeta" />
+        <input
+          class="form-check-input"
+          type="checkbox"
+          id="ie-pull-meta"
+          v-model="pullMeta"
+        />
         <label class="form-check-label" for="ie-pull-meta">Metadata</label>
       </div>
       <div class="form-check">
-        <input class="form-check-input" type="checkbox" id="ie-pull-desc" v-model="pullDesc" />
+        <input
+          class="form-check-input"
+          type="checkbox"
+          id="ie-pull-desc"
+          v-model="pullDesc"
+        />
         <label class="form-check-label" for="ie-pull-desc">Description</label>
       </div>
     </div>
     <h3 class="h5 mt-5">Export Database as JSON</h3>
     <div class="mb-3 d-flex gap-2">
-      <button @click="exportJson" class="btn btn-primary">
-        Export Models
-      </button>
+      <button @click="exportJson" class="btn btn-primary">Export Models</button>
     </div>
     <h3 class="h5 mt-5">Import Database JSON</h3>
     <div class="input-group mb-3">
-      <input type="file" accept=".json" @change="onDbFileChange" class="form-control" />
+      <input
+        type="file"
+        accept=".json"
+        @change="onDbFileChange"
+        class="form-control"
+      />
       <div class="input-group-append">
-        <button @click="importDbJson" :disabled="!dbImportFile" class="btn btn-primary">
-        Import
+        <button
+          @click="importDbJson"
+          :disabled="!dbImportFile"
+          class="btn btn-primary"
+        >
+          Import
         </button>
+      </div>
+    </div>
+
+    <h3 class="h5 mt-5">Library Stats</h3>
+    <p>Total models: {{ stats?.totalModels || 0 }}</p>
+    <ul>
+      <li v-for="t in stats?.types || []" :key="t.type">
+        {{ t.type || "Unknown" }}: {{ t.count }}
+      </li>
+    </ul>
+    <div class="row">
+      <div class="col-md-6 mb-3">
+        <canvas ref="baseChartEl"></canvas>
+      </div>
+      <div class="col-md-6 mb-3">
+        <canvas ref="nsfwChartEl"></canvas>
       </div>
     </div>
   </div>
 </template>
 
 <script setup>
- 
-import { ref } from 'vue'
-import { useRouter } from 'vue-router'
-import axios from 'axios'
-import { showToast } from '../utils/ui'
+import { ref, onMounted, nextTick } from "vue";
+import { useRouter } from "vue-router";
+import axios from "axios";
+import Chart from "chart.js/auto";
+import { showToast } from "../utils/ui";
 
-const importFile = ref(null)
-const dbImportFile = ref(null)
-const pullImages = ref(false)
-const pullMeta = ref(false)
-const pullDesc = ref(false)
-const router = useRouter()
+const importFile = ref(null);
+const dbImportFile = ref(null);
+const pullImages = ref(false);
+const pullMeta = ref(false);
+const pullDesc = ref(false);
+const router = useRouter();
+const stats = ref(null);
+const baseChartEl = ref(null);
+const nsfwChartEl = ref(null);
+let baseChart;
+let nsfwChart;
+
+const fetchStats = async () => {
+  const res = await axios.get("/api/stats");
+  stats.value = res.data;
+  await nextTick();
+  drawCharts();
+};
+
+const drawCharts = () => {
+  if (!stats.value) return;
+  const baseLabels = stats.value.baseModels.map(
+    (b) => b.baseModel || "Unknown",
+  );
+  const baseData = stats.value.baseModels.map((b) => b.count);
+  if (baseChart) baseChart.destroy();
+  baseChart = new Chart(baseChartEl.value, {
+    type: "pie",
+    data: {
+      labels: baseLabels,
+      datasets: [{ data: baseData }],
+    },
+    options: { responsive: true },
+  });
+
+  if (nsfwChart) nsfwChart.destroy();
+  nsfwChart = new Chart(nsfwChartEl.value, {
+    type: "pie",
+    data: {
+      labels: ["NSFW", "Non-NSFW"],
+      datasets: [{ data: [stats.value.nsfwCount, stats.value.sfwCount] }],
+    },
+    options: { responsive: true },
+  });
+};
 
 const onFileChange = (e) => {
-  importFile.value = e.target.files[0] || null
-}
+  importFile.value = e.target.files[0] || null;
+};
 
 const onDbFileChange = (e) => {
-  dbImportFile.value = e.target.files[0] || null
-}
+  dbImportFile.value = e.target.files[0] || null;
+};
 
 const importJson = async () => {
-  if (!importFile.value) return
-  const form = new FormData()
-  form.append('file', importFile.value)
+  if (!importFile.value) return;
+  const form = new FormData();
+  form.append("file", importFile.value);
   try {
-    const params = []
-    if (pullMeta.value) params.push('metadata')
-    if (pullDesc.value) params.push('description')
-    if (pullImages.value) params.push('images')
-    const query = params.length ? `?fields=${params.join(',')}` : ''
-    await axios.post(`/api/import${query}`, form)
-    showToast('Import successful', 'success')
+    const params = [];
+    if (pullMeta.value) params.push("metadata");
+    if (pullDesc.value) params.push("description");
+    if (pullImages.value) params.push("images");
+    const query = params.length ? `?fields=${params.join(",")}` : "";
+    await axios.post(`/api/import${query}`, form);
+    showToast("Import successful", "success");
   } catch (err) {
-    console.error(err)
-    showToast('Import failed', 'danger')
+    console.error(err);
+    showToast("Import failed", "danger");
   } finally {
-    importFile.value = null
+    importFile.value = null;
   }
-}
+};
 
 const importDbJson = async () => {
-  if (!dbImportFile.value) return
-  const form = new FormData()
-  form.append('file', dbImportFile.value)
+  if (!dbImportFile.value) return;
+  const form = new FormData();
+  form.append("file", dbImportFile.value);
   try {
-    await axios.post('/api/import-db', form)
-    showToast('Database import successful', 'success')
+    await axios.post("/api/import-db", form);
+    showToast("Database import successful", "success");
   } catch (err) {
-    console.error(err)
-    showToast('Database import failed', 'danger')
+    console.error(err);
+    showToast("Database import failed", "danger");
   } finally {
-    dbImportFile.value = null
+    dbImportFile.value = null;
   }
-}
+};
 
 const exportJson = async () => {
   try {
-    const res = await axios.get('/api/export', { responseType: 'blob' })
-    const url = window.URL.createObjectURL(new Blob([res.data], { type: 'application/json' }))
-    const a = document.createElement('a')
-    a.href = url
-    a.download = 'model_export.json'
-    a.click()
-    window.URL.revokeObjectURL(url)
+    const res = await axios.get("/api/export", { responseType: "blob" });
+    const url = window.URL.createObjectURL(
+      new Blob([res.data], { type: "application/json" }),
+    );
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "model_export.json";
+    a.click();
+    window.URL.revokeObjectURL(url);
   } catch (err) {
-    console.error(err)
-    showToast('Export failed', 'danger')
+    console.error(err);
+    showToast("Export failed", "danger");
   }
-}
+};
 
 const goBack = () => {
-  router.push('/')
-}
+  router.push("/");
+};
+
+onMounted(fetchStats);
 </script>
