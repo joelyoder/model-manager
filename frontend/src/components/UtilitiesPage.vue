@@ -6,20 +6,18 @@
     <h2 class="my-3">Utilities</h2>
     <div class="card card-body mb-4" v-if="stats">
       <h3 class="h5">Stats</h3>
-      <p>Total Models: {{ stats.totalModels }}</p>
-      <ul class="mb-3">
-        <li v-for="t in stats.typeCounts" :key="t.Key">
-          {{ t.Key || "Unknown" }}: {{ t.Count }}
-        </li>
-      </ul>
-      <div class="row">
-        <div class="col-md-6 mb-3">
+      <div class="row text-center">
+        <div class="col-md-4 mb-3">
+          <canvas id="typeChart"></canvas>
+        </div>
+        <div class="col-md-4 mb-3">
           <canvas id="baseModelChart"></canvas>
         </div>
-        <div class="col-md-6 mb-3">
+        <div class="col-md-4 mb-3">
           <canvas id="nsfwChart"></canvas>
         </div>
       </div>
+      <p class="text-center">Total Models: {{ stats.totalModels }}</p>
     </div>
     <h3 class="h5 mt-5">Import JSON from Model Organizer</h3>
     <div class="input-group mb-3">
@@ -102,6 +100,7 @@ import axios from "axios";
 import { showToast } from "../utils/ui";
 
 const stats = ref(null);
+let typeChart = null;
 let baseChart = null;
 let nsfwChart = null;
 
@@ -118,8 +117,24 @@ onMounted(async () => {
 
 function renderCharts() {
   if (!stats.value) return;
+  if (typeChart) typeChart.destroy();
   if (baseChart) baseChart.destroy();
   if (nsfwChart) nsfwChart.destroy();
+
+  const typeCtx = document.getElementById("typeChart");
+  if (typeCtx) {
+    typeChart = new Chart(typeCtx, {
+      type: "pie",
+      data: {
+        labels: stats.value.typeCounts.map((t) => t.Key || "Unknown"),
+        datasets: [
+          {
+            data: stats.value.typeCounts.map((t) => t.Count),
+          },
+        ],
+      },
+    });
+  }
 
   const baseCtx = document.getElementById("baseModelChart");
   if (baseCtx) {
