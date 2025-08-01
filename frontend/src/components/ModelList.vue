@@ -197,6 +197,7 @@
     <div
       v-for="card in versionCards"
       :key="card.version.ID"
+      :id="`model-${card.version.ID}`"
       class="model-card card h-100"
     >
       <img
@@ -271,8 +272,8 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, onUnmounted, watch } from "vue";
-import { useRouter } from "vue-router";
+import { ref, computed, onMounted, onUnmounted, watch, nextTick } from "vue";
+import { useRouter, useRoute } from "vue-router";
 import axios from "axios";
 import { showToast, showDeleteConfirm } from "../utils/ui";
 import debounce from "../utils/debounce";
@@ -293,6 +294,7 @@ const downloading = ref(false);
 const downloadProgress = ref(0);
 let progressInterval = null;
 const router = useRouter();
+const route = useRoute();
 
 const page = ref(1);
 const pageInput = ref(1);
@@ -370,6 +372,16 @@ onMounted(async () => {
   await fetchTotal();
   await fetchModels();
   initialized.value = true;
+  if (route.query.scrollTo) {
+    await nextTick();
+    const el = document.getElementById(`model-${route.query.scrollTo}`);
+    if (el) {
+      el.scrollIntoView({ behavior: "smooth" });
+    }
+    const rest = { ...route.query };
+    delete rest.scrollTo;
+    router.replace({ path: route.path, query: rest });
+  }
 });
 
 onUnmounted(() => {

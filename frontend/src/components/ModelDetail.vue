@@ -110,7 +110,10 @@
               >
                 Set as Main
               </button>
-              <span v-else class="badge text-bg-success d-block text-center mt-1 py-2">
+              <span
+                v-else
+                class="badge text-bg-success d-block text-center mt-1 py-2"
+              >
                 Main Image
               </span>
             </div>
@@ -460,7 +463,7 @@ const updateAll = async () => {
 };
 
 const goBack = () => {
-  router.push("/");
+  router.push({ path: "/", query: { scrollTo: version.value.ID } });
 };
 
 const setMainImage = async (img) => {
