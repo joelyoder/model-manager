@@ -29,8 +29,4 @@ and displayed alongside the image.
 - Settings
     - Add a setting to change the models and image folder locations
 - Utilities
-    - Statistics about the library size broken down by several different factors
-        - Model Type
-        - Base Model
-        - Models vs images
     - A tool that will scan the library folder and find any models that are missing from the library
