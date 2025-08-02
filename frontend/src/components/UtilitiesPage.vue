@@ -5,7 +5,8 @@
     </div>
     <h2 class="my-3">Utilities</h2>
     <div class="card card-body mb-4" v-if="stats">
-      <h3 class="h5">Stats</h3>
+      <h3>Stats</h3>
+      <p class="text-center h5 mb-3">Total Models: <strong>{{ stats.totalModels }}</strong></p>
       <div class="row text-center">
         <div class="col-md-4 mb-3">
           <canvas id="typeChart"></canvas>
@@ -17,76 +18,78 @@
           <canvas id="nsfwChart"></canvas>
         </div>
       </div>
-      <p class="text-center">Total Models: {{ stats.totalModels }}</p>
     </div>
-    <h3 class="h5 mt-5">Import JSON from Model Organizer</h3>
-    <div class="input-group mb-3">
-      <input
-        type="file"
-        accept=".json"
-        @change="onFileChange"
-        class="form-control"
-      />
-      <div class="input-group-append">
-        <button
-          @click="importJson"
-          :disabled="!importFile"
-          class="btn btn-primary"
-        >
-          Import
-        </button>
-      </div>
-    </div>
-    <div class="d-flex gap-2 mb-3">
-      <span>Update:</span>
-      <div class="form-check">
+    <div class="card card-body">
+      <h3>Import & Export</h3>
+      <h4 class="h5 my-3">Import JSON from Model Organizer</h4>
+      <div class="input-group mb-3">
         <input
-          class="form-check-input"
-          type="checkbox"
-          id="ie-pull-images"
-          v-model="pullImages"
+          type="file"
+          accept=".json"
+          @change="onFileChange"
+          class="form-control"
         />
-        <label class="form-check-label" for="ie-pull-images">Images</label>
+        <div class="input-group-append">
+          <button
+            @click="importJson"
+            :disabled="!importFile"
+            class="btn btn-primary"
+          >
+            Import
+          </button>
+        </div>
       </div>
-      <div class="form-check">
+      <div class="d-flex gap-2 mb-3">
+        <span>Update:</span>
+        <div class="form-check">
+          <input
+            class="form-check-input"
+            type="checkbox"
+            id="ie-pull-images"
+            v-model="pullImages"
+          />
+          <label class="form-check-label" for="ie-pull-images">Images</label>
+        </div>
+        <div class="form-check">
+          <input
+            class="form-check-input"
+            type="checkbox"
+            id="ie-pull-meta"
+            v-model="pullMeta"
+          />
+          <label class="form-check-label" for="ie-pull-meta">Metadata</label>
+        </div>
+        <div class="form-check">
+          <input
+            class="form-check-input"
+            type="checkbox"
+            id="ie-pull-desc"
+            v-model="pullDesc"
+          />
+          <label class="form-check-label" for="ie-pull-desc">Description</label>
+        </div>
+      </div>
+      <h4 class="h5 my-3">Export Database as JSON</h4>
+      <div class="mb-3 d-flex gap-2">
+        <button @click="exportJson" class="btn btn-primary">Export Models</button>
+      </div>
+      <h4 class="h5 my-3">Import Database from JSON</h4>
+      <div class="input-group mb-3">
         <input
-          class="form-check-input"
-          type="checkbox"
-          id="ie-pull-meta"
-          v-model="pullMeta"
+          type="file"
+          accept=".json"
+          @change="onDbFileChange"
+          class="form-control"
         />
-        <label class="form-check-label" for="ie-pull-meta">Metadata</label>
-      </div>
-      <div class="form-check">
-        <input
-          class="form-check-input"
-          type="checkbox"
-          id="ie-pull-desc"
-          v-model="pullDesc"
-        />
-        <label class="form-check-label" for="ie-pull-desc">Description</label>
-      </div>
-    </div>
-    <h3 class="h5 mt-5">Export Database as JSON</h3>
-    <div class="mb-3 d-flex gap-2">
-      <button @click="exportJson" class="btn btn-primary">Export Models</button>
-    </div>
-    <h3 class="h5 mt-5">Import Database JSON</h3>
-    <div class="input-group mb-3">
-      <input
-        type="file"
-        accept=".json"
-        @change="onDbFileChange"
-        class="form-control"
-      />
-      <div class="input-group-append">
-        <button
-          @click="importDbJson"
-          :disabled="!dbImportFile"
-          class="btn btn-primary"
-        >
-          Import
-        </button>
+        <div class="input-group-append">
+          <button
+            @click="importDbJson"
+            :disabled="!dbImportFile"
+            class="btn btn-primary"
+          >
+            Import
+          </button>
+        </div>
       </div>
     </div>
   </div>
