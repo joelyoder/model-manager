@@ -126,18 +126,35 @@
               </button>
             </div>
           </div>
-          <div class="table-responsive">
-            <table
-              v-if="Object.keys(img.parsedMeta || {}).length"
-              class="table table-sm mb-0 mt-1"
+          <div
+            v-if="Object.keys(img.parsedMeta || {}).length"
+            class="mt-1"
+          >
+            <button
+              class="btn btn-outline-secondary btn-sm w-100"
+              type="button"
+              data-bs-toggle="collapse"
+              :data-bs-target="'#meta-' + img.ID"
+              aria-expanded="false"
+              :aria-controls="'meta-' + img.ID"
             >
-              <tbody>
-                <tr v-for="(value, key) in img.parsedMeta" :key="key">
-                  <th class="fw-normal">{{ key }}</th>
-                  <td>{{ value }}</td>
-                </tr>
-              </tbody>
-            </table>
+              Show Metadata
+            </button>
+            <div :id="'meta-' + img.ID" class="collapse mt-1">
+              <div class="table-responsive">
+                <table class="table table-sm mb-0">
+                  <tbody>
+                    <tr
+                      v-for="(value, key) in img.parsedMeta"
+                      :key="key"
+                    >
+                      <th class="fw-normal">{{ key }}</th>
+                      <td>{{ value }}</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
           </div>
         </div>
       </div>
