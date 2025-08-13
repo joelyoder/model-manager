@@ -42,7 +42,7 @@
         class="btn btn-outline-secondary btn-sm"
       >
         <svg
-          v-if="hideNsfw"
+          v-if="hideNsfw.value"
           width="22px"
           height="22px"
           viewBox="0 0 24 24"
