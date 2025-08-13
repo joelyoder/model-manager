@@ -55,20 +55,6 @@
           </option>
         </select>
       </div>
-
-      <div class="col">
-        <div class="form-check form-switch d-flex gap-2 align-items-center m-2">
-          <input
-            class="form-check-input"
-            type="checkbox"
-            role="switch"
-            id="hide-nsfw"
-            v-model="hideNsfw"
-          />
-          <label class="form-check-label" for="hide-nsfw">Hide NSFW</label>
-        </div>
-      </div>
-
       <div class="col d-flex justify-content-end">
         <button
           class="btn btn-outline-primary"
@@ -213,6 +199,79 @@
         <span class="ms-1 badge rounded-pill text-bg-success">{{
           card.version.baseModel
         }}</span>
+        <button
+          @click.stop="toggleVersionNsfw(card.version)"
+          class="btn btn-sm position-absolute top-0 end-0 m-2"
+          :class="card.version.nsfw ? 'btn-danger' : 'btn-secondary'"
+          style="--bs-btn-padding-y: 0.25rem; --bs-btn-padding-x: 0.25rem"
+        >
+          <svg
+            v-if="card.version.nsfw"
+            width="18px"
+            height="18px"
+            viewBox="0 0 24 24"
+            stroke-width="1.5"
+            fill="none"
+            xmlns="http://www.w3.org/2000/svg"
+            color="#ffffff"
+          >
+            <path
+              d="M10.733 5.076a10.744 10.744 0 0 1 11.205 6.575 1 1 0 0 1 0 .696 10.747 10.747 0 0 1-1.444 2.49"
+              stroke="#ffffff"
+              stroke-width="1.5"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            ></path>
+            <path
+              d="M14.084 14.158a3 3 0 0 1-4.242-4.242"
+              stroke="#ffffff"
+              stroke-width="1.5"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            ></path>
+            <path
+              d="M17.479 17.499a10.75 10.75 0 0 1-15.417-5.151 1 1 0 0 1 0-.696 10.75 10.75 0 0 1 4.446-5.143"
+              stroke="#ffffff"
+              stroke-width="1.5"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            ></path>
+            <path
+              d="m2 2 20 20"
+              stroke="#ffffff"
+              stroke-width="1.5"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            ></path>
+          </svg>
+          <svg
+            v-else
+            width="18px"
+            height="18px"
+            viewBox="0 0 24 24"
+            stroke-width="1.5"
+            fill="none"
+            xmlns="http://www.w3.org/2000/svg"
+            color="#ffffff"
+          >
+            <path
+              d="M2.062 12.348a1 1 0 0 1 0-.696 10.75 10.75 0 0 1 19.876 0 1 1 0 0 1 0 .696 10.75 10.75 0 0 1-19.876 0"
+              stroke="#ffffff"
+              stroke-width="1.5"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            ></path>
+            <circle
+              cx="12"
+              cy="12"
+              r="3"
+              stroke="#ffffff"
+              stroke-width="1.5"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            ></circle>
+          </svg>
+        </button>
       </div>
       <div class="card-body z-3">
         <h3 class="card-title h5">
@@ -277,6 +336,7 @@ import { useRouter, useRoute } from "vue-router";
 import axios from "axios";
 import { showToast, showDeleteConfirm } from "../utils/ui";
 import debounce from "../utils/debounce";
+import { hideNsfw } from "../utils/state";
 
 const models = ref([]);
 const search = ref("");
@@ -284,7 +344,6 @@ const tagsSearch = ref("");
 const selectedCategory = ref("");
 const selectedBaseModel = ref("");
 const selectedModelType = ref("");
-const hideNsfw = ref(false);
 const showAddPanel = ref(false);
 const modelUrl = ref("");
 const versions = ref([]);
@@ -624,6 +683,18 @@ const deleteVersion = async (id) => {
   await fetchTotal();
   await fetchModels();
   await fetchBaseModels();
+};
+
+const toggleVersionNsfw = async (version) => {
+  const updated = { ...version, nsfw: !version.nsfw };
+  try {
+    await axios.put(`/api/versions/${version.ID}`, updated);
+    version.nsfw = updated.nsfw;
+    showToast("NSFW status updated", "success");
+  } catch (err) {
+    console.error(err);
+    showToast("Failed to update NSFW status", "danger");
+  }
 };
 
 const goToModel = (modelId, versionId) => {
