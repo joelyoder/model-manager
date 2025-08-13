@@ -541,10 +541,12 @@ const categories = [
 const totalPages = computed(() => Math.ceil(total.value / limit));
 
 const filteredModels = computed(() => {
-  if (!search.value) return models.value;
-  return models.value.filter((m) =>
-    m.name.toLowerCase().includes(search.value.toLowerCase()),
-  );
+  return models.value.filter((m) => {
+    if (hideNsfw.value && m.nsfw) return false;
+    if (search.value && !m.name.toLowerCase().includes(search.value.toLowerCase()))
+      return false;
+    return true;
+  });
 });
 
 const versionCards = computed(() => {
