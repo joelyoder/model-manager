@@ -74,22 +74,22 @@
           class="btn btn-outline-primary"
           @click="showAddPanel = !showAddPanel"
         >
-          {{ showAddPanel ? "Hide Panel" : "Add Models" }}
+          {{ showAddPanel ? "Close Panel" : "Add Models" }}
         </button>
       </div>
     </div>
-    <div v-show="showAddPanel" class="card card-body my-3">
+    <div v-show="showAddPanel" class="mx-auto card card-body my-3" style="max-width: 1000px;">
       <div class="row g-3">
         <div class="col-md-2">
           <button
             @click="createManualModel"
-            class="btn btn-outline-primary w-100"
+            class="btn btn-primary w-100"
           >
             Add Model
           </button>
         </div>
         <div class="col">
-          <div class="input-group">
+          <div class="input-group mb-2">
             <!-- Paste URL and fetch versions -->
             <input
               v-model="modelUrl"
