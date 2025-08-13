@@ -55,6 +55,79 @@
           </option>
         </select>
       </div>
+      <div class="col-auto d-flex align-items-center">
+        <button
+          @click="hideNsfw = !hideNsfw"
+          class="btn btn-outline-secondary btn-sm"
+        >
+          <svg
+            v-if="hideNsfw"
+            width="22px"
+            height="22px"
+            viewBox="0 0 24 24"
+            stroke-width="1.5"
+            fill="none"
+            xmlns="http://www.w3.org/2000/svg"
+            color="#ffffff"
+          >
+            <path
+              d="M10.733 5.076a10.744 10.744 0 0 1 11.205 6.575 1 1 0 0 1 0 .696 10.747 10.747 0 0 1-1.444 2.49"
+              stroke="#ffffff"
+              stroke-width="1.5"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            ></path>
+            <path
+              d="M14.084 14.158a3 3 0 0 1-4.242-4.242"
+              stroke="#ffffff"
+              stroke-width="1.5"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            ></path>
+            <path
+              d="M17.479 17.499a10.75 10.75 0 0 1-15.417-5.151 1 1 0 0 1 0-.696 10.75 10.75 0 0 1 4.446-5.143"
+              stroke="#ffffff"
+              stroke-width="1.5"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            ></path>
+            <path
+              d="m2 2 20 20"
+              stroke="#ffffff"
+              stroke-width="1.5"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            ></path>
+          </svg>
+          <svg
+            v-else
+            width="22px"
+            height="22px"
+            viewBox="0 0 24 24"
+            stroke-width="1.5"
+            fill="none"
+            xmlns="http://www.w3.org/2000/svg"
+            color="#ffffff"
+          >
+            <path
+              d="M2.062 12.348a1 1 0 0 1 0-.696 10.75 10.75 0 0 1 19.876 0 1 1 0 0 1 0 .696 10.75 10.75 0 0 1-19.876 0"
+              stroke="#ffffff"
+              stroke-width="1.5"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            ></path>
+            <circle
+              cx="12"
+              cy="12"
+              r="3"
+              stroke="#ffffff"
+              stroke-width="1.5"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            ></circle>
+          </svg>
+        </button>
+      </div>
       <div class="col d-flex justify-content-end">
         <button
           class="btn btn-outline-primary"
@@ -336,7 +409,6 @@ import { useRouter, useRoute } from "vue-router";
 import axios from "axios";
 import { showToast, showDeleteConfirm } from "../utils/ui";
 import debounce from "../utils/debounce";
-import { hideNsfw } from "../utils/state";
 
 const models = ref([]);
 const search = ref("");
@@ -344,6 +416,7 @@ const tagsSearch = ref("");
 const selectedCategory = ref("");
 const selectedBaseModel = ref("");
 const selectedModelType = ref("");
+const hideNsfw = ref(false);
 const showAddPanel = ref(false);
 const modelUrl = ref("");
 const versions = ref([]);
@@ -478,15 +551,12 @@ watch(selectedModelType, () => {
   if (initialized.value) debouncedUpdate();
 });
 
-watch(
-  () => hideNsfw.value,
-  async () => {
-    if (!initialized.value) return;
-    page.value = 1;
-    await fetchTotal();
-    await fetchModels();
-  },
-);
+watch(hideNsfw, async () => {
+  if (!initialized.value) return;
+  page.value = 1;
+  await fetchTotal();
+  await fetchModels();
+});
 
 watch(page, () => {
   pageInput.value = page.value;
