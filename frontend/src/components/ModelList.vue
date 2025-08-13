@@ -55,20 +55,79 @@
           </option>
         </select>
       </div>
-
-      <div class="col">
-        <div class="form-check form-switch d-flex gap-2 align-items-center m-2">
-          <input
-            class="form-check-input"
-            type="checkbox"
-            role="switch"
-            id="hide-nsfw"
-            v-model="hideNsfw"
-          />
-          <label class="form-check-label" for="hide-nsfw">Hide NSFW</label>
-        </div>
+      <div class="col-auto d-flex align-items-center">
+        <button
+          @click="hideNsfw = !hideNsfw"
+          class="btn btn-outline-secondary btn-sm"
+        >
+          <svg
+            v-if="hideNsfw"
+            width="22px"
+            height="22px"
+            viewBox="0 0 24 24"
+            stroke-width="1.5"
+            fill="none"
+            xmlns="http://www.w3.org/2000/svg"
+            color="#ffffff"
+          >
+            <path
+              d="M10.733 5.076a10.744 10.744 0 0 1 11.205 6.575 1 1 0 0 1 0 .696 10.747 10.747 0 0 1-1.444 2.49"
+              stroke="#ffffff"
+              stroke-width="1.5"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            ></path>
+            <path
+              d="M14.084 14.158a3 3 0 0 1-4.242-4.242"
+              stroke="#ffffff"
+              stroke-width="1.5"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            ></path>
+            <path
+              d="M17.479 17.499a10.75 10.75 0 0 1-15.417-5.151 1 1 0 0 1 0-.696 10.75 10.75 0 0 1 4.446-5.143"
+              stroke="#ffffff"
+              stroke-width="1.5"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            ></path>
+            <path
+              d="m2 2 20 20"
+              stroke="#ffffff"
+              stroke-width="1.5"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            ></path>
+          </svg>
+          <svg
+            v-else
+            width="22px"
+            height="22px"
+            viewBox="0 0 24 24"
+            stroke-width="1.5"
+            fill="none"
+            xmlns="http://www.w3.org/2000/svg"
+            color="#ffffff"
+          >
+            <path
+              d="M2.062 12.348a1 1 0 0 1 0-.696 10.75 10.75 0 0 1 19.876 0 1 1 0 0 1 0 .696 10.75 10.75 0 0 1-19.876 0"
+              stroke="#ffffff"
+              stroke-width="1.5"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            ></path>
+            <circle
+              cx="12"
+              cy="12"
+              r="3"
+              stroke="#ffffff"
+              stroke-width="1.5"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            ></circle>
+          </svg>
+        </button>
       </div>
-
       <div class="col d-flex justify-content-end">
         <button
           class="btn btn-outline-primary"
@@ -213,6 +272,79 @@
         <span class="ms-1 badge rounded-pill text-bg-success">{{
           card.version.baseModel
         }}</span>
+        <button
+          @click.stop="toggleVersionNsfw(card.version)"
+          class="btn btn-sm position-absolute top-0 end-0 m-2"
+          :class="card.version.nsfw ? 'btn-danger' : 'btn-secondary'"
+          style="--bs-btn-padding-y: 0.25rem; --bs-btn-padding-x: 0.25rem"
+        >
+          <svg
+            v-if="card.version.nsfw"
+            width="18px"
+            height="18px"
+            viewBox="0 0 24 24"
+            stroke-width="1.5"
+            fill="none"
+            xmlns="http://www.w3.org/2000/svg"
+            color="#ffffff"
+          >
+            <path
+              d="M10.733 5.076a10.744 10.744 0 0 1 11.205 6.575 1 1 0 0 1 0 .696 10.747 10.747 0 0 1-1.444 2.49"
+              stroke="#ffffff"
+              stroke-width="1.5"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            ></path>
+            <path
+              d="M14.084 14.158a3 3 0 0 1-4.242-4.242"
+              stroke="#ffffff"
+              stroke-width="1.5"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            ></path>
+            <path
+              d="M17.479 17.499a10.75 10.75 0 0 1-15.417-5.151 1 1 0 0 1 0-.696 10.75 10.75 0 0 1 4.446-5.143"
+              stroke="#ffffff"
+              stroke-width="1.5"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            ></path>
+            <path
+              d="m2 2 20 20"
+              stroke="#ffffff"
+              stroke-width="1.5"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            ></path>
+          </svg>
+          <svg
+            v-else
+            width="18px"
+            height="18px"
+            viewBox="0 0 24 24"
+            stroke-width="1.5"
+            fill="none"
+            xmlns="http://www.w3.org/2000/svg"
+            color="#ffffff"
+          >
+            <path
+              d="M2.062 12.348a1 1 0 0 1 0-.696 10.75 10.75 0 0 1 19.876 0 1 1 0 0 1 0 .696 10.75 10.75 0 0 1-19.876 0"
+              stroke="#ffffff"
+              stroke-width="1.5"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            ></path>
+            <circle
+              cx="12"
+              cy="12"
+              r="3"
+              stroke="#ffffff"
+              stroke-width="1.5"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            ></circle>
+          </svg>
+        </button>
       </div>
       <div class="card-body z-3">
         <h3 class="card-title h5">
@@ -419,8 +551,11 @@ watch(selectedModelType, () => {
   if (initialized.value) debouncedUpdate();
 });
 
-watch(hideNsfw, () => {
-  if (initialized.value) debouncedUpdate();
+watch(hideNsfw, async () => {
+  if (!initialized.value) return;
+  page.value = 1;
+  await fetchTotal();
+  await fetchModels();
 });
 
 watch(page, () => {
@@ -476,10 +611,12 @@ const categories = [
 const totalPages = computed(() => Math.ceil(total.value / limit));
 
 const filteredModels = computed(() => {
-  if (!search.value) return models.value;
-  return models.value.filter((m) =>
-    m.name.toLowerCase().includes(search.value.toLowerCase()),
-  );
+  return models.value.filter((m) => {
+    if (hideNsfw.value && m.nsfw) return false;
+    if (search.value && !m.name.toLowerCase().includes(search.value.toLowerCase()))
+      return false;
+    return true;
+  });
 });
 
 const versionCards = computed(() => {
@@ -624,6 +761,27 @@ const deleteVersion = async (id) => {
   await fetchTotal();
   await fetchModels();
   await fetchBaseModels();
+};
+
+const toggleVersionNsfw = async (version) => {
+  const updated = { ...version, nsfw: !version.nsfw };
+  try {
+    await axios.put(`/api/versions/${version.ID}`, updated);
+    // update the card version
+    version.nsfw = updated.nsfw;
+    // update underlying model data so computed cards react immediately
+    for (const m of models.value) {
+      const v = m.versions.find((v) => v.ID === version.ID);
+      if (v) {
+        v.nsfw = updated.nsfw;
+        break;
+      }
+    }
+    showToast("NSFW status updated", "success");
+  } catch (err) {
+    console.error(err);
+    showToast("Failed to update NSFW status", "danger");
+  }
 };
 
 const goToModel = (modelId, versionId) => {
