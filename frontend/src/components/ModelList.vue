@@ -478,12 +478,15 @@ watch(selectedModelType, () => {
   if (initialized.value) debouncedUpdate();
 });
 
-watch(hideNsfw, async () => {
-  if (!initialized.value) return;
-  page.value = 1;
-  await fetchTotal();
-  await fetchModels();
-});
+watch(
+  () => hideNsfw.value,
+  async () => {
+    if (!initialized.value) return;
+    page.value = 1;
+    await fetchTotal();
+    await fetchModels();
+  },
+);
 
 watch(page, () => {
   pageInput.value = page.value;
