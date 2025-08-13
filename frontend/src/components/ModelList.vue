@@ -478,8 +478,11 @@ watch(selectedModelType, () => {
   if (initialized.value) debouncedUpdate();
 });
 
-watch(hideNsfw, () => {
-  if (initialized.value) debouncedUpdate();
+watch(hideNsfw, async () => {
+  if (!initialized.value) return;
+  page.value = 1;
+  await fetchTotal();
+  await fetchModels();
 });
 
 watch(page, () => {
@@ -689,7 +692,16 @@ const toggleVersionNsfw = async (version) => {
   const updated = { ...version, nsfw: !version.nsfw };
   try {
     await axios.put(`/api/versions/${version.ID}`, updated);
+    // update the card version
     version.nsfw = updated.nsfw;
+    // update underlying model data so computed cards react immediately
+    for (const m of models.value) {
+      const v = m.versions.find((v) => v.ID === version.ID);
+      if (v) {
+        v.nsfw = updated.nsfw;
+        break;
+      }
+    }
     showToast("NSFW status updated", "success");
   } catch (err) {
     console.error(err);
