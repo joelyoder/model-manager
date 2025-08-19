@@ -128,6 +128,11 @@
           </svg>
         </button>
       </div>
+      <div class="col-auto d-flex align-items-center">
+        <button @click="clearFilters" class="btn btn-outline-secondary">
+          Clear Filters
+        </button>
+      </div>
       <div class="col d-flex justify-content-end">
         <button
           class="btn btn-outline-primary"
@@ -434,6 +439,23 @@ const limit = 50;
 const total = ref(0);
 const localStorageKey = "modelListState";
 
+const saveState = () => {
+  localStorage.setItem(
+    localStorageKey,
+    JSON.stringify({
+      search: search.value,
+      tagsSearch: tagsSearch.value,
+      selectedCategory: selectedCategory.value,
+      selectedBaseModel: selectedBaseModel.value,
+      selectedModelType: selectedModelType.value,
+      hideNsfw: hideNsfw.value,
+      page: page.value,
+    })
+  );
+};
+
+const debouncedSave = debounce(saveState, 300);
+
 const mapModel = (model) => {
   const imageUrl = model.imagePath
     ? model.imagePath.replace(/^.*[\\/]backend[\\/]images/, "/images")
@@ -517,50 +539,65 @@ onMounted(async () => {
 });
 
 onUnmounted(() => {
-  localStorage.setItem(
-    localStorageKey,
-    JSON.stringify({
-      search: search.value,
-      tagsSearch: tagsSearch.value,
-      selectedCategory: selectedCategory.value,
-      selectedBaseModel: selectedBaseModel.value,
-      selectedModelType: selectedModelType.value,
-      hideNsfw: hideNsfw.value,
-      page: page.value,
-    }),
-  );
+  saveState();
 });
 
 watch(search, () => {
-  if (initialized.value) debouncedUpdate();
+  if (initialized.value) {
+    debouncedUpdate();
+    debouncedSave();
+  }
 });
 
 watch(tagsSearch, () => {
-  if (initialized.value) debouncedUpdate();
+  if (initialized.value) {
+    debouncedUpdate();
+    debouncedSave();
+  }
 });
 
 watch(selectedCategory, () => {
-  if (initialized.value) debouncedUpdate();
+  if (initialized.value) {
+    debouncedUpdate();
+    debouncedSave();
+  }
 });
 
 watch(selectedBaseModel, () => {
-  if (initialized.value) debouncedUpdate();
+  if (initialized.value) {
+    debouncedUpdate();
+    debouncedSave();
+  }
 });
 
 watch(selectedModelType, () => {
-  if (initialized.value) debouncedUpdate();
+  if (initialized.value) {
+    debouncedUpdate();
+    debouncedSave();
+  }
 });
 
-watch(hideNsfw, async () => {
-  if (!initialized.value) return;
-  page.value = 1;
-  await fetchTotal();
-  await fetchModels();
+watch(hideNsfw, () => {
+  if (initialized.value) {
+    debouncedUpdate();
+    debouncedSave();
+  }
 });
 
 watch(page, () => {
   pageInput.value = page.value;
+  debouncedSave();
 });
+
+const clearFilters = () => {
+  search.value = "";
+  tagsSearch.value = "";
+  selectedCategory.value = "";
+  selectedBaseModel.value = "";
+  selectedModelType.value = "";
+  hideNsfw.value = false;
+  page.value = 1;
+};
 
 const baseModels = ref([]);
 const fetchBaseModels = async () => {
