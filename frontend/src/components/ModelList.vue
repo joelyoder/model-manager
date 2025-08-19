@@ -351,7 +351,7 @@
           {{ card.model.name }} - {{ card.version.name }}
         </h3>
       </div>
-      <div class="mb-2 d-flex gap-2 card-footer z-2">
+      <div class="d-flex gap-2 card-footer">
         <button
           @click="goToModel(card.model.ID, card.version.ID)"
           class="btn btn-outline-primary"
