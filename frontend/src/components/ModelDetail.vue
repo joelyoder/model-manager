@@ -431,21 +431,24 @@ const cancelEdit = async () => {
 
 const saveEdit = async () => {
   if (quill) {
-    version.value.description = quill.root.innerHTML;
+    const desc = quill.root.innerHTML;
+    version.value.description = desc;
+    model.value.description = desc;
   }
-  await axios.put(`/api/models/${model.value.ID}`, model.value);
   try {
+    await axios.put(`/api/models/${model.value.ID}`, model.value);
     await axios.put(`/api/versions/${version.value.ID}`, version.value);
+    isEditing.value = false;
+    await fetchData();
+    showToast("Saved", "success");
   } catch (err) {
     if (err.response && err.response.status === 409) {
       showToast("Version ID already exists", "danger");
-      return;
+    } else {
+      console.error(err);
+      showToast("Failed to save", "danger");
     }
-    throw err;
   }
-  isEditing.value = false;
-  await fetchData();
-  showToast("Saved", "success");
 };
 
 const refreshVersion = async (fields) => {
