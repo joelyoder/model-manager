@@ -347,6 +347,9 @@ func SyncVersionByID(c *gin.Context) {
 		if imageURL == "" {
 			continue
 		}
+		if isVideoURL(imageURL) {
+			continue
+		}
 		imgPath, _ := DownloadFile(imageURL, "./backend/images/"+modelType, fmt.Sprintf("%d_%d.jpg", verData.ID, idx))
 		w, h, _ := GetImageDimensions(imgPath)
 		hash, _ := FileHash(imgPath)
@@ -359,7 +362,7 @@ func SyncVersionByID(c *gin.Context) {
 			Hash:      hash,
 			Meta:      string(metaBytes),
 		})
-		if idx == 0 {
+		if imagePath == "" {
 			imagePath = imgPath
 			imgW = w
 			imgH = h
@@ -457,6 +460,9 @@ func processModel(item CivitModel, apiKey string) {
 			if imageURL == "" {
 				continue
 			}
+			if isVideoURL(imageURL) {
+				continue
+			}
 			imgPath, _ := DownloadFile(imageURL, "./backend/images/"+item.Type, fmt.Sprintf("%d_%d.jpg", verData.ID, idx))
 			w, h, _ := GetImageDimensions(imgPath)
 			hash, _ := FileHash(imgPath)
@@ -469,7 +475,7 @@ func processModel(item CivitModel, apiKey string) {
 				Hash:      hash,
 				Meta:      string(metaBytes),
 			})
-			if idx == 0 {
+			if imagePath == "" {
 				imagePath = imgPath
 				imgW = w
 				imgH = h

@@ -107,3 +107,19 @@ func FileHash(path string) (string, error) {
 	}
 	return hex.EncodeToString(h.Sum(nil)), nil
 }
+
+// isVideoURL returns true if the provided URL points to a video file.
+// It checks the file extension against a list of common video formats
+// and is used to skip downloading preview videos from CivitAI.
+func isVideoURL(u string) bool {
+	// Strip query parameters before inspecting the extension
+	if idx := strings.Index(u, "?"); idx != -1 {
+		u = u[:idx]
+	}
+	ext := strings.ToLower(filepath.Ext(u))
+	switch ext {
+	case ".mp4", ".webm", ".avi", ".mov", ".mkv", ".flv", ".wmv", ".m4v", ".mpeg", ".mpg", ".gif":
+		return true
+	}
+	return false
+}
