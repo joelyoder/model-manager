@@ -310,7 +310,7 @@ func SyncVersionByID(c *gin.Context) {
 		downloadURL = verData.ModelFiles[0].DownloadURL
 		filePath, _ = DownloadFile(downloadURL, "./backend/downloads/"+modelType, verData.ModelFiles[0].Name)
 		if info, err := os.Stat(filePath); err == nil && info.Size() < 110 {
-			os.Remove(filePath)
+			moveToTrash(filePath)
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Downloaded file too small"})
 			return
 		}
@@ -423,7 +423,7 @@ func processModel(item CivitModel, apiKey string) {
 			fileName := verData.ModelFiles[0].Name
 			filePath, _ = DownloadFile(downloadURL, "./backend/downloads/"+item.Type, fileName)
 			if info, err := os.Stat(filePath); err == nil && info.Size() < 110 {
-				os.Remove(filePath)
+				moveToTrash(filePath)
 				log.Printf("downloaded %s is too small", fileName)
 				continue
 			}
@@ -529,23 +529,23 @@ func DeleteModel(c *gin.Context) {
 	}
 
 	if model.FilePath != "" {
-		os.Remove(model.FilePath)
+		moveToTrash(model.FilePath)
 	}
 	if model.ImagePath != "" {
-		os.Remove(model.ImagePath)
+		moveToTrash(model.ImagePath)
 	}
 	for _, v := range model.Versions {
 		if v.FilePath != "" {
-			os.Remove(v.FilePath)
+			moveToTrash(v.FilePath)
 		}
 		if v.ImagePath != "" {
-			os.Remove(v.ImagePath)
+			moveToTrash(v.ImagePath)
 		}
 		var imgs []models.VersionImage
 		database.DB.Where("version_id = ?", v.ID).Find(&imgs)
 		for _, img := range imgs {
 			if img.Path != "" {
-				os.Remove(img.Path)
+				moveToTrash(img.Path)
 			}
 		}
 		database.DB.Where("version_id = ?", v.ID).Delete(&models.VersionImage{})
@@ -603,14 +603,14 @@ func DeleteVersion(c *gin.Context) {
 
 	if deleteFiles {
 		if version.FilePath != "" {
-			os.Remove(version.FilePath)
+			moveToTrash(version.FilePath)
 		}
 		if version.ImagePath != "" {
-			os.Remove(version.ImagePath)
+			moveToTrash(version.ImagePath)
 		}
 		for _, img := range imgs {
 			if img.Path != "" {
-				os.Remove(img.Path)
+				moveToTrash(img.Path)
 			}
 		}
 	}
@@ -626,11 +626,11 @@ func DeleteVersion(c *gin.Context) {
 			var model models.Model
 			if err := database.DB.First(&model, version.ModelID).Error; err == nil {
 				if model.FilePath != "" && model.FilePath == version.FilePath {
-					os.Remove(model.FilePath)
+					moveToTrash(model.FilePath)
 					model.FilePath = ""
 				}
 				if model.ImagePath != "" && model.ImagePath == version.ImagePath {
-					os.Remove(model.ImagePath)
+					moveToTrash(model.ImagePath)
 					model.ImagePath = ""
 				}
 				database.DB.Save(&model)
@@ -1029,7 +1029,7 @@ func DeleteVersionImage(c *gin.Context) {
 	}
 
 	if image.Path != "" {
-		os.Remove(image.Path)
+		moveToTrash(image.Path)
 	}
 	database.DB.Delete(&image)
 
