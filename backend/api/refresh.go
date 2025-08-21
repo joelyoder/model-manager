@@ -3,7 +3,6 @@ package api
 import (
 	"encoding/json"
 	"fmt"
-	"os"
 	"strings"
 
 	"model-manager/backend/database"
@@ -86,13 +85,13 @@ func refreshVersionData(id int, fields string) error {
 
 	if updateImages {
 		if version.ImagePath != "" {
-			os.Remove(version.ImagePath)
+			moveToTrash(version.ImagePath)
 		}
 		var imgs []models.VersionImage
 		database.DB.Where("version_id = ?", version.ID).Find(&imgs)
 		for _, img := range imgs {
 			if img.Path != "" {
-				os.Remove(img.Path)
+				moveToTrash(img.Path)
 			}
 		}
 		database.DB.Where("version_id = ?", version.ID).Delete(&models.VersionImage{})
