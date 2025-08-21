@@ -126,7 +126,7 @@ func refreshVersionData(id int, fields string) error {
 				Hash:      hash,
 				Meta:      string(metaBytes),
 			})
-			if idx == 0 {
+			if imagePath == "" {
 				imagePath = imgPath
 				imgW = w
 				imgH = h

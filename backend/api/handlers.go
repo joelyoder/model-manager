@@ -362,7 +362,7 @@ func SyncVersionByID(c *gin.Context) {
 			Hash:      hash,
 			Meta:      string(metaBytes),
 		})
-		if idx == 0 {
+		if imagePath == "" {
 			imagePath = imgPath
 			imgW = w
 			imgH = h
@@ -475,7 +475,7 @@ func processModel(item CivitModel, apiKey string) {
 				Hash:      hash,
 				Meta:      string(metaBytes),
 			})
-			if idx == 0 {
+			if imagePath == "" {
 				imagePath = imgPath
 				imgW = w
 				imgH = h
