@@ -1,6 +1,6 @@
 import { fileURLToPath, URL } from 'node:url'
 
-import { defineConfig } from 'vite'
+import { defineConfig } from 'vitest/config'
 import vue from '@vitejs/plugin-vue'
 import vueDevTools from 'vite-plugin-vue-devtools'
 
@@ -22,5 +22,8 @@ export default defineConfig({
     },
     host: '0.0.0.0', // <-- this is key
     port: 5173
+  },
+  test: {
+    environment: 'jsdom',
   },
 })
