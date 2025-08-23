@@ -50,6 +50,7 @@ func main() {
 		apiGroup.POST("/import-db", api.ImportDatabase)
 		apiGroup.GET("/export", api.ExportModels)
 		apiGroup.GET("/stats", api.GetStats)
+		apiGroup.GET("/orphaned-files", api.GetOrphanedFiles)
 		apiGroup.GET("/settings", api.GetSettings)
 		apiGroup.POST("/settings", api.UpdateSetting)
 	}
