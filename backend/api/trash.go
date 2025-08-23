@@ -11,12 +11,14 @@ import (
 	"time"
 )
 
+var runtimeGOOS = runtime.GOOS
+
 // moveToTrash moves the given file to the operating system's trash/recycle bin.
 // It attempts to use platform-native mechanisms on Windows and macOS, and falls
 // back to the freedesktop.org trash specification on other systems (e.g. Linux).
 // If an error occurs, it is returned to the caller for handling.
 func moveToTrash(path string) error {
-	switch runtime.GOOS {
+	switch runtimeGOOS {
 	case "windows":
 		cmd := exec.Command("powershell", "-NoProfile", "-Command",
 			fmt.Sprintf(`Add-Type -AssemblyName Microsoft.VisualBasic; [Microsoft.VisualBasic.FileIO.FileSystem]::DeleteFile(%q, [Microsoft.VisualBasic.FileIO.UIOption]::OnlyErrorDialogs, [Microsoft.VisualBasic.FileIO.RecycleOption]::SendToRecycleBin)`, path))
