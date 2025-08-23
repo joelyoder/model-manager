@@ -4,6 +4,8 @@ import (
 	"io/fs"
 	"net/http"
 	"path/filepath"
+	"runtime"
+	"strings"
 
 	"model-manager/backend/database"
 	"model-manager/backend/models"
@@ -25,11 +27,15 @@ func GetOrphanedFiles(c *gin.Context) {
 		if err != nil {
 			continue
 		}
-		dbFiles[abs] = struct{}{}
+		key := abs
+		if runtime.GOOS == "windows" {
+			key = strings.ToLower(key)
+		}
+		dbFiles[key] = struct{}{}
 	}
 
 	var orphans []string
-	root := "./backend/downloads"
+	root := filepath.Join("backend", "downloads")
 	filepath.WalkDir(root, func(path string, d fs.DirEntry, err error) error {
 		if err != nil {
 			return nil
@@ -37,11 +43,19 @@ func GetOrphanedFiles(c *gin.Context) {
 		if d.IsDir() {
 			return nil
 		}
+		ext := strings.ToLower(filepath.Ext(d.Name()))
+		if ext != ".safetensors" && ext != ".pt" {
+			return nil
+		}
 		abs, err := filepath.Abs(path)
 		if err != nil {
 			return nil
 		}
-		if _, exists := dbFiles[abs]; !exists {
+		key := abs
+		if runtime.GOOS == "windows" {
+			key = strings.ToLower(key)
+		}
+		if _, exists := dbFiles[key]; !exists {
 			orphans = append(orphans, abs)
 		}
 		return nil

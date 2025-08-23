@@ -39,16 +39,16 @@ func setupOrphansTest(t *testing.T) string {
 		t.Fatalf("mkdir: %v", err)
 	}
 	files := []string{
-		"backend/downloads/a.bin",
-		"backend/downloads/b.bin",
-		"backend/downloads/sub/c.bin",
+		"backend/downloads/a.pt",
+		"backend/downloads/b.pt",
+		"backend/downloads/sub/c.pt",
 	}
 	for _, f := range files {
 		if err := os.WriteFile(f, []byte("test"), 0o644); err != nil {
 			t.Fatalf("write file %s: %v", f, err)
 		}
 	}
-	return "backend/downloads/sub/c.bin"
+	return "backend/downloads/sub/c.pt"
 }
 
 func TestGetOrphanedFiles(t *testing.T) {
@@ -56,8 +56,8 @@ func TestGetOrphanedFiles(t *testing.T) {
 	orphan := setupOrphansTest(t)
 
 	// Insert referenced files into DB
-	absA, _ := filepath.Abs("backend/downloads/a.bin")
-	absB, _ := filepath.Abs("backend/downloads/b.bin")
+	absA, _ := filepath.Abs("backend/downloads/a.pt")
+	absB, _ := filepath.Abs("backend/downloads/b.pt")
 	m := models.Model{CivitID: 1, Name: "m1", FilePath: absA}
 	if err := database.DB.Create(&m).Error; err != nil {
 		t.Fatalf("create model: %v", err)
@@ -93,9 +93,9 @@ func TestGetOrphanedFilesNone(t *testing.T) {
 	gin.SetMode(gin.TestMode)
 	setupOrphansTest(t)
 
-	absA, _ := filepath.Abs("backend/downloads/a.bin")
-	absB, _ := filepath.Abs("backend/downloads/b.bin")
-	absC, _ := filepath.Abs("backend/downloads/sub/c.bin")
+	absA, _ := filepath.Abs("backend/downloads/a.pt")
+	absB, _ := filepath.Abs("backend/downloads/b.pt")
+	absC, _ := filepath.Abs("backend/downloads/sub/c.pt")
 
 	m := models.Model{CivitID: 1, Name: "m1", FilePath: absA}
 	if err := database.DB.Create(&m).Error; err != nil {
