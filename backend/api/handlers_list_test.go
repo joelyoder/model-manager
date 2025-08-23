@@ -12,7 +12,7 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func setupTestDB(t *testing.T) {
+func setupListDB(t *testing.T) {
 	t.Helper()
 	t.Setenv("MODELS_DB_PATH", "file::memory:?cache=shared")
 	database.ConnectDatabase()
@@ -59,7 +59,7 @@ func newTestRouter() *gin.Engine {
 }
 
 func TestGetModelsAndCountFilters(t *testing.T) {
-	setupTestDB(t)
+	setupListDB(t)
 	r := newTestRouter()
 
 	tests := []struct {
