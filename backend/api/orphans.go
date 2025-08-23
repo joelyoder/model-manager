@@ -30,7 +30,12 @@ func GetOrphanedFiles(c *gin.Context) {
 			log.Printf("failed to get abs path for %s: %v", p, err)
 			continue
 		}
-		key := abs
+		resolved, err := filepath.EvalSymlinks(abs)
+		if err != nil {
+			log.Printf("failed to eval symlink for %s: %v", abs, err)
+			resolved = abs
+		}
+		key := resolved
 		if runtime.GOOS == "windows" {
 			key = strings.ToLower(key)
 		}

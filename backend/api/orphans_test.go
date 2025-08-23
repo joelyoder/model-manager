@@ -33,7 +33,11 @@ func setupOrphansTest(t *testing.T) string {
 	t.Cleanup(func() {
 		os.Chdir(wd)
 		os.RemoveAll("backend/downloads")
+		os.RemoveAll("backend/target")
 	})
+
+	os.RemoveAll("backend/downloads")
+	os.RemoveAll("backend/target")
 
 	if err := os.MkdirAll("backend/downloads/sub", 0o755); err != nil {
 		t.Fatalf("mkdir: %v", err)
@@ -176,6 +180,49 @@ func TestGetOrphanedFilesSymlinkDir(t *testing.T) {
 		t.Fatalf("got %d orphans, want 1", len(resp.Orphans))
 	}
 	absOrphan, _ := filepath.Abs("backend/target/orphan.pt")
+	if resp.Orphans[0] != absOrphan {
+		t.Errorf("orphan = %s, want %s", resp.Orphans[0], absOrphan)
+	}
+}
+
+func TestGetOrphanedFilesDBSymlinkPath(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+	orphan := setupOrphansTest(t)
+
+	if err := os.Symlink("downloads", "backend/link"); err != nil {
+		t.Fatalf("symlink: %v", err)
+	}
+	t.Cleanup(func() { os.Remove("backend/link") })
+
+	absSymlinkA, _ := filepath.Abs("backend/link/a.pt")
+	absB, _ := filepath.Abs("backend/downloads/b.pt")
+
+	m := models.Model{CivitID: 1, Name: "m1", FilePath: absSymlinkA}
+	if err := database.DB.Create(&m).Error; err != nil {
+		t.Fatalf("create model: %v", err)
+	}
+	if err := database.DB.Create(&models.Version{ModelID: m.ID, VersionID: 1, FilePath: absB}).Error; err != nil {
+		t.Fatalf("create version: %v", err)
+	}
+
+	r := gin.New()
+	r.GET("/api/orphaned-files", GetOrphanedFiles)
+	w := httptest.NewRecorder()
+	req := httptest.NewRequest(http.MethodGet, "/api/orphaned-files", nil)
+	r.ServeHTTP(w, req)
+	if w.Code != http.StatusOK {
+		t.Fatalf("status = %d", w.Code)
+	}
+	var resp struct {
+		Orphans []string `json:"orphans"`
+	}
+	if err := json.Unmarshal(w.Body.Bytes(), &resp); err != nil {
+		t.Fatalf("unmarshal: %v", err)
+	}
+	if len(resp.Orphans) != 1 {
+		t.Fatalf("got %d orphans, want 1", len(resp.Orphans))
+	}
+	absOrphan, _ := filepath.Abs(orphan)
 	if resp.Orphans[0] != absOrphan {
 		t.Errorf("orphan = %s, want %s", resp.Orphans[0], absOrphan)
 	}
