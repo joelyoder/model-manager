@@ -1,0 +1,71 @@
+name: Performance
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  k6:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v4
+        with:
+          go-version: '1.21'
+      - uses: grafana/setup-k6@v0.2
+      - name: Start server
+        run: |
+          go run backend/main.go &
+          echo $! > server.pid
+          sleep 3
+      - name: Run k6
+        run: k6 run perf/perf.js --summary-export=perf/summary.json
+        env:
+          BASE_URL: http://localhost:8080
+      - name: Stop server
+        if: always()
+        run: kill $(cat server.pid)
+      - name: Extract metrics
+        run: |
+          models_p95=$(jq '.metrics["http_req_duration{scenario:models}"].values["p(95)"]' perf/summary.json)
+          sync_p95=$(jq '.metrics["http_req_duration{scenario:sync}"].values["p(95)"]' perf/summary.json)
+          import_p95=$(jq '.metrics["http_req_duration{scenario:importEndpoint}"].values["p(95)"]' perf/summary.json)
+          models_rate=$(jq '.metrics["http_reqs{scenario:models}"].values.rate' perf/summary.json)
+          sync_rate=$(jq '.metrics["http_reqs{scenario:sync}"].values.rate' perf/summary.json)
+          import_rate=$(jq '.metrics["http_reqs{scenario:importEndpoint}"].values.rate' perf/summary.json)
+          cat <<DATA > perf/latency.json
+          [
+            {"name":"/api/models","unit":"ms","value":$models_p95},
+            {"name":"/api/sync","unit":"ms","value":$sync_p95},
+            {"name":"/api/import","unit":"ms","value":$import_p95}
+          ]
+          DATA
+          cat <<DATA > perf/throughput.json
+          [
+            {"name":"/api/models","unit":"req/s","value":$models_rate},
+            {"name":"/api/sync","unit":"req/s","value":$sync_rate},
+            {"name":"/api/import","unit":"req/s","value":$import_rate}
+          ]
+          DATA
+      - name: Store latency benchmark
+        uses: benchmark-action/github-action-benchmark@v1
+        with:
+          name: API latency
+          tool: customSmallerIsBetter
+          output-file-path: perf/latency.json
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          auto-push: true
+      - name: Store throughput benchmark
+        uses: benchmark-action/github-action-benchmark@v1
+        with:
+          name: API throughput
+          tool: customBiggerIsBetter
+          output-file-path: perf/throughput.json
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          auto-push: true
+      - name: Upload raw results
+        uses: actions/upload-artifact@v4
+        with:
+          name: k6-summary
+          path: perf/summary.json
