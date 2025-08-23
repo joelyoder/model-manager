@@ -260,6 +260,8 @@ func GetModelVersions(c *gin.Context) {
 func SyncVersionByID(c *gin.Context) {
 	apiKey := getCivitaiAPIKey()
 	versionID := c.Param("versionId")
+	downloadParam := c.DefaultQuery("download", "1")
+	shouldDownload := downloadParam != "0"
 
 	id, err := strconv.Atoi(versionID)
 	if err != nil {
@@ -308,11 +310,13 @@ func SyncVersionByID(c *gin.Context) {
 	}
 	if len(verData.ModelFiles) > 0 {
 		downloadURL = verData.ModelFiles[0].DownloadURL
-		filePath, _ = DownloadFile(downloadURL, "./backend/downloads/"+modelType, verData.ModelFiles[0].Name)
-		if info, err := os.Stat(filePath); err == nil && info.Size() < 110 {
-			moveToTrash(filePath)
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "Downloaded file too small"})
-			return
+		if shouldDownload {
+			filePath, _ = DownloadFile(downloadURL, "./backend/downloads/"+modelType, verData.ModelFiles[0].Name)
+			if info, err := os.Stat(filePath); err == nil && info.Size() < 110 {
+				moveToTrash(filePath)
+				c.JSON(http.StatusInternalServerError, gin.H{"error": "Downloaded file too small"})
+				return
+			}
 		}
 		fileSHA = verData.ModelFiles[0].Hashes.SHA256
 	}

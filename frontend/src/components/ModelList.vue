@@ -142,13 +142,14 @@
         </button>
       </div>
     </div>
-    <div v-show="showAddPanel" class="mx-auto card card-body my-3" style="max-width: 1000px;">
+    <div
+      v-show="showAddPanel"
+      class="mx-auto card card-body my-3"
+      style="max-width: 1000px"
+    >
       <div class="row g-3">
         <div class="col-md-2">
-          <button
-            @click="createManualModel"
-            class="btn btn-primary w-100"
-          >
+          <button @click="createManualModel" class="btn btn-primary w-100">
             Add Model
           </button>
         </div>
@@ -188,6 +189,24 @@
               </option>
             </select>
             <div class="input-group-append">
+              <!-- Add version without downloading -->
+              <button
+                v-if="selectedVersionId"
+                @click="addSelectedVersion"
+                :disabled="loading"
+                class="btn btn-secondary"
+              >
+                <span
+                  v-if="loading && adding"
+                  class="spinner-border spinner-border-sm"
+                  aria-hidden="true"
+                ></span>
+                <span v-if="loading && adding" role="status" class="ps-2"
+                  >Adding...</span
+                >
+                <span v-else>Add</span>
+              </button>
+
               <!-- Download version -->
               <button
                 v-if="selectedVersionId"
@@ -196,11 +215,11 @@
                 class="btn btn-primary"
               >
                 <span
-                  v-if="loading"
+                  v-if="loading && !adding"
                   class="spinner-border spinner-border-sm"
                   aria-hidden="true"
                 ></span>
-                <span v-if="loading" role="status" class="ps-2"
+                <span v-if="loading && !adding" role="status" class="ps-2"
                   >Downloading...</span
                 >
                 <span v-else>Download</span>
@@ -429,6 +448,7 @@ const selectedVersionId = ref("");
 const loading = ref(false);
 const downloading = ref(false);
 const downloadProgress = ref(0);
+const adding = ref(false);
 let progressInterval = null;
 const router = useRouter();
 const route = useRoute();
@@ -450,7 +470,7 @@ const saveState = () => {
       selectedModelType: selectedModelType.value,
       hideNsfw: hideNsfw.value,
       page: page.value,
-    })
+    }),
   );
 };
 
@@ -650,7 +670,10 @@ const totalPages = computed(() => Math.ceil(total.value / limit));
 const filteredModels = computed(() => {
   return models.value.filter((m) => {
     if (hideNsfw.value && m.nsfw) return false;
-    if (search.value && !m.name.toLowerCase().includes(search.value.toLowerCase()))
+    if (
+      search.value &&
+      !m.name.toLowerCase().includes(search.value.toLowerCase())
+    )
       return false;
     return true;
   });
@@ -743,6 +766,30 @@ const loadVersions = async () => {
   }
 };
 
+const addSelectedVersion = async () => {
+  if (!selectedVersionId.value) return;
+
+  loading.value = true;
+  adding.value = true;
+  try {
+    await axios.post(`/api/sync/version/${selectedVersionId.value}?download=0`);
+    page.value = 1;
+    await fetchTotal();
+    await fetchModels();
+    await fetchBaseModels();
+    showToast("Version added to library", "success");
+  } catch (err) {
+    console.error(err);
+    showToast("Add failed", "danger");
+  } finally {
+    modelUrl.value = "";
+    versions.value = [];
+    selectedVersionId.value = "";
+    loading.value = false;
+    adding.value = false;
+  }
+};
+
 const downloadSelectedVersion = async () => {
   if (!selectedVersionId.value) return;
 
@@ -761,6 +808,7 @@ const downloadSelectedVersion = async () => {
   }
 
   loading.value = true;
+  adding.value = false;
   downloading.value = true;
   downloadProgress.value = 0;
   progressInterval = setInterval(async () => {
@@ -786,6 +834,7 @@ const downloadSelectedVersion = async () => {
     selectedVersionId.value = "";
     loading.value = false;
     downloading.value = false;
+    adding.value = false;
   }
 };
 
