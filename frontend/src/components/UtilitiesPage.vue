@@ -6,7 +6,9 @@
     <h2 class="my-3">Utilities</h2>
     <div class="card card-body mb-4" v-if="stats">
       <h3>Stats</h3>
-      <p class="text-center h5 mb-3">Total Models: <strong>{{ stats.totalModels }}</strong></p>
+      <p class="text-center h5 mb-3">
+        Total Models: <strong>{{ stats.totalModels }}</strong>
+      </p>
       <div class="row text-center">
         <div class="col-md-4 mb-3">
           <canvas id="typeChart"></canvas>
@@ -71,7 +73,9 @@
       </div>
       <h4 class="h5 my-3">Export Database as JSON</h4>
       <div class="mb-3 d-flex gap-2">
-        <button @click="exportJson" class="btn btn-primary">Export Models</button>
+        <button @click="exportJson" class="btn btn-primary">
+          Export Models
+        </button>
       </div>
       <h4 class="h5 my-3">Import Database from JSON</h4>
       <div class="input-group mb-3">
@@ -91,6 +95,29 @@
           </button>
         </div>
       </div>
+    </div>
+    <div class="card card-body">
+      <button @click="findOrphanFiles" class="btn btn-primary mb-3">
+        Find Orphaned Model Files
+      </button>
+      <div v-if="orphanFiles.length">
+        <ul class="list-group list-group-flush">
+          <li
+            v-for="file in orphanFiles"
+            :key="file"
+            class="list-group-item"
+          >
+            {{ file }}
+          </li>
+        </ul>
+        <button
+          @click="exportOrphanFiles"
+          class="btn btn-secondary mt-3"
+        >
+          Export Results
+        </button>
+      </div>
+      <p v-else-if="searchDone" class="mb-0">No orphaned files found</p>
     </div>
   </div>
 </template>
@@ -176,6 +203,8 @@ const pullImages = ref(false);
 const pullMeta = ref(false);
 const pullDesc = ref(false);
 const router = useRouter();
+const orphanFiles = ref([]);
+const searchDone = ref(false);
 
 const onFileChange = (e) => {
   importFile.value = e.target.files[0] || null;
@@ -235,6 +264,33 @@ const exportJson = async () => {
     console.error(err);
     showToast("Export failed", "danger");
   }
+};
+
+const findOrphanFiles = async () => {
+  try {
+    const res = await axios.get("/api/orphaned-files");
+    console.log("orphaned files response", res.data);
+    orphanFiles.value = res.data.orphans || [];
+  } catch (err) {
+    console.error(err);
+    showToast("Failed to fetch orphaned files", "danger");
+    orphanFiles.value = [];
+  } finally {
+    searchDone.value = true;
+  }
+};
+
+const exportOrphanFiles = () => {
+  if (!orphanFiles.value.length) return;
+  const blob = new Blob([orphanFiles.value.join("\n")], {
+    type: "text/plain",
+  });
+  const url = window.URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = "orphaned_files.txt";
+  a.click();
+  window.URL.revokeObjectURL(url);
 };
 
 const goBack = () => {
