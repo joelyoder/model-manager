@@ -92,6 +92,21 @@
         </div>
       </div>
     </div>
+    <div class="card card-body">
+      <button @click="findOrphanFiles" class="btn btn-primary mb-3">
+        Find Orphaned Model Files
+      </button>
+      <ul v-if="orphanFiles.length" class="list-group list-group-flush">
+        <li
+          v-for="file in orphanFiles"
+          :key="file"
+          class="list-group-item"
+        >
+          {{ file }}
+        </li>
+      </ul>
+      <p v-else-if="searchDone" class="mb-0">No orphaned files found</p>
+    </div>
   </div>
 </template>
 
@@ -176,6 +191,8 @@ const pullImages = ref(false);
 const pullMeta = ref(false);
 const pullDesc = ref(false);
 const router = useRouter();
+const orphanFiles = ref([]);
+const searchDone = ref(false);
 
 const onFileChange = (e) => {
   importFile.value = e.target.files[0] || null;
@@ -234,6 +251,19 @@ const exportJson = async () => {
   } catch (err) {
     console.error(err);
     showToast("Export failed", "danger");
+  }
+};
+
+const findOrphanFiles = async () => {
+  try {
+    const res = await axios.get("/api/orphaned-files");
+    orphanFiles.value = res.data;
+  } catch (err) {
+    console.error(err);
+    showToast("Failed to fetch orphaned files", "danger");
+    orphanFiles.value = [];
+  } finally {
+    searchDone.value = true;
   }
 };
 
