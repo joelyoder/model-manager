@@ -39,15 +39,21 @@ func GetOrphanedFiles(c *gin.Context) {
 
 	var orphans []string
 	root := filepath.Join("backend", "downloads")
-	log.Printf("walking downloads directory: %s", root)
-	filepath.WalkDir(root, func(path string, d fs.DirEntry, err error) error {
+	absRoot, err := filepath.Abs(root)
+	if err != nil {
+		log.Printf("failed to resolve downloads directory %s: %v", root, err)
+	}
+	log.Printf("walking downloads directory: %s", absRoot)
+	filepath.WalkDir(absRoot, func(path string, d fs.DirEntry, err error) error {
 		if err != nil {
 			log.Printf("walk error on %s: %v", path, err)
 			return nil
 		}
 		if d.IsDir() {
+			log.Printf("scanning dir: %s", path)
 			return nil
 		}
+		log.Printf("found file: %s", path)
 		ext := strings.ToLower(filepath.Ext(d.Name()))
 		if ext != ".safetensors" && ext != ".pt" {
 			return nil
