@@ -4,6 +4,7 @@ import (
 	"io/fs"
 	"log"
 	"net/http"
+	"os"
 	"path/filepath"
 	"runtime"
 	"strings"
@@ -44,15 +45,47 @@ func GetOrphanedFiles(c *gin.Context) {
 		log.Printf("failed to resolve downloads directory %s: %v", root, err)
 	}
 	log.Printf("walking downloads directory: %s", absRoot)
-	filepath.WalkDir(absRoot, func(path string, d fs.DirEntry, err error) error {
+
+	visited := make(map[string]struct{})
+	var walkFn func(string, fs.DirEntry, error) error
+
+	walkFn = func(path string, d fs.DirEntry, err error) error {
 		if err != nil {
 			log.Printf("walk error on %s: %v", path, err)
 			return nil
 		}
+
+		if d.Type()&fs.ModeSymlink != 0 {
+			target, err := filepath.EvalSymlinks(path)
+			if err != nil {
+				log.Printf("failed to eval symlink %s: %v", path, err)
+				return nil
+			}
+			info, err := os.Stat(target)
+			if err != nil {
+				log.Printf("stat symlink target %s: %v", target, err)
+				return nil
+			}
+			if info.IsDir() {
+				absTarget, err := filepath.Abs(target)
+				if err == nil {
+					if _, ok := visited[absTarget]; ok {
+						return nil
+					}
+					visited[absTarget] = struct{}{}
+				}
+				log.Printf("following symlink dir: %s -> %s", path, target)
+				return filepath.WalkDir(target, walkFn)
+			}
+			d = fs.FileInfoToDirEntry(info)
+			path = target
+		}
+
 		if d.IsDir() {
 			log.Printf("scanning dir: %s", path)
 			return nil
 		}
+
 		log.Printf("found file: %s", path)
 		ext := strings.ToLower(filepath.Ext(d.Name()))
 		if ext != ".safetensors" && ext != ".pt" {
@@ -74,7 +107,9 @@ func GetOrphanedFiles(c *gin.Context) {
 			log.Printf("file referenced in db: %s", abs)
 		}
 		return nil
-	})
+	}
+
+	filepath.WalkDir(absRoot, walkFn)
 
 	c.JSON(http.StatusOK, gin.H{"orphans": orphans})
 }
