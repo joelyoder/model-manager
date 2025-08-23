@@ -49,5 +49,3 @@ and displayed alongside the image.
     - Add check to ensure that model files with the same name don't overrite existing models in the folder
 - Settings
     - Add a setting to change the models and image folder locations
-- Utilities
-    - A tool that will scan the library folder and find any models that are missing from the library
