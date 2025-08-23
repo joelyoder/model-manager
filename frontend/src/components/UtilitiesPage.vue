@@ -100,11 +100,23 @@
       <button @click="findOrphanFiles" class="btn btn-primary mb-3">
         Find Orphaned Model Files
       </button>
-      <ul v-if="orphanFiles.length" class="list-group list-group-flush">
-        <li v-for="file in orphanFiles" :key="file" class="list-group-item">
-          {{ file }}
-        </li>
-      </ul>
+      <div v-if="orphanFiles.length">
+        <ul class="list-group list-group-flush">
+          <li
+            v-for="file in orphanFiles"
+            :key="file"
+            class="list-group-item"
+          >
+            {{ file }}
+          </li>
+        </ul>
+        <button
+          @click="exportOrphanFiles"
+          class="btn btn-secondary mt-3"
+        >
+          Export Results
+        </button>
+      </div>
       <p v-else-if="searchDone" class="mb-0">No orphaned files found</p>
     </div>
   </div>
@@ -266,6 +278,19 @@ const findOrphanFiles = async () => {
   } finally {
     searchDone.value = true;
   }
+};
+
+const exportOrphanFiles = () => {
+  if (!orphanFiles.value.length) return;
+  const blob = new Blob([orphanFiles.value.join("\n")], {
+    type: "text/plain",
+  });
+  const url = window.URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = "orphaned_files.txt";
+  a.click();
+  window.URL.revokeObjectURL(url);
 };
 
 const goBack = () => {
