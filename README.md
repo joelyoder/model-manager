@@ -9,6 +9,27 @@ This is a desktop application to download and manage models for local image gene
 3. In the main directory, run `go run .\backend\main.go`
 4. In the \frontend\ directory, run `npm run dev`
 
+## Tests
+### Backend
+Run all Go tests from the backend directory:
+
+```sh
+go test ./...
+```
+
+### Frontend
+Unit tests are executed with [Vitest](https://vitest.dev/):
+
+```sh
+npm test
+```
+
+End-to-end tests use [Playwright](https://playwright.dev/):
+
+```sh
+npm run test:e2e
+```
+
 ## Gallery Management
 Use the model detail page to upload additional images or remove existing gallery
 images from a version. The uploaded image will be scanned for embedded metadata
