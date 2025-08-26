@@ -310,8 +310,16 @@ func SyncVersionByID(c *gin.Context) {
 	}
 	if len(verData.ModelFiles) > 0 {
 		downloadURL = verData.ModelFiles[0].DownloadURL
+		fileName := verData.ModelFiles[0].Name
+		destDir := "./backend/downloads/" + modelType
+		destPath := filepath.Join(destDir, fileName)
 		if shouldDownload {
-			filePath, _ = DownloadFile(downloadURL, "./backend/downloads/"+modelType, verData.ModelFiles[0].Name)
+			if _, err := os.Stat(destPath); err == nil {
+				ext := filepath.Ext(fileName)
+				base := strings.TrimSuffix(fileName, ext)
+				fileName = fmt.Sprintf("%s_%d%s", base, verData.ID, ext)
+			}
+			filePath, _ = DownloadFile(downloadURL, destDir, fileName)
 			if info, err := os.Stat(filePath); err == nil && info.Size() < 110 {
 				moveToTrash(filePath)
 				c.JSON(http.StatusInternalServerError, gin.H{"error": "Downloaded file too small"})
@@ -425,7 +433,14 @@ func processModel(item CivitModel, apiKey string) {
 		if len(verData.ModelFiles) > 0 {
 			downloadURL = verData.ModelFiles[0].DownloadURL
 			fileName := verData.ModelFiles[0].Name
-			filePath, _ = DownloadFile(downloadURL, "./backend/downloads/"+item.Type, fileName)
+			destDir := "./backend/downloads/" + item.Type
+			destPath := filepath.Join(destDir, fileName)
+			if _, err := os.Stat(destPath); err == nil {
+				ext := filepath.Ext(fileName)
+				base := strings.TrimSuffix(fileName, ext)
+				fileName = fmt.Sprintf("%s_%d%s", base, verData.ID, ext)
+			}
+			filePath, _ = DownloadFile(downloadURL, destDir, fileName)
 			if info, err := os.Stat(filePath); err == nil && info.Size() < 110 {
 				moveToTrash(filePath)
 				log.Printf("downloaded %s is too small", fileName)
