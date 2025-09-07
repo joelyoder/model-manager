@@ -113,7 +113,7 @@ func refreshVersionData(id int, fields string) error {
 			if isVideoURL(imageURL) {
 				continue
 			}
-			imgPath, _ := DownloadFile(imageURL, "./backend/images/"+modelType, fmt.Sprintf("%d_%d.jpg", verData.ID, idx))
+			imgPath, _, _ := DownloadFile(imageURL, "./backend/images/"+modelType, fmt.Sprintf("%d_%d.jpg", verData.ID, idx))
 			w, h, _ := GetImageDimensions(imgPath)
 			hash, _ := FileHash(imgPath)
 			metaBytes, _ := json.Marshal(img.Meta)

@@ -16,13 +16,13 @@ import (
 
 var CurrentDownloadProgress int64
 
-func DownloadFile(url, destDir, filename string) (string, error) {
+func DownloadFile(url, destDir, filename string) (string, int64, error) {
 	token := getCivitaiAPIKey()
 	log.Printf("Downloading %s", url)
 
 	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
-		return "", err
+		return "", 0, err
 	}
 	if token != "" {
 		req.Header.Add("Authorization", "Bearer "+token)
@@ -30,7 +30,7 @@ func DownloadFile(url, destDir, filename string) (string, error) {
 
 	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
-		return "", err
+		return "", 0, err
 	}
 	defer resp.Body.Close()
 
@@ -38,12 +38,12 @@ func DownloadFile(url, destDir, filename string) (string, error) {
 	fullPath := filepath.Join(destDir, filename)
 	absPath, err := filepath.Abs(fullPath)
 	if err != nil {
-		return "", err
+		return "", 0, err
 	}
 
 	out, err := os.Create(absPath)
 	if err != nil {
-		return "", err
+		return "", 0, err
 	}
 	defer out.Close()
 
@@ -58,7 +58,7 @@ func DownloadFile(url, destDir, filename string) (string, error) {
 		n, err := resp.Body.Read(buf)
 		if n > 0 {
 			if _, werr := out.Write(buf[:n]); werr != nil {
-				return "", werr
+				return "", 0, werr
 			}
 			downloaded += int64(n)
 			if strings.Contains(destDir, "downloads") && total > 0 {
@@ -69,7 +69,7 @@ func DownloadFile(url, destDir, filename string) (string, error) {
 			if err == io.EOF {
 				break
 			}
-			return "", err
+			return "", 0, err
 		}
 	}
 
@@ -77,7 +77,7 @@ func DownloadFile(url, destDir, filename string) (string, error) {
 		CurrentDownloadProgress = 100
 	}
 
-	return absPath, nil
+	return absPath, downloaded, nil
 }
 
 func GetImageDimensions(path string) (int, int, error) {

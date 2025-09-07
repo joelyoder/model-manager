@@ -46,9 +46,12 @@ func TestDownloadFileAndHelpers(t *testing.T) {
 
 	destDir := filepath.Join(t.TempDir(), "downloads")
 
-	filePath, err := DownloadFile(srv.URL+"/file", destDir, "test.txt")
+	filePath, size, err := DownloadFile(srv.URL+"/file", destDir, "test.txt")
 	if err != nil {
 		t.Fatalf("DownloadFile file: %v", err)
+	}
+	if size != int64(len(fileContent)) {
+		t.Errorf("size = %d, want %d", size, len(fileContent))
 	}
 	data, err := os.ReadFile(filePath)
 	if err != nil {
@@ -72,9 +75,12 @@ func TestDownloadFileAndHelpers(t *testing.T) {
 		t.Errorf("hash = %s, want %s", hash, hex.EncodeToString(expHash[:]))
 	}
 
-	imgPath, err := DownloadFile(srv.URL+"/image", destDir, "img.png")
+	imgPath, imgSize, err := DownloadFile(srv.URL+"/image", destDir, "img.png")
 	if err != nil {
 		t.Fatalf("DownloadFile image: %v", err)
+	}
+	if imgSize != int64(len(imgBytes)) {
+		t.Errorf("image size = %d, want %d", imgSize, len(imgBytes))
 	}
 	w, h, err := GetImageDimensions(imgPath)
 	if err != nil {
