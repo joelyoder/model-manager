@@ -237,8 +237,9 @@ func GetModelVersions(c *gin.Context) {
 		updated := ver.Updated
 		eaf := ver.EarlyAccessTimeFrame
 		if len(ver.ModelFiles) > 0 {
-			sizeKB = ver.ModelFiles[0].SizeKB
-			sha = ver.ModelFiles[0].Hashes.SHA256
+			file := selectModelFile(ver.ModelFiles)
+			sizeKB = file.SizeKB
+			sha = file.Hashes.SHA256
 		}
 
 		versions = append(versions, VersionInfo{
@@ -305,13 +306,15 @@ func SyncVersionByID(c *gin.Context) {
 	var imgW, imgH int
 	var fileSHA string
 	var downloadURL string
+	var selectedFile ModelFile
 	modelType := model.Type
 	if modelType == "" {
 		modelType = modelData.Type
 	}
 	if len(verData.ModelFiles) > 0 {
-		downloadURL = verData.ModelFiles[0].DownloadURL
-		fileName := verData.ModelFiles[0].Name
+		selectedFile = selectModelFile(verData.ModelFiles)
+		downloadURL = selectedFile.DownloadURL
+		fileName := selectedFile.Name
 		destDir := "./backend/downloads/" + modelType
 		destPath := filepath.Join(destDir, fileName)
 		if shouldDownload {
@@ -327,7 +330,7 @@ func SyncVersionByID(c *gin.Context) {
 				return
 			}
 		}
-		fileSHA = verData.ModelFiles[0].Hashes.SHA256
+		fileSHA = selectedFile.Hashes.SHA256
 	}
 
 	versionRecord := models.Version{
@@ -336,7 +339,7 @@ func SyncVersionByID(c *gin.Context) {
 		Name:                 verData.Name,
 		BaseModel:            verData.BaseModel,
 		EarlyAccessTimeFrame: verData.EarlyAccessTimeFrame,
-		SizeKB:               verData.ModelFiles[0].SizeKB,
+		SizeKB:               selectedFile.SizeKB,
 		TrainedWords:         strings.Join(verData.TrainedWords, ","),
 		Nsfw:                 modelData.Nsfw,
 		Type:                 modelData.Type,
@@ -432,9 +435,11 @@ func processModel(item CivitModel, apiKey string) {
 		var imgW, imgH int
 		var fileSHA string
 		var downloadURL string
+		var selectedFile ModelFile
 		if len(verData.ModelFiles) > 0 {
-			downloadURL = verData.ModelFiles[0].DownloadURL
-			fileName := verData.ModelFiles[0].Name
+			selectedFile = selectModelFile(verData.ModelFiles)
+			downloadURL = selectedFile.DownloadURL
+			fileName := selectedFile.Name
 			destDir := "./backend/downloads/" + item.Type
 			destPath := filepath.Join(destDir, fileName)
 			if _, err := os.Stat(destPath); err == nil {
@@ -448,7 +453,7 @@ func processModel(item CivitModel, apiKey string) {
 				log.Printf("downloaded %s is too small", fileName)
 				continue
 			}
-			fileSHA = verData.ModelFiles[0].Hashes.SHA256
+			fileSHA = selectedFile.Hashes.SHA256
 		}
 
 		versionRec := models.Version{
@@ -457,7 +462,7 @@ func processModel(item CivitModel, apiKey string) {
 			Name:                 verData.Name,
 			BaseModel:            verData.BaseModel,
 			EarlyAccessTimeFrame: verData.EarlyAccessTimeFrame,
-			SizeKB:               verData.ModelFiles[0].SizeKB,
+			SizeKB:               selectedFile.SizeKB,
 			TrainedWords:         strings.Join(verData.TrainedWords, ","),
 			Nsfw:                 item.Nsfw,
 			Type:                 item.Type,
