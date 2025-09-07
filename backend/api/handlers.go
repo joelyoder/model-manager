@@ -301,6 +301,7 @@ func SyncVersionByID(c *gin.Context) {
 	}
 
 	var filePath, imagePath string
+	var size int64
 	var imgW, imgH int
 	var fileSHA string
 	var downloadURL string
@@ -319,8 +320,8 @@ func SyncVersionByID(c *gin.Context) {
 				base := strings.TrimSuffix(fileName, ext)
 				fileName = fmt.Sprintf("%s_%d%s", base, verData.ID, ext)
 			}
-			filePath, _ = DownloadFile(downloadURL, destDir, fileName)
-			if info, err := os.Stat(filePath); err == nil && info.Size() < 110 {
+			filePath, size, _ = DownloadFile(downloadURL, destDir, fileName)
+			if size < 110 {
 				moveToTrash(filePath)
 				c.JSON(http.StatusInternalServerError, gin.H{"error": "Downloaded file too small"})
 				return
@@ -362,7 +363,7 @@ func SyncVersionByID(c *gin.Context) {
 		if isVideoURL(imageURL) {
 			continue
 		}
-		imgPath, _ := DownloadFile(imageURL, "./backend/images/"+modelType, fmt.Sprintf("%d_%d.jpg", verData.ID, idx))
+		imgPath, _, _ := DownloadFile(imageURL, "./backend/images/"+modelType, fmt.Sprintf("%d_%d.jpg", verData.ID, idx))
 		w, h, _ := GetImageDimensions(imgPath)
 		hash, _ := FileHash(imgPath)
 		metaBytes, _ := json.Marshal(img.Meta)
@@ -427,6 +428,7 @@ func processModel(item CivitModel, apiKey string) {
 		}
 
 		var filePath, imagePath string
+		var size int64
 		var imgW, imgH int
 		var fileSHA string
 		var downloadURL string
@@ -440,8 +442,8 @@ func processModel(item CivitModel, apiKey string) {
 				base := strings.TrimSuffix(fileName, ext)
 				fileName = fmt.Sprintf("%s_%d%s", base, verData.ID, ext)
 			}
-			filePath, _ = DownloadFile(downloadURL, destDir, fileName)
-			if info, err := os.Stat(filePath); err == nil && info.Size() < 110 {
+			filePath, size, _ = DownloadFile(downloadURL, destDir, fileName)
+			if size < 110 {
 				moveToTrash(filePath)
 				log.Printf("downloaded %s is too small", fileName)
 				continue
@@ -482,7 +484,7 @@ func processModel(item CivitModel, apiKey string) {
 			if isVideoURL(imageURL) {
 				continue
 			}
-			imgPath, _ := DownloadFile(imageURL, "./backend/images/"+item.Type, fmt.Sprintf("%d_%d.jpg", verData.ID, idx))
+			imgPath, _, _ := DownloadFile(imageURL, "./backend/images/"+item.Type, fmt.Sprintf("%d_%d.jpg", verData.ID, idx))
 			w, h, _ := GetImageDimensions(imgPath)
 			hash, _ := FileHash(imgPath)
 			metaBytes, _ := json.Marshal(img.Meta)
