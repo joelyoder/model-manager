@@ -59,9 +59,10 @@ func refreshVersionData(id int, fields string) error {
 		version.BaseModel = verData.BaseModel
 		version.EarlyAccessTimeFrame = verData.EarlyAccessTimeFrame
 		if len(verData.ModelFiles) > 0 {
-			version.SizeKB = verData.ModelFiles[0].SizeKB
-			version.SHA256 = verData.ModelFiles[0].Hashes.SHA256
-			version.DownloadURL = verData.ModelFiles[0].DownloadURL
+			file := selectModelFile(verData.ModelFiles)
+			version.SizeKB = file.SizeKB
+			version.SHA256 = file.Hashes.SHA256
+			version.DownloadURL = file.DownloadURL
 		}
 		version.TrainedWords = strings.Join(verData.TrainedWords, ",")
 		version.Nsfw = modelData.Nsfw
