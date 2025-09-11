@@ -39,14 +39,15 @@ func GetModels(c *gin.Context) {
 	var modelsList []models.Model
 	q := database.DB.Model(&models.Model{})
 
-	// Filter models by versions when filters are provided
-	needJoin := baseModel != "" || modelType != "" || hideNsfw || tags != ""
+	// Filter models by versions when filters are provided or when searching
+	needJoin := search != "" || baseModel != "" || modelType != "" || hideNsfw || tags != ""
 	if needJoin {
 		q = q.Joins("JOIN versions ON versions.model_id = models.id")
 	}
 
 	if search != "" {
-		q = q.Where("LOWER(models.name) LIKE ?", "%"+strings.ToLower(search)+"%")
+		like := "%" + strings.ToLower(search) + "%"
+		q = q.Where("LOWER(models.name) LIKE ? OR LOWER(versions.name) LIKE ? OR LOWER(versions.trained_words) LIKE ?", like, like, like)
 	}
 	if baseModel != "" {
 		q = q.Where("versions.base_model = ?", baseModel)
@@ -107,12 +108,13 @@ func GetModelsCount(c *gin.Context) {
 
 	var count int64
 	q := database.DB.Model(&models.Model{})
-	needJoin := baseModel != "" || modelType != "" || hideNsfw || tags != ""
+	needJoin := search != "" || baseModel != "" || modelType != "" || hideNsfw || tags != ""
 	if needJoin {
 		q = q.Joins("JOIN versions ON versions.model_id = models.id")
 	}
 	if search != "" {
-		q = q.Where("LOWER(models.name) LIKE ?", "%"+strings.ToLower(search)+"%")
+		like := "%" + strings.ToLower(search) + "%"
+		q = q.Where("LOWER(models.name) LIKE ? OR LOWER(versions.name) LIKE ? OR LOWER(versions.trained_words) LIKE ?", like, like, like)
 	}
 	if baseModel != "" {
 		q = q.Where("versions.base_model = ?", baseModel)

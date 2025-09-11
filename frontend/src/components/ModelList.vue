@@ -670,11 +670,17 @@ const totalPages = computed(() => Math.ceil(total.value / limit));
 const filteredModels = computed(() => {
   return models.value.filter((m) => {
     if (hideNsfw.value && m.nsfw) return false;
-    if (
-      search.value &&
-      !m.name.toLowerCase().includes(search.value.toLowerCase())
-    )
-      return false;
+    if (search.value) {
+      const s = search.value.toLowerCase();
+      const matchModel = m.name.toLowerCase().includes(s);
+      const matchVersion = (m.versions || []).some((v) =>
+        v.name.toLowerCase().includes(s),
+      );
+      const matchTrained = (m.versions || []).some((v) =>
+        (v.trainedWords || "").toLowerCase().includes(s),
+      );
+      if (!(matchModel || matchVersion || matchTrained)) return false;
+    }
     return true;
   });
 });
@@ -694,6 +700,13 @@ const versionCards = computed(() => {
         if (selectedModelType.value && v.type !== selectedModelType.value)
           return false;
         if (hideNsfw.value && v.nsfw) return false;
+        if (search.value) {
+          const s = search.value.toLowerCase();
+          const matchModel = model.name.toLowerCase().includes(s);
+          const matchVersion = v.name.toLowerCase().includes(s);
+          const matchTrained = (v.trainedWords || "").toLowerCase().includes(s);
+          if (!(matchModel || matchVersion || matchTrained)) return false;
+        }
 
         if (selectedCategory.value) {
           const tags = (v.tags || "")

@@ -21,7 +21,7 @@ func setupListDB(t *testing.T) {
 	if err := database.DB.Create(&m1).Error; err != nil {
 		t.Fatalf("create model1: %v", err)
 	}
-	if err := database.DB.Create(&models.Version{ModelID: m1.ID, VersionID: 11, BaseModel: "SD1", Type: "checkpoint", Nsfw: false, Tags: "tag1"}).Error; err != nil {
+	if err := database.DB.Create(&models.Version{ModelID: m1.ID, VersionID: 11, Name: "AlphaV1", BaseModel: "SD1", Type: "checkpoint", Nsfw: false, Tags: "tag1", TrainedWords: "alpha-key"}).Error; err != nil {
 		t.Fatalf("create version1: %v", err)
 	}
 
@@ -29,7 +29,7 @@ func setupListDB(t *testing.T) {
 	if err := database.DB.Create(&m2).Error; err != nil {
 		t.Fatalf("create model2: %v", err)
 	}
-	if err := database.DB.Create(&models.Version{ModelID: m2.ID, VersionID: 22, BaseModel: "SD1", Type: "lora", Nsfw: true, Tags: "tag2,tag3"}).Error; err != nil {
+	if err := database.DB.Create(&models.Version{ModelID: m2.ID, VersionID: 22, Name: "BetaSpecial", BaseModel: "SD1", Type: "lora", Nsfw: true, Tags: "tag2,tag3", TrainedWords: "beta-key"}).Error; err != nil {
 		t.Fatalf("create version2: %v", err)
 	}
 
@@ -37,7 +37,7 @@ func setupListDB(t *testing.T) {
 	if err := database.DB.Create(&m3).Error; err != nil {
 		t.Fatalf("create model3: %v", err)
 	}
-	if err := database.DB.Create(&models.Version{ModelID: m3.ID, VersionID: 33, BaseModel: "SD2", Type: "checkpoint", Nsfw: false, Tags: "tag1,tag2"}).Error; err != nil {
+	if err := database.DB.Create(&models.Version{ModelID: m3.ID, VersionID: 33, Name: "GammaVer", BaseModel: "SD2", Type: "checkpoint", Nsfw: false, Tags: "tag1,tag2", TrainedWords: "gamma-key"}).Error; err != nil {
 		t.Fatalf("create version3: %v", err)
 	}
 
@@ -45,7 +45,7 @@ func setupListDB(t *testing.T) {
 	if err := database.DB.Create(&m4).Error; err != nil {
 		t.Fatalf("create model4: %v", err)
 	}
-	if err := database.DB.Create(&models.Version{ModelID: m4.ID, VersionID: 44, BaseModel: "SD2", Type: "lora", Nsfw: false, Tags: "tag3"}).Error; err != nil {
+	if err := database.DB.Create(&models.Version{ModelID: m4.ID, VersionID: 44, Name: "DeltaVer", BaseModel: "SD2", Type: "lora", Nsfw: false, Tags: "tag3", TrainedWords: "delta-key"}).Error; err != nil {
 		t.Fatalf("create version4: %v", err)
 	}
 }
@@ -68,6 +68,8 @@ func TestGetModelsAndCountFilters(t *testing.T) {
 		wantNames []string
 	}{
 		{"search", "?search=alpha", []string{"Alpha"}},
+		{"searchVersion", "?search=betaspecial", []string{"Beta"}},
+		{"searchTrained", "?search=delta-key", []string{"Delta"}},
 		{"baseModel", "?baseModel=SD1", []string{"Beta", "Alpha"}},
 		{"modelType", "?modelType=lora", []string{"Delta", "Beta"}},
 		{"hideNsfw", "?hideNsfw=1", []string{"Delta", "Gamma", "Alpha"}},
