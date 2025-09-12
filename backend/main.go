@@ -51,6 +51,7 @@ func main() {
 		apiGroup.GET("/export", api.ExportModels)
 		apiGroup.GET("/stats", api.GetStats)
 		apiGroup.GET("/orphaned-files", api.GetOrphanedFiles)
+		apiGroup.GET("/duplicate-file-paths", api.GetDuplicateFilePaths)
 		apiGroup.GET("/settings", api.GetSettings)
 		apiGroup.POST("/settings", api.UpdateSetting)
 	}

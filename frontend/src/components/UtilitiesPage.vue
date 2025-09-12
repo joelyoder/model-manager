@@ -105,18 +105,11 @@
         </button>
         <div v-if="orphanFiles.length">
           <ul class="list-group list-group-flush">
-            <li
-              v-for="file in orphanFiles"
-              :key="file"
-              class="list-group-item"
-            >
+            <li v-for="file in orphanFiles" :key="file" class="list-group-item">
               {{ file }}
             </li>
           </ul>
-          <button
-            @click="exportOrphanFiles"
-            class="btn btn-secondary mt-3"
-          >
+          <button @click="exportOrphanFiles" class="btn btn-secondary mt-3">
             Export Results
           </button>
         </div>
@@ -124,6 +117,31 @@
       </div>
       <h4 class="h5 my-3">Find Duplicate File Paths</h4>
       <div class="mb-3 d-flex gap-2">
+        <button @click="findDuplicatePaths" class="btn btn-primary">
+          Search Duplicates
+        </button>
+        <div v-if="duplicatePaths.length">
+          <ul class="list-group list-group-flush">
+            <li
+              v-for="dup in duplicatePaths"
+              :key="dup.path"
+              class="list-group-item"
+            >
+              <strong>{{ dup.path }}</strong>
+              <ul class="mb-0">
+                <li v-for="v in dup.versions" :key="v.versionId">
+                  {{ v.modelName }} - {{ v.versionName }}
+                </li>
+              </ul>
+            </li>
+          </ul>
+          <button @click="exportDuplicatePaths" class="btn btn-secondary mt-3">
+            Export Results
+          </button>
+        </div>
+        <p v-else-if="dupSearchDone" class="mb-0">
+          No duplicate file paths found
+        </p>
       </div>
     </div>
   </div>
@@ -212,6 +230,8 @@ const pullDesc = ref(false);
 const router = useRouter();
 const orphanFiles = ref([]);
 const searchDone = ref(false);
+const duplicatePaths = ref([]);
+const dupSearchDone = ref(false);
 
 const onFileChange = (e) => {
   importFile.value = e.target.files[0] || null;
@@ -285,6 +305,36 @@ const findOrphanFiles = async () => {
   } finally {
     searchDone.value = true;
   }
+};
+
+const findDuplicatePaths = async () => {
+  try {
+    const res = await axios.get("/api/duplicate-file-paths");
+    duplicatePaths.value = res.data.duplicates || [];
+  } catch (err) {
+    console.error(err);
+    showToast("Failed to fetch duplicate paths", "danger");
+    duplicatePaths.value = [];
+  } finally {
+    dupSearchDone.value = true;
+  }
+};
+
+const exportDuplicatePaths = () => {
+  if (!duplicatePaths.value.length) return;
+  const lines = duplicatePaths.value.map((d) =>
+    [
+      d.path,
+      ...d.versions.map((v) => `  ${v.modelName} - ${v.versionName}`),
+    ].join("\n"),
+  );
+  const blob = new Blob([lines.join("\n\n")], { type: "text/plain" });
+  const url = window.URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = "duplicate_file_paths.txt";
+  a.click();
+  window.URL.revokeObjectURL(url);
 };
 
 const exportOrphanFiles = () => {
