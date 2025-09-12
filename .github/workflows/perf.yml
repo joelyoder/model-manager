@@ -18,7 +18,13 @@ jobs:
         run: |
           go run backend/main.go &
           echo $! > server.pid
-          sleep 3
+          for i in {1..10}; do
+            if curl -sSf http://localhost:8080/api/models > /dev/null; then
+              break
+            fi
+            echo "Waiting for server to be ready..."
+            sleep 1
+          done
       - name: Run k6
         run: k6 run perf/perf.js --summary-export=perf/summary.json
         env:
@@ -48,7 +54,17 @@ jobs:
             {"name":"/api/import","unit":"req/s","value":$import_rate}
           ]
           DATA
+      - name: Ensure gh-pages branch exists
+        if: github.ref == 'refs/heads/main'
+        run: |
+          if ! git ls-remote --exit-code origin gh-pages > /dev/null 2>&1; then
+            git checkout --orphan gh-pages
+            git commit --allow-empty -m "Initialize gh-pages branch"
+            git push origin gh-pages
+            git checkout "$GITHUB_REF"
+          fi
       - name: Store latency benchmark
+        if: github.ref == 'refs/heads/main'
         uses: benchmark-action/github-action-benchmark@v1
         with:
           name: API latency
@@ -58,6 +74,7 @@ jobs:
           skip-fetch-gh-pages: true
           auto-push: true
       - name: Store throughput benchmark
+        if: github.ref == 'refs/heads/main'
         uses: benchmark-action/github-action-benchmark@v1
         with:
           name: API throughput
