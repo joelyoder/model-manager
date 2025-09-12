@@ -21,7 +21,7 @@
         </div>
       </div>
     </div>
-    <div class="card card-body">
+    <div class="card card-body mb-4">
       <h3>Import & Export</h3>
       <h4 class="h5 my-3">Import JSON from Model Organizer</h4>
       <div class="input-group mb-3">
@@ -97,27 +97,34 @@
       </div>
     </div>
     <div class="card card-body">
-      <button @click="findOrphanFiles" class="btn btn-primary mb-3">
-        Find Orphaned Model Files
-      </button>
-      <div v-if="orphanFiles.length">
-        <ul class="list-group list-group-flush">
-          <li
-            v-for="file in orphanFiles"
-            :key="file"
-            class="list-group-item"
-          >
-            {{ file }}
-          </li>
-        </ul>
-        <button
-          @click="exportOrphanFiles"
-          class="btn btn-secondary mt-3"
-        >
-          Export Results
+      <h3>Library Cleanup</h3>
+      <h4 class="h5 my-3">Find Orphaned Model Files</h4>
+      <div class="mb-3 d-flex gap-2">
+        <button @click="findOrphanFiles" class="btn btn-primary">
+          Search Library
         </button>
+        <div v-if="orphanFiles.length">
+          <ul class="list-group list-group-flush">
+            <li
+              v-for="file in orphanFiles"
+              :key="file"
+              class="list-group-item"
+            >
+              {{ file }}
+            </li>
+          </ul>
+          <button
+            @click="exportOrphanFiles"
+            class="btn btn-secondary mt-3"
+          >
+            Export Results
+          </button>
+        </div>
+        <p v-else-if="searchDone" class="mb-0">No orphaned files found</p>
       </div>
-      <p v-else-if="searchDone" class="mb-0">No orphaned files found</p>
+      <h4 class="h5 my-3">Find Duplicate File Paths</h4>
+      <div class="mb-3 d-flex gap-2">
+      </div>
     </div>
   </div>
 </template>
