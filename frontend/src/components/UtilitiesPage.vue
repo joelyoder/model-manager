@@ -99,7 +99,7 @@
     <div class="card card-body">
       <h3>Library Cleanup</h3>
       <h4 class="h5 my-3">Find Orphaned Model Files</h4>
-      <div class="mb-3 d-flex gap-2">
+      <div class="mb-3 flex gap-2">
         <button @click="findOrphanFiles" class="btn btn-primary">
           Search Library
         </button>
@@ -116,7 +116,7 @@
         <p v-else-if="searchDone" class="mb-0">No orphaned files found</p>
       </div>
       <h4 class="h5 my-3">Find Duplicate File Paths</h4>
-      <div class="mb-3 d-flex gap-2">
+      <div class="mb-3 flex gap-2">
         <button @click="findDuplicatePaths" class="btn btn-primary">
           Search Duplicates
         </button>
