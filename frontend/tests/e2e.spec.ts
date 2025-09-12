@@ -57,3 +57,14 @@ test("update settings and ensure persistence", async ({ page }) => {
 
   await expect(page.locator('input[type="text"]')).toHaveValue("my-test-key");
 });
+
+test("find duplicate file paths shows message when none found", async ({
+  page,
+}) => {
+  await page.goto("/");
+  await page.click('a[href="#/utilities"]');
+  await page.click("text=Search Duplicates");
+  await expect(
+    page.locator("text=No duplicate file paths found"),
+  ).toBeVisible();
+});
