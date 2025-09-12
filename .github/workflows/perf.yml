@@ -55,6 +55,7 @@ jobs:
           tool: customSmallerIsBetter
           output-file-path: perf/latency.json
           github-token: ${{ secrets.GITHUB_TOKEN }}
+          skip-fetch-gh-pages: true
           auto-push: true
       - name: Store throughput benchmark
         uses: benchmark-action/github-action-benchmark@v1
@@ -63,6 +64,7 @@ jobs:
           tool: customBiggerIsBetter
           output-file-path: perf/throughput.json
           github-token: ${{ secrets.GITHUB_TOKEN }}
+          skip-fetch-gh-pages: true
           auto-push: true
       - name: Upload raw results
         uses: actions/upload-artifact@v4
