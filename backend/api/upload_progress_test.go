@@ -3,12 +3,14 @@ package api
 import (
 	"bytes"
 	"encoding/json"
+	"fmt"
 	"mime/multipart"
 	"net/http"
 	"net/http/httptest"
 	"os"
 	"path/filepath"
 	"strconv"
+	"sync"
 	"testing"
 
 	"github.com/gin-gonic/gin"
@@ -100,6 +102,35 @@ func TestUploadVersionFile(t *testing.T) {
 	}
 }
 
+// requestProgress issues a GET request to the progress endpoint and returns the progress value.
+func requestProgress() (int64, error) {
+	rec := httptest.NewRecorder()
+	c, _ := gin.CreateTestContext(rec)
+	c.Request = httptest.NewRequest(http.MethodGet, "/progress", nil)
+
+	GetDownloadProgress(c)
+	if rec.Code != http.StatusOK {
+		return 0, fmt.Errorf("status = %d", rec.Code)
+	}
+	var resp struct {
+		Progress int64 `json:"progress"`
+	}
+	if err := json.Unmarshal(rec.Body.Bytes(), &resp); err != nil {
+		return 0, err
+	}
+	return resp.Progress, nil
+}
+
+// getProgress is a helper for tests that must fail the test on error.
+func getProgress(t *testing.T) int64 {
+	t.Helper()
+	p, err := requestProgress()
+	if err != nil {
+		t.Fatalf("request progress: %v", err)
+	}
+	return p
+}
+
 func TestGetDownloadProgress(t *testing.T) {
 	gin.SetMode(gin.TestMode)
 	CurrentDownloadProgress = 42
@@ -120,4 +151,70 @@ func TestGetDownloadProgress(t *testing.T) {
 	if resp.Progress != 42 {
 		t.Errorf("progress = %d, want 42", resp.Progress)
 	}
+}
+
+// TestGetDownloadProgressUpdates verifies the endpoint reflects sequential updates
+// to CurrentDownloadProgress and that values persist or reset appropriately.
+func TestGetDownloadProgressUpdates(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+
+	CurrentDownloadProgress = 0
+	if p := getProgress(t); p != 0 {
+		t.Errorf("progress = %d, want 0", p)
+	}
+
+	CurrentDownloadProgress = 50
+	if p := getProgress(t); p != 50 {
+		t.Errorf("progress = %d, want 50", p)
+	}
+	// Ensure value persists without another update.
+	if p := getProgress(t); p != 50 {
+		t.Errorf("progress persisted = %d, want 50", p)
+	}
+
+	CurrentDownloadProgress = 100
+	if p := getProgress(t); p != 100 {
+		t.Errorf("progress = %d, want 100", p)
+	}
+
+	// Reset back to 0 and confirm.
+	CurrentDownloadProgress = 0
+	if p := getProgress(t); p != 0 {
+		t.Errorf("progress after reset = %d, want 0", p)
+	}
+}
+
+// TestGetDownloadProgressOutOfRange verifies negative or >100 values are returned as-is.
+func TestGetDownloadProgressOutOfRange(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+	for _, v := range []int64{-10, 150} {
+		CurrentDownloadProgress = v
+		if p := getProgress(t); p != v {
+			t.Errorf("progress = %d, want %d", p, v)
+		}
+	}
+}
+
+// TestGetDownloadProgressConcurrent ensures simultaneous requests return the current value.
+func TestGetDownloadProgressConcurrent(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+	CurrentDownloadProgress = 66
+
+	const n = 10
+	var wg sync.WaitGroup
+	for i := 0; i < n; i++ {
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			p, err := requestProgress()
+			if err != nil {
+				t.Errorf("request: %v", err)
+				return
+			}
+			if p != 66 {
+				t.Errorf("progress = %d, want 66", p)
+			}
+		}()
+	}
+	wg.Wait()
 }
