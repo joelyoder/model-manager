@@ -45,7 +45,5 @@ and displayed alongside the image.
     - Add a tag to multiple models at once
     - Remove a tag from multiple models at once
     - A way to see all current tags in the library and see all models with that tag
-- Civitai Import
-    - Add check to ensure that model files with the same name don't overrite existing models in the folder
 - Settings
     - Add a setting to change the models and image folder locations
