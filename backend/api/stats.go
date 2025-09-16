@@ -14,7 +14,10 @@ type countResult struct {
 	Count int64
 }
 
-// GetStats returns summary statistics about the models in the database.
+// GetStats aggregates counts about the stored models and returns totals,
+// grouped counts by model type, base model, and NSFW flag. The handler reads
+// optional query parameters (none) and responds with JSON metrics without
+// mutating database state.
 func GetStats(c *gin.Context) {
 	var total int64
 	database.DB.Model(&models.Model{}).Count(&total)

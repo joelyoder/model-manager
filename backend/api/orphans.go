@@ -15,7 +15,12 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-// GetOrphanedFiles returns file paths in backend/downloads that are not referenced in the database.
+// GetOrphanedFiles scans the backend/downloads directory tree and returns any
+// SAFETensors/PT files not referenced by models or versions in the database.
+// The handler accepts no parameters, walks the filesystem (following directory
+// symlinks), and reports orphaned absolute paths as JSON. It does not modify
+// database records but logs extensively and may resolve symlinks during the
+// scan.
 func GetOrphanedFiles(c *gin.Context) {
 	// Collect file paths from models and versions
 	var modelPaths []string

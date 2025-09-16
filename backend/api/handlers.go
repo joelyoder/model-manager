@@ -20,6 +20,10 @@ import (
 	"gorm.io/gorm"
 )
 
+// GetModels returns a paginated list of models, optionally filtered by query
+// parameters. Supported query params include page, limit, search, baseModel,
+// modelType, hideNsfw, tags, and includeVersions. The handler performs read-only
+// database queries and responds with JSON containing the matching models.
 func GetModels(c *gin.Context) {
 	page, _ := strconv.Atoi(c.DefaultQuery("page", "1"))
 	limit, _ := strconv.Atoi(c.DefaultQuery("limit", "50"))
@@ -98,7 +102,9 @@ func GetModels(c *gin.Context) {
 	c.JSON(http.StatusOK, modelsList)
 }
 
-// GetModelsCount returns the total number of models matching the optional search query
+// GetModelsCount mirrors GetModels filtering logic but returns only the total
+// count. It honors the search, baseModel, modelType, hideNsfw, and tags query
+// parameters and does not modify any database records.
 func GetModelsCount(c *gin.Context) {
 	search := c.Query("search")
 	baseModel := c.Query("baseModel")
@@ -140,7 +146,9 @@ func GetModelsCount(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"count": count})
 }
 
-// GetBaseModels returns a list of distinct base models from all versions
+// GetBaseModels enumerates the distinct base_model values from stored versions.
+// It accepts no parameters and simply reads the database to return an ordered
+// list of strings.
 func GetBaseModels(c *gin.Context) {
 	var baseModels []string
 	database.DB.Model(&models.Version{}).
@@ -150,7 +158,9 @@ func GetBaseModels(c *gin.Context) {
 	c.JSON(http.StatusOK, baseModels)
 }
 
-// GetModel returns a single model by ID with its versions
+// GetModel loads a specific model and its versions identified by the :id path
+// parameter. The handler validates the ID, reads the database, and returns the
+// model document without modifying persisted data.
 func GetModel(c *gin.Context) {
 	idStr := c.Param("id")
 	id, err := strconv.Atoi(idStr)
@@ -168,6 +178,11 @@ func GetModel(c *gin.Context) {
 	c.JSON(http.StatusOK, model)
 }
 
+// SyncCivitModels pulls the latest models from CivitAI using the configured API
+// token. The handler accepts no parameters, fetches the remote catalog, and
+// calls processModels which creates database records and downloads assets to
+// disk as a side effect. A JSON status message is returned when syncing
+// completes.
 func SyncCivitModels(c *gin.Context) {
 	apiKey := getCivitaiAPIKey()
 	items, err := FetchCivitModels(apiKey)
@@ -179,6 +194,9 @@ func SyncCivitModels(c *gin.Context) {
 	c.JSON(200, gin.H{"message": "Models synced successfully."})
 }
 
+// SyncCivitModelByID refreshes a single CivitAI model identified by the :id
+// path parameter. It fetches the remote model payload, processes the model into
+// local database records, and may download associated files/images.
 func SyncCivitModelByID(c *gin.Context) {
 	log.Println("Hit /api/sync/:id")
 	apiKey := getCivitaiAPIKey()
@@ -210,6 +228,10 @@ func SyncCivitModelByID(c *gin.Context) {
 	c.JSON(200, gin.H{"message": "Model synced successfully", "modelId": modelID})
 }
 
+// GetModelVersions returns remote version metadata for the CivitAI model whose
+// ID is provided in the :id path parameter. The handler calls the CivitAI API
+// for each version and returns a simplified slice of version information
+// without persisting it locally.
 func GetModelVersions(c *gin.Context) {
 	apiKey := getCivitaiAPIKey()
 	modelID := c.Param("id")
@@ -260,6 +282,10 @@ func GetModelVersions(c *gin.Context) {
 	c.JSON(200, versions)
 }
 
+// SyncVersionByID imports a specific CivitAI model version identified by the
+// :versionId path parameter. The optional download query parameter controls
+// whether associated files are downloaded. The handler creates or updates local
+// model/version records and may write downloaded assets to disk.
 func SyncVersionByID(c *gin.Context) {
 	apiKey := getCivitaiAPIKey()
 	versionID := c.Param("versionId")
@@ -541,7 +567,10 @@ func processModels(items []CivitModel, apiKey string) {
 	wg.Wait()
 }
 
-// DeleteModel removes a model and its versions from the database. It also deletes any associated files and images stored on disk.
+// DeleteModel removes the model identified by the :id path parameter along
+// with all related versions, version images, and associated files. Files are
+// moved to the trash directory when possible and the corresponding database
+// rows are permanently deleted.
 func DeleteModel(c *gin.Context) {
 	idStr := c.Param("id")
 	id, err := strconv.Atoi(idStr)
@@ -585,7 +614,9 @@ func DeleteModel(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"message": "Model deleted"})
 }
 
-// GetVersion returns a single model version along with its parent model
+// GetVersion retrieves the version referenced by the :id path parameter and
+// returns it alongside its parent model. The handler performs read-only lookups
+// and responds with JSON describing both records.
 func GetVersion(c *gin.Context) {
 	idStr := c.Param("id")
 	id, err := strconv.Atoi(idStr)
@@ -609,7 +640,10 @@ func GetVersion(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"model": model, "version": version})
 }
 
-// DeleteVersion removes a single model version and associated files from the database.
+// DeleteVersion removes the version addressed by the :id path parameter. The
+// optional files query parameter (defaults to 1) controls whether referenced
+// files and images are moved to the trash. Related database records are deleted
+// as part of the operation.
 func DeleteVersion(c *gin.Context) {
 	idStr := c.Param("id")
 	id, err := strconv.Atoi(idStr)
@@ -669,9 +703,10 @@ func DeleteVersion(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"message": "Version deleted"})
 }
 
-// CreateModel inserts a new model and initial blank version
-// and returns their IDs. The CivitId and VersionId fields are
-// populated with negative timestamps to avoid unique conflicts.
+// CreateModel inserts a placeholder model and companion version when called.
+// No request body is required; the handler generates temporary negative
+// identifiers to avoid conflicts and returns the created database IDs. New
+// model and version rows are written as a side effect.
 func CreateModel(c *gin.Context) {
 	civitID := -int(time.Now().UnixNano())
 	model := models.Model{CivitID: civitID, Name: "New Model", Type: "Checkpoint"}
@@ -690,7 +725,9 @@ func CreateModel(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"modelId": model.ID, "versionId": version.ID})
 }
 
-// UpdateModel updates an existing model with new values
+// UpdateModel updates the model referenced by the :id path parameter using the
+// JSON body of the request. All mutable fields on the model struct can be
+// provided, and the handler persists the changes to the database.
 func UpdateModel(c *gin.Context) {
 	idStr := c.Param("id")
 	id, err := strconv.Atoi(idStr)
@@ -730,7 +767,9 @@ func UpdateModel(c *gin.Context) {
 	c.JSON(http.StatusOK, model)
 }
 
-// UpdateVersion updates an existing version with new values
+// UpdateVersion applies the JSON payload to the version specified by the :id
+// path parameter. It validates version ID uniqueness before saving and then
+// updates the stored version record with the provided fields.
 func UpdateVersion(c *gin.Context) {
 	idStr := c.Param("id")
 	id, err := strconv.Atoi(idStr)
@@ -787,10 +826,10 @@ func UpdateVersion(c *gin.Context) {
 	c.JSON(http.StatusOK, version)
 }
 
-// RefreshVersion pulls updated data from CivitAI for the specified version.
-// The fields query parameter controls which parts to update. Acceptable values
-// are comma-separated list of "metadata", "description", and "images". The
-// value "all" updates everything.
+// RefreshVersion pulls updated data from CivitAI for the version identified by
+// the :id path parameter. The optional fields query parameter (all, metadata,
+// description, images) selects which sections to refresh. The handler updates
+// the existing database record and may download new images when requested.
 func RefreshVersion(c *gin.Context) {
 	idStr := c.Param("id")
 	id, err := strconv.Atoi(idStr)
@@ -808,9 +847,10 @@ func RefreshVersion(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"message": "Version refreshed"})
 }
 
-// SetVersionMainImage sets the ImagePath of a version to the specified image
-// ID. If the model currently references the old ImagePath, it will be updated
-// to the new one as well.
+// SetVersionMainImage sets the main image for a version using the :id version
+// path parameter and :imageId gallery image parameter. When the parent model is
+// referencing the previous main image, it is updated to the new selection. The
+// operation only touches database state.
 func SetVersionMainImage(c *gin.Context) {
 	verIDStr := c.Param("id")
 	verID, err := strconv.Atoi(verIDStr)
@@ -862,11 +902,12 @@ func SetVersionMainImage(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"message": "Main image updated"})
 }
 
-// UploadVersionFile handles manual uploads of model or image files for a version.
-// The "kind" query parameter should be "file" or "image" to determine which path
-// to update. The "type" query parameter controls which model type folder the file
-// is placed under. The file will be copied under downloads/<type>/ or images/<type>/
-// based on that value. The new absolute path is returned as JSON.
+// UploadVersionFile handles multipart uploads of primary files or preview
+// images for the version specified by the :id path parameter. The "file" form
+// field must contain the binary data. Query parameters "kind" (file or image)
+// and "type" (model folder) determine where the file is stored. The handler
+// writes the uploaded file to disk and updates the associated version/model
+// paths before returning the absolute path as JSON.
 func UploadVersionFile(c *gin.Context) {
 	verIDStr := c.Param("id")
 	verID, err := strconv.Atoi(verIDStr)
@@ -951,7 +992,11 @@ func UploadVersionFile(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"path": absPath})
 }
 
-// UploadVersionImage allows uploading an additional gallery image for a version.
+// UploadVersionImage uploads a supplemental gallery image for the version given
+// by the :id path parameter. The request must include a "file" form field and
+// may specify a "type" query parameter to pick the destination folder. The
+// image is written to disk, metadata is extracted, and a new VersionImage row
+// is created.
 func UploadVersionImage(c *gin.Context) {
 	verIDStr := c.Param("id")
 	verID, err := strconv.Atoi(verIDStr)
@@ -1025,7 +1070,9 @@ func UploadVersionImage(c *gin.Context) {
 	c.JSON(http.StatusOK, img)
 }
 
-// DeleteVersionImage removes a gallery image from a version and disk.
+// DeleteVersionImage removes the gallery image identified by the :imgId path
+// parameter from the version :id. It deletes the database row and moves the
+// underlying image file to the trash if present.
 func DeleteVersionImage(c *gin.Context) {
 	verIDStr := c.Param("id")
 	verID, err := strconv.Atoi(verIDStr)

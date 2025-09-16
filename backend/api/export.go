@@ -9,8 +9,11 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-// ExportModels returns a JSON representation of all models in the database
-// including their versions and associated images.
+// ExportModels serves the entire model catalog as a downloadable JSON payload.
+// It expects no parameters on the incoming request, queries the database for
+// models with nested versions/images, and writes the JSON export with
+// Content-Disposition headers. The handler is read-only with respect to the
+// database but streams the response body to the client.
 func ExportModels(c *gin.Context) {
 	var modelsList []models.Model
 	database.DB.Preload("Versions").Preload("Versions.Images").Find(&modelsList)
