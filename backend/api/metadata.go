@@ -9,8 +9,10 @@ import (
 	"github.com/rwcarlsen/goexif/exif"
 )
 
-// ExtractImageMetadata attempts to read embedded metadata from JPEG or PNG files.
-// It returns a map of key/value pairs for any recognized fields.
+// ExtractImageMetadata parses EXIF and PNG text chunks from the image at path.
+// The path argument must reference a readable JPEG or PNG on disk; the function
+// opens the file, extracts known metadata fields, and returns them as a map
+// without modifying the underlying file.
 func ExtractImageMetadata(path string) (map[string]interface{}, error) {
 	meta := make(map[string]interface{})
 	ext := strings.ToLower(filepath.Ext(path))

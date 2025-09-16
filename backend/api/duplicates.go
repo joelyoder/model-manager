@@ -8,7 +8,9 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-// GetDuplicateFilePaths searches for versions sharing the same file path
+// GetDuplicateFilePaths lists model versions that reference the same file_path
+// in the database. The endpoint accepts no parameters, aggregates duplicates,
+// and returns grouped records as JSON without mutating any persisted data.
 func GetDuplicateFilePaths(c *gin.Context) {
 	var rows []struct {
 		ModelID     uint

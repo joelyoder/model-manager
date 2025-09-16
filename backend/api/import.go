@@ -25,9 +25,11 @@ import (
 var modelIDRegex = regexp.MustCompile(`models/(\d+)`)
 var versionIDRegex = regexp.MustCompile(`modelVersionId=(\d+)`)
 
-// ImportModels handles JSON file uploads and inserts records into the database.
-// If the optional "fields" query parameter is provided, each imported version
-// will immediately be refreshed using the same semantics as the refresh API.
+// ImportModels ingests a multipart upload named "file" that contains JSON
+// export data and recreates the referenced models/versions in the database. If
+// the optional fields query parameter is provided, each imported version will
+// immediately be refreshed using the same semantics as the refresh API. The
+// handler writes new records and may download additional assets during refresh.
 func ImportModels(c *gin.Context) {
 	file, _, err := c.Request.FormFile("file")
 	if err != nil {

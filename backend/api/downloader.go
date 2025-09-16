@@ -16,6 +16,11 @@ import (
 
 var CurrentDownloadProgress int64
 
+// DownloadFile streams the content at url into destDir/filename. The caller
+// must supply a destination directory and filename; the handler ensures the
+// directory exists, injects the CivitAI token when available, updates the
+// package-level CurrentDownloadProgress, and returns the absolute path and
+// number of bytes written. It performs filesystem writes as a side effect.
 func DownloadFile(url, destDir, filename string) (string, int64, error) {
 	token := getCivitaiAPIKey()
 	log.Printf("Downloading %s", url)
@@ -80,6 +85,9 @@ func DownloadFile(url, destDir, filename string) (string, int64, error) {
 	return absPath, downloaded, nil
 }
 
+// GetImageDimensions opens the image at path and returns its width and height
+// in pixels. The path argument must reference a readable image file; the
+// function opens the file for inspection but does not modify it.
 func GetImageDimensions(path string) (int, int, error) {
 	file, err := os.Open(path)
 	if err != nil {
@@ -94,6 +102,9 @@ func GetImageDimensions(path string) (int, int, error) {
 	return cfg.Width, cfg.Height, nil
 }
 
+// FileHash computes the SHA-256 digest of the file at path. It requires read
+// access to the file and returns the encoded hash without altering the source
+// data.
 func FileHash(path string) (string, error) {
 	f, err := os.Open(path)
 	if err != nil {
