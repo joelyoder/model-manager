@@ -6,6 +6,40 @@
     <h2 class="my-3">Utilities</h2>
     <div class="card card-body mb-4" v-if="stats">
       <h3>Stats</h3>
+      <div class="row g-2 mb-3">
+        <div class="col-md-4">
+          <label class="form-label mb-1">Category</label>
+          <select v-model="selectedCategory" class="form-select">
+            <option value="">All categories</option>
+            <option v-for="cat in categories" :key="cat" :value="cat">
+              {{ cat }}
+            </option>
+          </select>
+        </div>
+        <div class="col-md-4">
+          <label class="form-label mb-1">Base Model</label>
+          <select v-model="selectedBaseModel" class="form-select">
+            <option value="">All base models</option>
+            <option v-for="bm in baseModels" :key="bm" :value="bm">
+              {{ bm }}
+            </option>
+          </select>
+        </div>
+        <div class="col-md-3">
+          <label class="form-label mb-1">Model Type</label>
+          <select v-model="selectedModelType" class="form-select">
+            <option value="">All model types</option>
+            <option v-for="type in modelTypes" :key="type" :value="type">
+              {{ type }}
+            </option>
+          </select>
+        </div>
+        <div class="col-md-1 d-flex align-items-end justify-content-end">
+          <button @click="clearFilters" class="btn btn-outline-secondary">
+            Clear
+          </button>
+        </div>
+      </div>
       <p class="text-center h5 mb-3">
         Total Models: <strong>{{ stats.totalModels }}</strong>
       </p>
@@ -149,7 +183,7 @@
 
 <script setup>
 /* global Chart */
-import { ref, onMounted, nextTick } from "vue";
+import { ref, onMounted, nextTick, watch } from "vue";
 import { useRouter } from "vue-router";
 import axios from "axios";
 import { showToast } from "../utils/ui";
@@ -158,23 +192,99 @@ const stats = ref(null);
 let typeChart = null;
 let baseChart = null;
 let nsfwChart = null;
+let statsRequestId = 0;
+
+const selectedCategory = ref("");
+const selectedBaseModel = ref("");
+const selectedModelType = ref("");
+const baseModels = ref([]);
+
+const modelTypes = [
+  "Checkpoint",
+  "TextualInversion",
+  "Hypernetwork",
+  "AestheticGradient",
+  "LORA",
+  "LoCon",
+  "DoRA",
+  "Controlnet",
+  "Upscaler",
+  "MotionModule",
+  "VAE",
+  "Wildcards",
+  "Poses",
+  "Workflows",
+  "Detection",
+  "Other",
+];
+
+const categories = [
+  "character",
+  "style",
+  "concept",
+  "clothing",
+  "base model",
+  "poses",
+  "background",
+  "tool",
+  "vehicle",
+  "buildings",
+  "objects",
+  "assets",
+  "animal",
+  "action",
+];
 
 onMounted(async () => {
+  await fetchBaseModels();
+  await fetchStats();
+});
+
+watch([selectedCategory, selectedBaseModel, selectedModelType], () => {
+  fetchStats();
+});
+
+const fetchBaseModels = async () => {
   try {
-    const res = await axios.get("/api/stats");
+    const res = await axios.get("/api/base-models");
+    baseModels.value = Array.isArray(res.data) ? res.data : [];
+  } catch (err) {
+    console.error(err);
+    baseModels.value = [];
+  }
+};
+
+const fetchStats = async () => {
+  const requestId = ++statsRequestId;
+  try {
+    const params = new URLSearchParams();
+    if (selectedCategory.value) params.set("category", selectedCategory.value);
+    if (selectedBaseModel.value)
+      params.set("baseModel", selectedBaseModel.value);
+    if (selectedModelType.value)
+      params.set("modelType", selectedModelType.value);
+
+    const query = params.toString();
+    const url = query ? `/api/stats?${query}` : "/api/stats";
+    const res = await axios.get(url);
+    if (requestId !== statsRequestId) {
+      return;
+    }
     stats.value = res.data;
     await nextTick();
     renderCharts();
   } catch (err) {
     console.error(err);
+    if (requestId === statsRequestId) {
+      stats.value = null;
+      destroyCharts();
+    }
   }
-});
+};
 
 function renderCharts() {
   if (!stats.value) return;
-  if (typeChart) typeChart.destroy();
-  if (baseChart) baseChart.destroy();
-  if (nsfwChart) nsfwChart.destroy();
+  destroyCharts();
 
   const typeCtx = document.getElementById("typeChart");
   if (typeCtx) {
@@ -221,6 +331,34 @@ function renderCharts() {
     });
   }
 }
+
+function destroyCharts() {
+  if (typeChart) {
+    typeChart.destroy();
+    typeChart = null;
+  }
+  if (baseChart) {
+    baseChart.destroy();
+    baseChart = null;
+  }
+  if (nsfwChart) {
+    nsfwChart.destroy();
+    nsfwChart = null;
+  }
+}
+
+const clearFilters = () => {
+  if (
+    !selectedCategory.value &&
+    !selectedBaseModel.value &&
+    !selectedModelType.value
+  ) {
+    return;
+  }
+  selectedCategory.value = "";
+  selectedBaseModel.value = "";
+  selectedModelType.value = "";
+};
 
 const importFile = ref(null);
 const dbImportFile = ref(null);
