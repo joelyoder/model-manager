@@ -40,7 +40,30 @@
                 </tr>
                 <tr v-if="version.trainedWords">
                   <th>Trained Words</th>
-                  <td>{{ version.trainedWords.split(",").join(", ") }}</td>
+                  <td>
+                    <div class="d-flex align-items-center gap-2 flex-wrap">
+                      <span>{{ formattedTrainedWords }}</span>
+                      <button
+                        type="button"
+                        class="btn btn-outline-secondary btn-sm d-flex align-items-center justify-content-center"
+                        @click="copyTrainedWords"
+                        aria-label="Copy trained words"
+                      >
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          width="16"
+                          height="16"
+                          fill="currentColor"
+                          viewBox="0 0 16 16"
+                          aria-hidden="true"
+                        >
+                          <path
+                            d="M10 1.5a1 1 0 0 1 1 1V3h1.5a1 1 0 0 1 1 1V14a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V13H2.5a1 1 0 0 1-1-1V2.5a1 1 0 0 1 1-1H10Zm-1 1H2.5a.5.5 0 0 0-.5.5V12a.5.5 0 0 0 .5.5H4V4a1 1 0 0 1 1-1h4V2.5a.5.5 0 0 0-.5-.5ZM5 4v10h7.5a.5.5 0 0 0 .5-.5V4H5Z"
+                          />
+                        </svg>
+                      </button>
+                    </div>
+                  </td>
                 </tr>
                 <tr v-if="version.filePath">
                   <th>File</th>
@@ -380,6 +403,15 @@ const fileName = computed(() => {
   return version.value.filePath.split("/").pop();
 });
 
+const formattedTrainedWords = computed(() => {
+  if (!version.value.trainedWords) return "";
+  return version.value.trainedWords
+    .split(",")
+    .map((word) => word.trim())
+    .filter((word) => word.length)
+    .join(", ");
+});
+
 const createdAtReadable = computed(() => {
   if (!version.value.createdAt) return "";
   return new Date(version.value.createdAt).toLocaleString();
@@ -418,6 +450,46 @@ const deleteVersion = async () => {
   const files = choice === "deleteFiles" ? 1 : 0;
   await axios.delete(`/api/versions/${route.params.versionId}?files=${files}`);
   router.push("/");
+};
+
+const copyTrainedWords = async () => {
+  const words = formattedTrainedWords.value;
+  if (!words) return;
+
+  const fallbackCopy = () => {
+    const textarea = document.createElement("textarea");
+    textarea.value = words;
+    textarea.setAttribute("readonly", "");
+    textarea.style.position = "absolute";
+    textarea.style.left = "-9999px";
+    textarea.style.opacity = "0";
+    document.body.appendChild(textarea);
+    textarea.select();
+    textarea.setSelectionRange(0, textarea.value.length);
+    const successful = document.execCommand("copy");
+    document.body.removeChild(textarea);
+    if (!successful) {
+      throw new Error("Copy command failed");
+    }
+  };
+
+  try {
+    if (navigator?.clipboard?.writeText) {
+      await navigator.clipboard.writeText(words);
+    } else {
+      fallbackCopy();
+    }
+  } catch (err) {
+    try {
+      fallbackCopy();
+    } catch (fallbackErr) {
+      console.error("Failed to copy trained words", fallbackErr);
+      showToast("Unable to copy trained words", "danger");
+      return;
+    }
+  }
+
+  showToast("Trained words copied", "success");
 };
 
 const startEdit = () => {
