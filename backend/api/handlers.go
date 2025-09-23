@@ -248,7 +248,7 @@ func GetModelVersions(c *gin.Context) {
 		return
 	}
 
-	var versions []VersionInfo
+	versions := make([]VersionInfo, 0, len(model.ModelVersions))
 	for _, vs := range model.ModelVersions {
 		ver, err := FetchModelVersion(apiKey, vs.ID)
 		if err != nil {
