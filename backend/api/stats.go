@@ -36,6 +36,7 @@ func GetStats(c *gin.Context) {
 
 	baseCounts := make(map[string]int64)
 	typeCounts := make(map[string]int64)
+	categoryCounts := make(map[string]int64)
 	var total int64
 	var nsfwCount int64
 	var safeCount int64
@@ -58,6 +59,15 @@ func GetStats(c *gin.Context) {
 
 			key := v.BaseModel
 			baseCounts[key]++
+
+			cats := extractCategories(v.Tags)
+			if len(cats) == 0 {
+				categoryCounts[uncategorizedLabel]++
+			} else {
+				for _, cat := range cats {
+					categoryCounts[cat]++
+				}
+			}
 		}
 
 		if !includeModel {
@@ -89,10 +99,19 @@ func GetStats(c *gin.Context) {
 		return baseResults[i].Key < baseResults[j].Key
 	})
 
+	categoryResults := make([]countResult, 0, len(categoryCounts))
+	for k, v := range categoryCounts {
+		categoryResults = append(categoryResults, countResult{Key: k, Count: v})
+	}
+	sort.Slice(categoryResults, func(i, j int) bool {
+		return categoryResults[i].Key < categoryResults[j].Key
+	})
+
 	c.JSON(http.StatusOK, gin.H{
 		"totalModels":     total,
 		"typeCounts":      typeResults,
 		"baseModelCounts": baseResults,
+		"categoryCounts":  categoryResults,
 		"nsfwCount":       nsfwCount,
 		"nonNsfwCount":    safeCount,
 	})
@@ -108,4 +127,44 @@ func tagMatchesCategory(tags string, category string) bool {
 		}
 	}
 	return false
+}
+
+const uncategorizedLabel = "Uncategorized"
+
+var categoryLookup = map[string]string{
+	"character":  "Character",
+	"style":      "Style",
+	"concept":    "Concept",
+	"clothing":   "Clothing",
+	"base model": "Base Model",
+	"poses":      "Poses",
+	"background": "Background",
+	"tool":       "Tool",
+	"vehicle":    "Vehicle",
+	"buildings":  "Buildings",
+	"objects":    "Objects",
+	"assets":     "Assets",
+	"animal":     "Animal",
+	"action":     "Action",
+}
+
+func extractCategories(tags string) []string {
+	seen := make(map[string]struct{})
+	for _, t := range strings.Split(tags, ",") {
+		normalized := strings.TrimSpace(strings.ToLower(t))
+		if normalized == "" {
+			continue
+		}
+		if display, ok := categoryLookup[normalized]; ok {
+			seen[display] = struct{}{}
+		}
+	}
+	if len(seen) == 0 {
+		return nil
+	}
+	results := make([]string, 0, len(seen))
+	for cat := range seen {
+		results = append(results, cat)
+	}
+	return results
 }

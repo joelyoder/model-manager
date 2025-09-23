@@ -43,14 +43,17 @@
       <p class="text-center h5 mb-3">
         Total Models: <strong>{{ stats.totalModels }}</strong>
       </p>
-      <div class="row text-center">
-        <div class="col-md-4 mb-3">
+      <div class="row row-cols-1 row-cols-md-2 text-center g-3">
+        <div class="col">
           <canvas id="typeChart"></canvas>
         </div>
-        <div class="col-md-4 mb-3">
+        <div class="col">
           <canvas id="baseModelChart"></canvas>
         </div>
-        <div class="col-md-4 mb-3">
+        <div class="col">
+          <canvas id="categoryChart"></canvas>
+        </div>
+        <div class="col">
           <canvas id="nsfwChart"></canvas>
         </div>
       </div>
@@ -192,6 +195,7 @@ const stats = ref(null);
 let typeChart = null;
 let baseChart = null;
 let nsfwChart = null;
+let categoryChart = null;
 let statsRequestId = 0;
 
 const selectedCategory = ref("");
@@ -286,15 +290,19 @@ function renderCharts() {
   if (!stats.value) return;
   destroyCharts();
 
+  const typeCounts = stats.value.typeCounts || [];
+  const baseCounts = stats.value.baseModelCounts || [];
+  const categoryCounts = stats.value.categoryCounts || [];
+
   const typeCtx = document.getElementById("typeChart");
   if (typeCtx) {
     typeChart = new Chart(typeCtx, {
       type: "pie",
       data: {
-        labels: stats.value.typeCounts.map((t) => t.Key || "Unknown"),
+        labels: typeCounts.map((t) => t.Key || "Unknown"),
         datasets: [
           {
-            data: stats.value.typeCounts.map((t) => t.Count),
+            data: typeCounts.map((t) => t.Count),
           },
         ],
       },
@@ -306,10 +314,25 @@ function renderCharts() {
     baseChart = new Chart(baseCtx, {
       type: "pie",
       data: {
-        labels: stats.value.baseModelCounts.map((b) => b.Key || "Unknown"),
+        labels: baseCounts.map((b) => b.Key || "Unknown"),
         datasets: [
           {
-            data: stats.value.baseModelCounts.map((b) => b.Count),
+            data: baseCounts.map((b) => b.Count),
+          },
+        ],
+      },
+    });
+  }
+
+  const categoryCtx = document.getElementById("categoryChart");
+  if (categoryCtx) {
+    categoryChart = new Chart(categoryCtx, {
+      type: "pie",
+      data: {
+        labels: categoryCounts.map((c) => c.Key || "Unknown"),
+        datasets: [
+          {
+            data: categoryCounts.map((c) => c.Count),
           },
         ],
       },
@@ -340,6 +363,10 @@ function destroyCharts() {
   if (baseChart) {
     baseChart.destroy();
     baseChart = null;
+  }
+  if (categoryChart) {
+    categoryChart.destroy();
+    categoryChart = null;
   }
   if (nsfwChart) {
     nsfwChart.destroy();
