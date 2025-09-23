@@ -18,13 +18,14 @@ type countResult struct {
 
 // GetStats aggregates counts about the stored models and returns totals,
 // grouped counts by model type, base model, and NSFW flag. Optional query
-// parameters category, baseModel, and modelType filter the dataset before
+// parameters category, baseModel, modelType, and hideNsfw filter the dataset before
 // aggregating counts. The handler performs read-only queries and responds with
 // JSON metrics without mutating database state.
 func GetStats(c *gin.Context) {
 	category := strings.ToLower(strings.TrimSpace(c.Query("category")))
 	baseModel := c.Query("baseModel")
 	modelType := c.Query("modelType")
+	hideNsfw := c.Query("hideNsfw") == "1"
 
 	var modelsList []models.Model
 	if err := database.DB.Preload("Versions").Find(&modelsList).Error; err != nil {
@@ -32,7 +33,7 @@ func GetStats(c *gin.Context) {
 		return
 	}
 
-	filtersActive := category != "" || baseModel != "" || modelType != ""
+	versionFiltersActive := category != "" || baseModel != "" || modelType != ""
 
 	baseCounts := make(map[string]int64)
 	typeCounts := make(map[string]int64)
@@ -42,9 +43,16 @@ func GetStats(c *gin.Context) {
 	var safeCount int64
 
 	for _, m := range modelsList {
-		includeModel := len(m.Versions) == 0 && !filtersActive
+		if hideNsfw && m.Nsfw {
+			continue
+		}
+
+		includeModel := len(m.Versions) == 0 && !versionFiltersActive
 
 		for _, v := range m.Versions {
+			if hideNsfw && v.Nsfw {
+				continue
+			}
 			if baseModel != "" && v.BaseModel != baseModel {
 				continue
 			}

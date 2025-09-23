@@ -7,7 +7,7 @@
     <div class="card card-body mb-4" v-if="stats">
       <h3>Stats</h3>
       <div class="row g-2 mb-3">
-        <div class="col-md-4">
+        <div class="col-md-3">
           <label class="form-label mb-1">Category</label>
           <select v-model="selectedCategory" class="form-select">
             <option value="">All categories</option>
@@ -16,7 +16,7 @@
             </option>
           </select>
         </div>
-        <div class="col-md-4">
+        <div class="col-md-3">
           <label class="form-label mb-1">Base Model</label>
           <select v-model="selectedBaseModel" class="form-select">
             <option value="">All base models</option>
@@ -33,6 +33,19 @@
               {{ type }}
             </option>
           </select>
+        </div>
+        <div class="col-md-2 d-flex align-items-end">
+          <div class="form-check mb-0">
+            <input
+              id="stats-hide-nsfw"
+              class="form-check-input"
+              type="checkbox"
+              v-model="hideNsfw"
+            />
+            <label class="form-check-label" for="stats-hide-nsfw">
+              Hide NSFW
+            </label>
+          </div>
         </div>
         <div class="col-md-1 d-flex align-items-end justify-content-end">
           <button @click="clearFilters" class="btn btn-outline-secondary">
@@ -201,6 +214,7 @@ let statsRequestId = 0;
 const selectedCategory = ref("");
 const selectedBaseModel = ref("");
 const selectedModelType = ref("");
+const hideNsfw = ref(false);
 const baseModels = ref([]);
 
 const modelTypes = [
@@ -244,7 +258,7 @@ onMounted(async () => {
   await fetchStats();
 });
 
-watch([selectedCategory, selectedBaseModel, selectedModelType], () => {
+watch([selectedCategory, selectedBaseModel, selectedModelType, hideNsfw], () => {
   fetchStats();
 });
 
@@ -267,6 +281,7 @@ const fetchStats = async () => {
       params.set("baseModel", selectedBaseModel.value);
     if (selectedModelType.value)
       params.set("modelType", selectedModelType.value);
+    if (hideNsfw.value) params.set("hideNsfw", "1");
 
     const query = params.toString();
     const url = query ? `/api/stats?${query}` : "/api/stats";
@@ -378,13 +393,15 @@ const clearFilters = () => {
   if (
     !selectedCategory.value &&
     !selectedBaseModel.value &&
-    !selectedModelType.value
+    !selectedModelType.value &&
+    !hideNsfw.value
   ) {
     return;
   }
   selectedCategory.value = "";
   selectedBaseModel.value = "";
   selectedModelType.value = "";
+  hideNsfw.value = false;
 };
 
 const importFile = ref(null);
