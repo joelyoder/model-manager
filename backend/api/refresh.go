@@ -49,7 +49,7 @@ func refreshVersionData(id int, fields string) error {
 	if err != nil {
 		return err
 	}
-	verData, err := FetchModelVersion(apiKey, version.VersionID)
+	verData, err := fetchVersionDetails(apiKey, version.VersionID, model.CivitID)
 	if err != nil {
 		return err
 	}
@@ -103,7 +103,8 @@ func refreshVersionData(id int, fields string) error {
 		if modelType == "" {
 			modelType = modelData.Type
 		}
-		for idx, img := range verData.Images {
+		images := collectVersionImages(apiKey, verData)
+		for idx, img := range images {
 			imageURL := img.URL
 			if imageURL == "" {
 				imageURL = img.URLSmall

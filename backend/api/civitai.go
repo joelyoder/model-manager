@@ -6,6 +6,7 @@ import (
 	"io"
 	"log"
 	"net/http"
+	neturl "net/url"
 )
 
 // FetchCivitModels calls the CivitAI REST API using the provided apiKey and
@@ -76,4 +77,57 @@ func FetchModelVersion(apiKey string, versionID int) (VersionResponse, error) {
 	body, _ := io.ReadAll(resp.Body)
 	err = json.Unmarshal(body, &version)
 	return version, err
+}
+
+// FetchVersionImages retrieves the images associated with a specific model version
+// using the paginated CivitAI images endpoint. It aggregates all pages, returning
+// a slice of ModelImage entries or an error when the request fails.
+func FetchVersionImages(apiKey string, versionID int) ([]ModelImage, error) {
+	var images []ModelImage
+	cursor := ""
+
+	for {
+		url := fmt.Sprintf("https://civitai.com/api/v1/images?modelVersionId=%d&limit=100", versionID)
+		if cursor != "" {
+			url += "&cursor=" + neturl.QueryEscape(cursor)
+		}
+
+		log.Printf("GET %s", url)
+
+		req, _ := http.NewRequest("GET", url, nil)
+		if apiKey != "" {
+			req.Header.Add("Authorization", "Bearer "+apiKey)
+		}
+
+		resp, err := http.DefaultClient.Do(req)
+		if err != nil {
+			return nil, err
+		}
+		if resp.StatusCode != http.StatusOK {
+			resp.Body.Close()
+			return nil, fmt.Errorf("failed to fetch images for version %d", versionID)
+		}
+
+		body, err := io.ReadAll(resp.Body)
+		resp.Body.Close()
+		if err != nil {
+			return nil, err
+		}
+
+		var parsed imagesResponse
+		if err := json.Unmarshal(body, &parsed); err != nil {
+			return nil, err
+		}
+
+		if len(parsed.Items) > 0 {
+			images = append(images, parsed.Items...)
+		}
+
+		if parsed.Metadata.NextCursor == "" {
+			break
+		}
+		cursor = parsed.Metadata.NextCursor
+	}
+
+	return images, nil
 }

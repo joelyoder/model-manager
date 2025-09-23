@@ -2,6 +2,7 @@ package api
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"log"
@@ -229,9 +230,9 @@ func SyncCivitModelByID(c *gin.Context) {
 }
 
 // GetModelVersions returns remote version metadata for the CivitAI model whose
-// ID is provided in the :id path parameter. The handler calls the CivitAI API
-// for each version and returns a simplified slice of version information
-// without persisting it locally.
+// ID is provided in the :id path parameter. The handler fetches the model data
+// from CivitAI, extracts the version summaries, and returns a simplified slice
+// of version information without persisting it locally.
 func GetModelVersions(c *gin.Context) {
 	apiKey := getCivitaiAPIKey()
 	modelID := c.Param("id")
@@ -248,38 +249,79 @@ func GetModelVersions(c *gin.Context) {
 		return
 	}
 
-	var versions []VersionInfo
-	for _, vs := range model.ModelVersions {
-		ver, err := FetchModelVersion(apiKey, vs.ID)
-		if err != nil {
-			continue
-		}
-
-		sizeKB := 0.0
-		sha := ""
-		created := ver.Created
-		updated := ver.Updated
-		eaf := ver.EarlyAccessTimeFrame
-		if len(ver.ModelFiles) > 0 {
-			file := selectModelFile(ver.ModelFiles)
-			sizeKB = file.SizeKB
-			sha = file.Hashes.SHA256
-		}
+	versions := make([]VersionInfo, 0, len(model.ModelVersions))
+	for _, ver := range model.ModelVersions {
+		file := selectModelFile(ver.Files)
 
 		versions = append(versions, VersionInfo{
 			ID:                   ver.ID,
+			ModelID:              model.ID,
 			Name:                 ver.Name,
 			BaseModel:            ver.BaseModel,
-			SizeKB:               sizeKB,
+			SizeKB:               file.SizeKB,
 			TrainedWords:         ver.TrainedWords,
-			EarlyAccessTimeFrame: eaf,
-			SHA256:               sha,
-			Created:              created,
-			Updated:              updated,
+			EarlyAccessTimeFrame: ver.EarlyAccessTimeFrame,
+			SHA256:               file.Hashes.SHA256,
+			Created:              ver.Created,
+			Updated:              ver.Updated,
 		})
 	}
 
 	c.JSON(200, versions)
+}
+
+var errVersionSummaryNotFound = errors.New("version not found in model summary")
+
+// fetchVersionDetails retrieves the detailed version payload for the supplied
+// versionID. It first attempts to query the dedicated version endpoint. When
+// that fails and a fallback model ID is provided, it loads the model summary
+// and extracts the matching version entry. The returned data mirrors the
+// VersionResponse shape expected by SyncVersionByID.
+func fetchVersionDetails(apiKey string, versionID int, fallbackModelID int) (VersionResponse, error) {
+	version, err := FetchModelVersion(apiKey, versionID)
+	if err == nil {
+		return version, nil
+	}
+
+	if fallbackModelID == 0 {
+		return VersionResponse{}, err
+	}
+
+	model, modelErr := FetchCivitModel(apiKey, fallbackModelID)
+	if modelErr != nil {
+		return VersionResponse{}, err
+	}
+
+	for _, summary := range model.ModelVersions {
+		if summary.ID == versionID {
+			return VersionResponse{
+				ID:                   summary.ID,
+				ModelID:              model.ID,
+				Name:                 summary.Name,
+				BaseModel:            summary.BaseModel,
+				Created:              summary.Created,
+				Updated:              summary.Updated,
+				EarlyAccessTimeFrame: summary.EarlyAccessTimeFrame,
+				TrainedWords:         summary.TrainedWords,
+				ModelFiles:           summary.Files,
+				Images:               summary.Images,
+			}, nil
+		}
+	}
+
+	return VersionResponse{}, errVersionSummaryNotFound
+}
+
+func collectVersionImages(apiKey string, verData VersionResponse) []ModelImage {
+	fetched, err := FetchVersionImages(apiKey, verData.ID)
+	if err != nil {
+		log.Printf("Failed to fetch images for version %d: %v", verData.ID, err)
+		return verData.Images
+	}
+	if len(fetched) == 0 {
+		return verData.Images
+	}
+	return fetched
 }
 
 // SyncVersionByID imports a specific CivitAI model version identified by the
@@ -298,9 +340,24 @@ func SyncVersionByID(c *gin.Context) {
 		return
 	}
 
-	verData, err := FetchModelVersion(apiKey, id)
+	var fallbackModelID int
+	if modelParam := c.Query("modelId"); modelParam != "" {
+		fallbackModelID, err = strconv.Atoi(modelParam)
+		if err != nil {
+			c.JSON(400, gin.H{"error": "Invalid model ID"})
+			return
+		}
+	}
+
+	verData, err := fetchVersionDetails(apiKey, id, fallbackModelID)
 	if err != nil {
-		c.JSON(500, gin.H{"error": "Failed to fetch version"})
+		status := http.StatusInternalServerError
+		message := "Failed to fetch version"
+		if errors.Is(err, errVersionSummaryNotFound) {
+			status = http.StatusNotFound
+			message = "Version not found"
+		}
+		c.JSON(status, gin.H{"error": message})
 		return
 	}
 
@@ -383,7 +440,8 @@ func SyncVersionByID(c *gin.Context) {
 	}
 	database.DB.Create(&versionRecord)
 
-	for idx, img := range verData.Images {
+	images := collectVersionImages(apiKey, verData)
+	for idx, img := range images {
 		imageURL := img.URL
 		if imageURL == "" {
 			imageURL = img.URLSmall
@@ -506,7 +564,8 @@ func processModel(item CivitModel, apiKey string) {
 		}
 		database.DB.Create(&versionRec)
 
-		for idx, img := range verData.Images {
+		images := collectVersionImages(apiKey, verData)
+		for idx, img := range images {
 			imageURL := img.URL
 			if imageURL == "" {
 				imageURL = img.URLSmall

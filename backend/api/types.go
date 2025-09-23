@@ -14,8 +14,15 @@ type CivitModel struct {
 }
 
 type VersionSummary struct {
-	ID   int    `json:"id"`
-	Name string `json:"name"`
+	ID                   int          `json:"id"`
+	Name                 string       `json:"name"`
+	BaseModel            string       `json:"baseModel"`
+	EarlyAccessTimeFrame int          `json:"earlyAccessTimeFrame"`
+	TrainedWords         []string     `json:"trainedWords"`
+	Created              string       `json:"createdAt"`
+	Updated              string       `json:"updatedAt"`
+	Files                []ModelFile  `json:"files"`
+	Images               []ModelImage `json:"images"`
 }
 
 type VersionResponse struct {
@@ -49,11 +56,19 @@ type ModelImage struct {
 	Meta     map[string]interface{} `json:"meta"`
 }
 
+type imagesResponse struct {
+	Items    []ModelImage `json:"items"`
+	Metadata struct {
+		NextCursor string `json:"nextCursor"`
+	} `json:"metadata"`
+}
+
 // VersionInfo represents a simplified view of a model version returned to the frontend.
 // It contains the basic fields required for display and selection when downloading
 // a specific model version.
 type VersionInfo struct {
 	ID                   int      `json:"id"`
+	ModelID              int      `json:"modelId"`
 	Name                 string   `json:"name"`
 	BaseModel            string   `json:"baseModel"`
 	SizeKB               float64  `json:"sizeKB"`
