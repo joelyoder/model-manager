@@ -55,6 +55,8 @@
       </div>
       <p class="text-center h5 mb-3">
         Total Models: <strong>{{ stats.totalModels }}</strong>
+        <br />
+        Total Versions: <strong>{{ stats.totalVersions }}</strong>
       </p>
       <div class="row row-cols-1 row-cols-md-2 text-center g-3">
         <div class="col">

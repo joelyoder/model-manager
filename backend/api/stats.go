@@ -16,11 +16,11 @@ type countResult struct {
 	Count int64
 }
 
-// GetStats aggregates counts about the stored models and returns totals,
-// grouped counts by model type, base model, and NSFW flag. Optional query
-// parameters category, baseModel, modelType, and hideNsfw filter the dataset before
-// aggregating counts. The handler performs read-only queries and responds with
-// JSON metrics without mutating database state.
+// GetStats aggregates counts about the stored models and their versions and
+// returns totals grouped by model type, base model, and NSFW flag. Optional
+// query parameters category, baseModel, modelType, and hideNsfw filter the
+// dataset before aggregating counts. The handler performs read-only queries and
+// responds with JSON metrics without mutating database state.
 func GetStats(c *gin.Context) {
 	category := strings.ToLower(strings.TrimSpace(c.Query("category")))
 	baseModel := c.Query("baseModel")
@@ -39,7 +39,12 @@ func GetStats(c *gin.Context) {
 	typeCounts := make(map[string]int64)
 	categoryCounts := make(map[string]int64)
 
-	includedModels := make([]models.Model, 0, len(modelsList))
+	type modelAggregate struct {
+		Model    models.Model
+		Versions []models.Version
+	}
+
+	aggregates := make([]modelAggregate, 0, len(modelsList))
 	includedVersions := make([]models.Version, 0)
 
 	for _, m := range modelsList {
@@ -70,13 +75,15 @@ func GetStats(c *gin.Context) {
 			continue
 		}
 
-		includedModels = append(includedModels, m)
+		aggregates = append(aggregates, modelAggregate{Model: m, Versions: matchingVersions})
 		includedVersions = append(includedVersions, matchingVersions...)
 	}
 
+	var nsfwCount int64
+	var safeCount int64
 	for _, v := range includedVersions {
-		key := v.BaseModel
-		baseCounts[key]++
+		baseCounts[v.BaseModel]++
+		typeCounts[v.Type]++
 
 		cats := extractCategories(v.Tags)
 		if len(cats) == 0 {
@@ -86,18 +93,16 @@ func GetStats(c *gin.Context) {
 				categoryCounts[cat]++
 			}
 		}
-	}
 
-	var nsfwCount int64
-	for _, m := range includedModels {
-		typeCounts[m.Type]++
-		if m.Nsfw {
+		if v.Nsfw {
 			nsfwCount++
+		} else {
+			safeCount++
 		}
 	}
 
-	total := int64(len(includedModels))
-	safeCount := total - nsfwCount
+	totalModels := int64(len(aggregates))
+	totalVersions := int64(len(includedVersions))
 
 	typeResults := make([]countResult, 0, len(typeCounts))
 	for k, v := range typeCounts {
@@ -124,7 +129,8 @@ func GetStats(c *gin.Context) {
 	})
 
 	c.JSON(http.StatusOK, gin.H{
-		"totalModels":     total,
+		"totalModels":     totalModels,
+		"totalVersions":   totalVersions,
 		"typeCounts":      typeResults,
 		"baseModelCounts": baseResults,
 		"categoryCounts":  categoryResults,
