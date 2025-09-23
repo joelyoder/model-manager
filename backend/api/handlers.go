@@ -312,6 +312,18 @@ func fetchVersionDetails(apiKey string, versionID int, fallbackModelID int) (Ver
 	return VersionResponse{}, errVersionSummaryNotFound
 }
 
+func collectVersionImages(apiKey string, verData VersionResponse) []ModelImage {
+	fetched, err := FetchVersionImages(apiKey, verData.ID)
+	if err != nil {
+		log.Printf("Failed to fetch images for version %d: %v", verData.ID, err)
+		return verData.Images
+	}
+	if len(fetched) == 0 {
+		return verData.Images
+	}
+	return fetched
+}
+
 // SyncVersionByID imports a specific CivitAI model version identified by the
 // :versionId path parameter. The optional download query parameter controls
 // whether associated files are downloaded. The handler creates or updates local
@@ -428,7 +440,8 @@ func SyncVersionByID(c *gin.Context) {
 	}
 	database.DB.Create(&versionRecord)
 
-	for idx, img := range verData.Images {
+	images := collectVersionImages(apiKey, verData)
+	for idx, img := range images {
 		imageURL := img.URL
 		if imageURL == "" {
 			imageURL = img.URLSmall
@@ -551,7 +564,8 @@ func processModel(item CivitModel, apiKey string) {
 		}
 		database.DB.Create(&versionRec)
 
-		for idx, img := range verData.Images {
+		images := collectVersionImages(apiKey, verData)
+		for idx, img := range images {
 			imageURL := img.URL
 			if imageURL == "" {
 				imageURL = img.URLSmall
