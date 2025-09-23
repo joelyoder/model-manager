@@ -38,17 +38,16 @@ func GetStats(c *gin.Context) {
 	baseCounts := make(map[string]int64)
 	typeCounts := make(map[string]int64)
 	categoryCounts := make(map[string]int64)
-	var total int64
-	var nsfwCount int64
-	var safeCount int64
+
+	includedModels := make([]models.Model, 0, len(modelsList))
+	includedVersions := make([]models.Version, 0)
 
 	for _, m := range modelsList {
 		if hideNsfw && m.Nsfw {
 			continue
 		}
 
-		includeModel := len(m.Versions) == 0 && !versionFiltersActive
-
+		matchingVersions := make([]models.Version, 0, len(m.Versions))
 		for _, v := range m.Versions {
 			if hideNsfw && v.Nsfw {
 				continue
@@ -63,33 +62,42 @@ func GetStats(c *gin.Context) {
 				continue
 			}
 
-			includeModel = true
-
-			key := v.BaseModel
-			baseCounts[key]++
-
-			cats := extractCategories(v.Tags)
-			if len(cats) == 0 {
-				categoryCounts[uncategorizedLabel]++
-			} else {
-				for _, cat := range cats {
-					categoryCounts[cat]++
-				}
-			}
+			matchingVersions = append(matchingVersions, v)
 		}
 
+		includeModel := len(matchingVersions) > 0 || (len(m.Versions) == 0 && !versionFiltersActive)
 		if !includeModel {
 			continue
 		}
 
-		total++
+		includedModels = append(includedModels, m)
+		includedVersions = append(includedVersions, matchingVersions...)
+	}
+
+	for _, v := range includedVersions {
+		key := v.BaseModel
+		baseCounts[key]++
+
+		cats := extractCategories(v.Tags)
+		if len(cats) == 0 {
+			categoryCounts[uncategorizedLabel]++
+		} else {
+			for _, cat := range cats {
+				categoryCounts[cat]++
+			}
+		}
+	}
+
+	var nsfwCount int64
+	for _, m := range includedModels {
 		typeCounts[m.Type]++
 		if m.Nsfw {
 			nsfwCount++
-		} else {
-			safeCount++
 		}
 	}
+
+	total := int64(len(includedModels))
+	safeCount := total - nsfwCount
 
 	typeResults := make([]countResult, 0, len(typeCounts))
 	for k, v := range typeCounts {
