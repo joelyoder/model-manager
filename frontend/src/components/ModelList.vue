@@ -752,6 +752,19 @@ const extractVersionId = (url) => {
   return match ? match[1] : null;
 };
 
+const buildSyncVersionUrl = (versionId, { download, modelId } = {}) => {
+  const params = new URLSearchParams();
+  if (modelId) {
+    params.set("modelId", String(modelId));
+  }
+  if (download !== undefined) {
+    params.set("download", String(download));
+  }
+  const query = params.toString();
+  const suffix = query ? `?${query}` : "";
+  return `/api/sync/version/${versionId}${suffix}`;
+};
+
 const loadVersions = async () => {
   const id = extractModelId(modelUrl.value);
   if (!id) {
@@ -785,7 +798,14 @@ const addSelectedVersion = async () => {
   loading.value = true;
   adding.value = true;
   try {
-    await axios.post(`/api/sync/version/${selectedVersionId.value}?download=0`);
+    const ver = versions.value.find(
+      (v) => v.id === Number(selectedVersionId.value),
+    );
+    const url = buildSyncVersionUrl(selectedVersionId.value, {
+      download: 0,
+      modelId: ver?.modelId,
+    });
+    await axios.post(url);
     page.value = 1;
     await fetchTotal();
     await fetchModels();
@@ -829,7 +849,10 @@ const downloadSelectedVersion = async () => {
     downloadProgress.value = res.data.progress || 0;
   }, 500);
   try {
-    await axios.post(`/api/sync/version/${selectedVersionId.value}`);
+    const url = buildSyncVersionUrl(selectedVersionId.value, {
+      modelId: ver?.modelId,
+    });
+    await axios.post(url);
     page.value = 1;
     await fetchTotal();
     await fetchModels();

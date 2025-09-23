@@ -61,6 +61,7 @@ type ModelImage struct {
 // a specific model version.
 type VersionInfo struct {
 	ID                   int      `json:"id"`
+	ModelID              int      `json:"modelId"`
 	Name                 string   `json:"name"`
 	BaseModel            string   `json:"baseModel"`
 	SizeKB               float64  `json:"sizeKB"`

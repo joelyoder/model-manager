@@ -2,6 +2,7 @@ package api
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"log"
@@ -254,6 +255,7 @@ func GetModelVersions(c *gin.Context) {
 
 		versions = append(versions, VersionInfo{
 			ID:                   ver.ID,
+			ModelID:              model.ID,
 			Name:                 ver.Name,
 			BaseModel:            ver.BaseModel,
 			SizeKB:               file.SizeKB,
@@ -266,6 +268,48 @@ func GetModelVersions(c *gin.Context) {
 	}
 
 	c.JSON(200, versions)
+}
+
+var errVersionSummaryNotFound = errors.New("version not found in model summary")
+
+// fetchVersionDetails retrieves the detailed version payload for the supplied
+// versionID. It first attempts to query the dedicated version endpoint. When
+// that fails and a fallback model ID is provided, it loads the model summary
+// and extracts the matching version entry. The returned data mirrors the
+// VersionResponse shape expected by SyncVersionByID.
+func fetchVersionDetails(apiKey string, versionID int, fallbackModelID int) (VersionResponse, error) {
+	version, err := FetchModelVersion(apiKey, versionID)
+	if err == nil {
+		return version, nil
+	}
+
+	if fallbackModelID == 0 {
+		return VersionResponse{}, err
+	}
+
+	model, modelErr := FetchCivitModel(apiKey, fallbackModelID)
+	if modelErr != nil {
+		return VersionResponse{}, err
+	}
+
+	for _, summary := range model.ModelVersions {
+		if summary.ID == versionID {
+			return VersionResponse{
+				ID:                   summary.ID,
+				ModelID:              model.ID,
+				Name:                 summary.Name,
+				BaseModel:            summary.BaseModel,
+				Created:              summary.Created,
+				Updated:              summary.Updated,
+				EarlyAccessTimeFrame: summary.EarlyAccessTimeFrame,
+				TrainedWords:         summary.TrainedWords,
+				ModelFiles:           summary.Files,
+				Images:               summary.Images,
+			}, nil
+		}
+	}
+
+	return VersionResponse{}, errVersionSummaryNotFound
 }
 
 // SyncVersionByID imports a specific CivitAI model version identified by the
@@ -284,9 +328,24 @@ func SyncVersionByID(c *gin.Context) {
 		return
 	}
 
-	verData, err := FetchModelVersion(apiKey, id)
+	var fallbackModelID int
+	if modelParam := c.Query("modelId"); modelParam != "" {
+		fallbackModelID, err = strconv.Atoi(modelParam)
+		if err != nil {
+			c.JSON(400, gin.H{"error": "Invalid model ID"})
+			return
+		}
+	}
+
+	verData, err := fetchVersionDetails(apiKey, id, fallbackModelID)
 	if err != nil {
-		c.JSON(500, gin.H{"error": "Failed to fetch version"})
+		status := http.StatusInternalServerError
+		message := "Failed to fetch version"
+		if errors.Is(err, errVersionSummaryNotFound) {
+			status = http.StatusNotFound
+			message = "Version not found"
+		}
+		c.JSON(status, gin.H{"error": message})
 		return
 	}
 
