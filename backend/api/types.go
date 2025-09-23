@@ -14,8 +14,15 @@ type CivitModel struct {
 }
 
 type VersionSummary struct {
-	ID   int    `json:"id"`
-	Name string `json:"name"`
+	ID                   int          `json:"id"`
+	Name                 string       `json:"name"`
+	BaseModel            string       `json:"baseModel"`
+	EarlyAccessTimeFrame int          `json:"earlyAccessTimeFrame"`
+	TrainedWords         []string     `json:"trainedWords"`
+	Created              string       `json:"createdAt"`
+	Updated              string       `json:"updatedAt"`
+	Files                []ModelFile  `json:"files"`
+	Images               []ModelImage `json:"images"`
 }
 
 type VersionResponse struct {

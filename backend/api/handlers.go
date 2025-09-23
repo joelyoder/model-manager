@@ -229,9 +229,9 @@ func SyncCivitModelByID(c *gin.Context) {
 }
 
 // GetModelVersions returns remote version metadata for the CivitAI model whose
-// ID is provided in the :id path parameter. The handler calls the CivitAI API
-// for each version and returns a simplified slice of version information
-// without persisting it locally.
+// ID is provided in the :id path parameter. The handler fetches the model data
+// from CivitAI, extracts the version summaries, and returns a simplified slice
+// of version information without persisting it locally.
 func GetModelVersions(c *gin.Context) {
 	apiKey := getCivitaiAPIKey()
 	modelID := c.Param("id")
@@ -249,33 +249,19 @@ func GetModelVersions(c *gin.Context) {
 	}
 
 	versions := make([]VersionInfo, 0, len(model.ModelVersions))
-	for _, vs := range model.ModelVersions {
-		ver, err := FetchModelVersion(apiKey, vs.ID)
-		if err != nil {
-			continue
-		}
-
-		sizeKB := 0.0
-		sha := ""
-		created := ver.Created
-		updated := ver.Updated
-		eaf := ver.EarlyAccessTimeFrame
-		if len(ver.ModelFiles) > 0 {
-			file := selectModelFile(ver.ModelFiles)
-			sizeKB = file.SizeKB
-			sha = file.Hashes.SHA256
-		}
+	for _, ver := range model.ModelVersions {
+		file := selectModelFile(ver.Files)
 
 		versions = append(versions, VersionInfo{
 			ID:                   ver.ID,
 			Name:                 ver.Name,
 			BaseModel:            ver.BaseModel,
-			SizeKB:               sizeKB,
+			SizeKB:               file.SizeKB,
 			TrainedWords:         ver.TrainedWords,
-			EarlyAccessTimeFrame: eaf,
-			SHA256:               sha,
-			Created:              created,
-			Updated:              updated,
+			EarlyAccessTimeFrame: ver.EarlyAccessTimeFrame,
+			SHA256:               file.Hashes.SHA256,
+			Created:              ver.Created,
+			Updated:              ver.Updated,
 		})
 	}
 
