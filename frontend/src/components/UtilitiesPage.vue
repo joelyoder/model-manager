@@ -34,20 +34,19 @@
             </option>
           </select>
         </div>
-        <div class="col-md-2 d-flex align-items-end">
-          <div class="form-check mb-0">
-            <input
-              id="stats-hide-nsfw"
-              class="form-check-input"
-              type="checkbox"
-              v-model="hideNsfw"
-            />
-            <label class="form-check-label" for="stats-hide-nsfw">
-              Hide NSFW
-            </label>
-          </div>
+        <div class="col-md-3">
+          <label class="form-label mb-1" for="stats-nsfw-filter">NSFW</label>
+          <select
+            id="stats-nsfw-filter"
+            v-model="nsfwFilter"
+            class="form-select"
+          >
+            <option value="">NSFW &amp; Non-NSFW</option>
+            <option value="non">Non-NSFW only</option>
+            <option value="nsfw">NSFW only</option>
+          </select>
         </div>
-        <div class="col-md-1 d-flex align-items-end justify-content-end">
+        <div class="col-md-12 col-lg-3 d-flex align-items-end justify-content-end">
           <button @click="clearFilters" class="btn btn-outline-secondary">
             Clear
           </button>
@@ -216,7 +215,7 @@ let statsRequestId = 0;
 const selectedCategory = ref("");
 const selectedBaseModel = ref("");
 const selectedModelType = ref("");
-const hideNsfw = ref(false);
+const nsfwFilter = ref("");
 const baseModels = ref([]);
 
 const modelTypes = [
@@ -260,9 +259,12 @@ onMounted(async () => {
   await fetchStats();
 });
 
-watch([selectedCategory, selectedBaseModel, selectedModelType, hideNsfw], () => {
-  fetchStats();
-});
+watch(
+  [selectedCategory, selectedBaseModel, selectedModelType, nsfwFilter],
+  () => {
+    fetchStats();
+  },
+);
 
 const fetchBaseModels = async () => {
   try {
@@ -283,7 +285,7 @@ const fetchStats = async () => {
       params.set("baseModel", selectedBaseModel.value);
     if (selectedModelType.value)
       params.set("modelType", selectedModelType.value);
-    if (hideNsfw.value) params.set("hideNsfw", "1");
+    if (nsfwFilter.value) params.set("nsfw", nsfwFilter.value);
 
     const query = params.toString();
     const url = query ? `/api/stats?${query}` : "/api/stats";
@@ -396,14 +398,14 @@ const clearFilters = () => {
     !selectedCategory.value &&
     !selectedBaseModel.value &&
     !selectedModelType.value &&
-    !hideNsfw.value
+    !nsfwFilter.value
   ) {
     return;
   }
   selectedCategory.value = "";
   selectedBaseModel.value = "";
   selectedModelType.value = "";
-  hideNsfw.value = false;
+  nsfwFilter.value = "";
 };
 
 const importFile = ref(null);
