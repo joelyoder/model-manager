@@ -30,60 +30,53 @@ func GetStats(c *gin.Context) {
 		nsfwFilter = ""
 	}
 
-	var modelsList []models.Model
-	if err := database.DB.Preload("Versions").Find(&modelsList).Error; err != nil {
+	versionFiltersActive := category != "" || baseModel != "" || modelType != "" || nsfwFilter != ""
+
+	query := database.DB.Model(&models.Version{}).
+		Joins("JOIN models ON models.id = versions.model_id").
+		Where("models.deleted_at IS NULL").
+		Where("versions.deleted_at IS NULL")
+
+	if nsfwFilter == "non" {
+		query = query.Where("versions.nsfw = ?", false)
+	}
+	if nsfwFilter == "nsfw" {
+		query = query.Where("versions.nsfw = ?", true)
+	}
+	if baseModel != "" {
+		query = query.Where("versions.base_model = ?", baseModel)
+	}
+	if modelType != "" {
+		query = query.Where("versions.type = ?", modelType)
+	}
+	if category != "" {
+		query = query.Where("LOWER(versions.tags) LIKE ?", "%"+category+"%")
+	}
+
+	var versions []models.Version
+	if err := query.
+		Select([]string{"versions.id", "versions.model_id", "versions.base_model", "versions.nsfw", "versions.type", "versions.tags"}).
+		Find(&versions).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to load stats"})
 		return
 	}
-
-	versionFiltersActive := category != "" || baseModel != "" || modelType != "" || nsfwFilter != ""
 
 	baseCounts := make(map[string]int64)
 	typeCounts := make(map[string]int64)
 	categoryCounts := make(map[string]int64)
 
-	type modelAggregate struct {
-		Model    models.Model
-		Versions []models.Version
-	}
-
-	aggregates := make([]modelAggregate, 0, len(modelsList))
-	includedVersions := make([]models.Version, 0)
-
-	for _, m := range modelsList {
-		matchingVersions := make([]models.Version, 0, len(m.Versions))
-		for _, v := range m.Versions {
-			if nsfwFilter == "non" && v.Nsfw {
-				continue
-			}
-			if nsfwFilter == "nsfw" && !v.Nsfw {
-				continue
-			}
-			if baseModel != "" && v.BaseModel != baseModel {
-				continue
-			}
-			if modelType != "" && v.Type != modelType {
-				continue
-			}
-			if category != "" && !tagMatchesCategory(v.Tags, category) {
-				continue
-			}
-
-			matchingVersions = append(matchingVersions, v)
-		}
-
-		includeModel := len(matchingVersions) > 0 || (len(m.Versions) == 0 && !versionFiltersActive)
-		if !includeModel {
+	filteredVersions := make([]models.Version, 0, len(versions))
+	for _, v := range versions {
+		if category != "" && !tagMatchesCategory(v.Tags, category) {
 			continue
 		}
-
-		aggregates = append(aggregates, modelAggregate{Model: m, Versions: matchingVersions})
-		includedVersions = append(includedVersions, matchingVersions...)
+		filteredVersions = append(filteredVersions, v)
 	}
 
 	var nsfwCount int64
 	var safeCount int64
-	for _, v := range includedVersions {
+	modelSeen := make(map[uint]struct{})
+	for _, v := range filteredVersions {
 		baseCounts[v.BaseModel]++
 		typeCounts[v.Type]++
 
@@ -101,10 +94,20 @@ func GetStats(c *gin.Context) {
 		} else {
 			safeCount++
 		}
+		modelSeen[v.ModelID] = struct{}{}
 	}
 
-	totalModels := int64(len(aggregates))
-	totalVersions := int64(len(includedVersions))
+	totalVersions := int64(len(filteredVersions))
+
+	var totalModels int64
+	if versionFiltersActive {
+		totalModels = int64(len(modelSeen))
+	} else {
+		if err := database.DB.Model(&models.Model{}).Where("deleted_at IS NULL").Count(&totalModels).Error; err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to load stats"})
+			return
+		}
+	}
 
 	typeResults := make([]countResult, 0, len(typeCounts))
 	for k, v := range typeCounts {
