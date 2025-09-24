@@ -103,7 +103,7 @@ func refreshVersionData(id int, fields string) error {
 		if modelType == "" {
 			modelType = modelData.Type
 		}
-		images := collectVersionImages(apiKey, verData)
+		images := collectVersionImages(apiKey, verData, modelType)
 		for idx, img := range images {
 			imageURL := img.URL
 			if imageURL == "" {

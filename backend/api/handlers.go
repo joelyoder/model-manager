@@ -312,14 +312,22 @@ func fetchVersionDetails(apiKey string, versionID int, fallbackModelID int) (Ver
 	return VersionResponse{}, errVersionSummaryNotFound
 }
 
-func collectVersionImages(apiKey string, verData VersionResponse) []ModelImage {
-	fetched, err := FetchVersionImages(apiKey, verData.ID)
+func collectVersionImages(apiKey string, verData VersionResponse, modelType string) []ModelImage {
+	fetched, err := FetchVersionImages(apiKey, verData.ID, modelType)
 	if err != nil {
 		log.Printf("Failed to fetch images for version %d: %v", verData.ID, err)
-		return verData.Images
+		fallback := filterImagesForVersion(verData.Images, verData.ID, modelType)
+		if len(fallback) == 0 {
+			return verData.Images
+		}
+		return fallback
 	}
 	if len(fetched) == 0 {
-		return verData.Images
+		fallback := filterImagesForVersion(verData.Images, verData.ID, modelType)
+		if len(fallback) == 0 {
+			return verData.Images
+		}
+		return fallback
 	}
 	return fetched
 }
@@ -440,7 +448,7 @@ func SyncVersionByID(c *gin.Context) {
 	}
 	database.DB.Create(&versionRecord)
 
-	images := collectVersionImages(apiKey, verData)
+	images := collectVersionImages(apiKey, verData, modelType)
 	for idx, img := range images {
 		imageURL := img.URL
 		if imageURL == "" {
@@ -564,7 +572,7 @@ func processModel(item CivitModel, apiKey string) {
 		}
 		database.DB.Create(&versionRec)
 
-		images := collectVersionImages(apiKey, verData)
+		images := collectVersionImages(apiKey, verData, item.Type)
 		for idx, img := range images {
 			imageURL := img.URL
 			if imageURL == "" {
