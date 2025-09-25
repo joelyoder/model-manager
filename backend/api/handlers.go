@@ -312,16 +312,8 @@ func fetchVersionDetails(apiKey string, versionID int, fallbackModelID int) (Ver
 	return VersionResponse{}, errVersionSummaryNotFound
 }
 
-func collectVersionImages(apiKey string, verData VersionResponse) []ModelImage {
-	fetched, err := FetchVersionImages(apiKey, verData.ID)
-	if err != nil {
-		log.Printf("Failed to fetch images for version %d: %v", verData.ID, err)
-		return verData.Images
-	}
-	if len(fetched) == 0 {
-		return verData.Images
-	}
-	return fetched
+func collectVersionImages(_ string, verData VersionResponse) []ModelImage {
+	return verData.Images
 }
 
 // SyncVersionByID imports a specific CivitAI model version identified by the
