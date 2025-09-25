@@ -56,13 +56,6 @@ type ModelImage struct {
 	Meta     map[string]interface{} `json:"meta"`
 }
 
-type imagesResponse struct {
-	Items    []ModelImage `json:"items"`
-	Metadata struct {
-		NextCursor string `json:"nextCursor"`
-	} `json:"metadata"`
-}
-
 // VersionInfo represents a simplified view of a model version returned to the frontend.
 // It contains the basic fields required for display and selection when downloading
 // a specific model version.
