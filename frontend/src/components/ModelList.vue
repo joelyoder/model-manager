@@ -55,78 +55,12 @@
           </option>
         </select>
       </div>
-      <div class="col-auto d-flex align-items-center">
-        <button
-          @click="hideNsfw = !hideNsfw"
-          class="btn btn-outline-secondary btn-sm"
-        >
-          <svg
-            v-if="hideNsfw"
-            width="22px"
-            height="22px"
-            viewBox="0 0 24 24"
-            stroke-width="1.5"
-            fill="none"
-            xmlns="http://www.w3.org/2000/svg"
-            color="#ffffff"
-          >
-            <path
-              d="M10.733 5.076a10.744 10.744 0 0 1 11.205 6.575 1 1 0 0 1 0 .696 10.747 10.747 0 0 1-1.444 2.49"
-              stroke="#ffffff"
-              stroke-width="1.5"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-            ></path>
-            <path
-              d="M14.084 14.158a3 3 0 0 1-4.242-4.242"
-              stroke="#ffffff"
-              stroke-width="1.5"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-            ></path>
-            <path
-              d="M17.479 17.499a10.75 10.75 0 0 1-15.417-5.151 1 1 0 0 1 0-.696 10.75 10.75 0 0 1 4.446-5.143"
-              stroke="#ffffff"
-              stroke-width="1.5"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-            ></path>
-            <path
-              d="m2 2 20 20"
-              stroke="#ffffff"
-              stroke-width="1.5"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-            ></path>
-          </svg>
-          <svg
-            v-else
-            width="22px"
-            height="22px"
-            viewBox="0 0 24 24"
-            stroke-width="1.5"
-            fill="none"
-            xmlns="http://www.w3.org/2000/svg"
-            color="#ffffff"
-          >
-            <path
-              d="M2.062 12.348a1 1 0 0 1 0-.696 10.75 10.75 0 0 1 19.876 0 1 1 0 0 1 0 .696 10.75 10.75 0 0 1-19.876 0"
-              stroke="#ffffff"
-              stroke-width="1.5"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-            ></path>
-            <circle
-              cx="12"
-              cy="12"
-              r="3"
-              stroke="#ffffff"
-              stroke-width="1.5"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-            ></circle>
-          </svg>
-        </button>
+      <div class="col">
+        <select v-model="nsfwFilter" class="form-select" style="min-width: 200px">
+          <option value="no">No NSFW</option>
+          <option value="only">Only NSFW</option>
+          <option value="both">Both</option>
+        </select>
       </div>
       <div class="col-auto d-flex align-items-center">
         <button @click="clearFilters" class="btn btn-outline-secondary">
@@ -440,7 +374,7 @@ const tagsSearch = ref("");
 const selectedCategory = ref("");
 const selectedBaseModel = ref("");
 const selectedModelType = ref("");
-const hideNsfw = ref(false);
+const nsfwFilter = ref("no");
 const showAddPanel = ref(false);
 const modelUrl = ref("");
 const versions = ref([]);
@@ -468,7 +402,7 @@ const saveState = () => {
       selectedCategory: selectedCategory.value,
       selectedBaseModel: selectedBaseModel.value,
       selectedModelType: selectedModelType.value,
-      hideNsfw: hideNsfw.value,
+      nsfwFilter: nsfwFilter.value,
       page: page.value,
     }),
   );
@@ -498,7 +432,7 @@ const fetchModels = async () => {
   if (search.value) params.search = search.value;
   if (selectedBaseModel.value) params.baseModel = selectedBaseModel.value;
   if (selectedModelType.value) params.modelType = selectedModelType.value;
-  if (hideNsfw.value) params.hideNsfw = 1;
+  if (nsfwFilter.value) params.nsfwFilter = nsfwFilter.value;
   const tagParts = [];
   if (selectedCategory.value) tagParts.push(selectedCategory.value);
   if (tagsSearch.value.trim()) tagParts.push(tagsSearch.value);
@@ -512,7 +446,7 @@ const fetchTotal = async () => {
   if (search.value) params.search = search.value;
   if (selectedBaseModel.value) params.baseModel = selectedBaseModel.value;
   if (selectedModelType.value) params.modelType = selectedModelType.value;
-  if (hideNsfw.value) params.hideNsfw = 1;
+  if (nsfwFilter.value) params.nsfwFilter = nsfwFilter.value;
   const tagParts = [];
   if (selectedCategory.value) tagParts.push(selectedCategory.value);
   if (tagsSearch.value.trim()) tagParts.push(tagsSearch.value);
@@ -539,7 +473,9 @@ onMounted(async () => {
     selectedBaseModel.value = saved.selectedBaseModel;
   if (saved.selectedModelType !== undefined)
     selectedModelType.value = saved.selectedModelType;
-  if (saved.hideNsfw !== undefined) hideNsfw.value = saved.hideNsfw;
+  if (saved.nsfwFilter !== undefined) nsfwFilter.value = saved.nsfwFilter;
+  else if (saved.hideNsfw !== undefined)
+    nsfwFilter.value = saved.hideNsfw ? "no" : "both";
   if (saved.page !== undefined) page.value = saved.page;
 
   await fetchBaseModels();
@@ -597,7 +533,7 @@ watch(selectedModelType, () => {
   }
 });
 
-watch(hideNsfw, () => {
+watch(nsfwFilter, () => {
   if (initialized.value) {
     debouncedUpdate();
     debouncedSave();
@@ -615,7 +551,7 @@ const clearFilters = () => {
   selectedCategory.value = "";
   selectedBaseModel.value = "";
   selectedModelType.value = "";
-  hideNsfw.value = false;
+  nsfwFilter.value = "no";
   page.value = 1;
 };
 
@@ -667,9 +603,20 @@ const categories = [
 
 const totalPages = computed(() => Math.ceil(total.value / limit));
 
+const matchesNsfwFilter = (value) => {
+  const isNsfw = Boolean(value);
+  if (nsfwFilter.value === "no") {
+    return !isNsfw;
+  }
+  if (nsfwFilter.value === "only") {
+    return isNsfw;
+  }
+  return true;
+};
+
 const filteredModels = computed(() => {
   return models.value.filter((m) => {
-    if (hideNsfw.value && m.nsfw) return false;
+    if (!matchesNsfwFilter(m.nsfw)) return false;
     if (search.value) {
       const s = search.value.toLowerCase();
       const matchModel = m.name.toLowerCase().includes(s);
@@ -699,7 +646,7 @@ const versionCards = computed(() => {
           return false;
         if (selectedModelType.value && v.type !== selectedModelType.value)
           return false;
-        if (hideNsfw.value && v.nsfw) return false;
+        if (!matchesNsfwFilter(v.nsfw)) return false;
         if (search.value) {
           const s = search.value.toLowerCase();
           const matchModel = model.name.toLowerCase().includes(s);

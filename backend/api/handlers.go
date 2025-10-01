@@ -21,9 +21,33 @@ import (
 	"gorm.io/gorm"
 )
 
+func resolveNSFWFilter(c *gin.Context) (onlySafe bool, onlyNSFW bool) {
+	filter := strings.ToLower(c.Query("nsfwFilter"))
+	hideNsfw := c.Query("hideNsfw") == "1"
+
+	switch filter {
+	case "no":
+		return true, false
+	case "only":
+		return false, true
+	case "both":
+		return false, false
+	case "":
+		if hideNsfw {
+			return true, false
+		}
+	default:
+		if hideNsfw {
+			return true, false
+		}
+	}
+
+	return false, false
+}
+
 // GetModels returns a paginated list of models, optionally filtered by query
 // parameters. Supported query params include page, limit, search, baseModel,
-// modelType, hideNsfw, tags, and includeVersions. The handler performs read-only
+// modelType, nsfwFilter, tags, and includeVersions. The handler performs read-only
 // database queries and responds with JSON containing the matching models.
 func GetModels(c *gin.Context) {
 	page, _ := strconv.Atoi(c.DefaultQuery("page", "1"))
@@ -38,14 +62,14 @@ func GetModels(c *gin.Context) {
 	search := c.Query("search")
 	baseModel := c.Query("baseModel")
 	modelType := c.Query("modelType")
-	hideNsfw := c.Query("hideNsfw") == "1"
+	onlySafe, onlyNSFW := resolveNSFWFilter(c)
 	tags := c.Query("tags")
 
 	var modelsList []models.Model
 	q := database.DB.Model(&models.Model{})
 
 	// Filter models by versions when filters are provided or when searching
-	needJoin := search != "" || baseModel != "" || modelType != "" || hideNsfw || tags != ""
+	needJoin := search != "" || baseModel != "" || modelType != "" || onlySafe || onlyNSFW || tags != ""
 	if needJoin {
 		q = q.Joins("JOIN versions ON versions.model_id = models.id")
 	}
@@ -60,8 +84,10 @@ func GetModels(c *gin.Context) {
 	if modelType != "" {
 		q = q.Where("versions.type = ?", modelType)
 	}
-	if hideNsfw {
+	if onlySafe {
 		q = q.Where("versions.nsfw = 0")
+	} else if onlyNSFW {
+		q = q.Where("versions.nsfw = 1")
 	}
 	if tags != "" {
 		for _, t := range strings.Split(tags, ",") {
@@ -80,8 +106,10 @@ func GetModels(c *gin.Context) {
 			if modelType != "" {
 				db = db.Where("type = ?", modelType)
 			}
-			if hideNsfw {
+			if onlySafe {
 				db = db.Where("nsfw = 0")
+			} else if onlyNSFW {
+				db = db.Where("nsfw = 1")
 			}
 			if tags != "" {
 				for _, t := range strings.Split(tags, ",") {
@@ -104,18 +132,18 @@ func GetModels(c *gin.Context) {
 }
 
 // GetModelsCount mirrors GetModels filtering logic but returns only the total
-// count. It honors the search, baseModel, modelType, hideNsfw, and tags query
+// count. It honors the search, baseModel, modelType, nsfwFilter, and tags query
 // parameters and does not modify any database records.
 func GetModelsCount(c *gin.Context) {
 	search := c.Query("search")
 	baseModel := c.Query("baseModel")
 	modelType := c.Query("modelType")
-	hideNsfw := c.Query("hideNsfw") == "1"
+	onlySafe, onlyNSFW := resolveNSFWFilter(c)
 	tags := c.Query("tags")
 
 	var count int64
 	q := database.DB.Model(&models.Model{})
-	needJoin := search != "" || baseModel != "" || modelType != "" || hideNsfw || tags != ""
+	needJoin := search != "" || baseModel != "" || modelType != "" || onlySafe || onlyNSFW || tags != ""
 	if needJoin {
 		q = q.Joins("JOIN versions ON versions.model_id = models.id")
 	}
@@ -129,8 +157,10 @@ func GetModelsCount(c *gin.Context) {
 	if modelType != "" {
 		q = q.Where("versions.type = ?", modelType)
 	}
-	if hideNsfw {
+	if onlySafe {
 		q = q.Where("versions.nsfw = 0")
+	} else if onlyNSFW {
+		q = q.Where("versions.nsfw = 1")
 	}
 	if tags != "" {
 		for _, t := range strings.Split(tags, ",") {
