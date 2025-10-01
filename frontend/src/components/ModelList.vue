@@ -63,16 +63,33 @@
         </select>
       </div>
       <div class="col-auto d-flex align-items-center">
-        <button @click="clearFilters" class="btn btn-outline-secondary">
-          Clear Filters
+        <button
+          type="button"
+          @click="clearFilters"
+          class="btn btn-outline-secondary d-inline-flex align-items-center justify-content-center"
+          aria-label="Clear filters"
+          title="Clear filters"
+        >
+          <Icon icon="mdi:filter-remove-outline" width="20" height="20" />
+          <span class="visually-hidden">Clear Filters</span>
         </button>
       </div>
       <div class="col d-flex justify-content-end">
         <button
-          class="btn btn-outline-primary"
+          type="button"
+          class="btn btn-outline-primary d-inline-flex align-items-center justify-content-center"
           @click="showAddPanel = !showAddPanel"
+          :aria-label="showAddPanel ? 'Close panel' : 'Add models'"
+          :title="showAddPanel ? 'Close panel' : 'Add models'"
         >
-          {{ showAddPanel ? "Close Panel" : "Add Models" }}
+          <Icon
+            :icon="showAddPanel ? 'mdi:close' : 'mdi:plus'"
+            width="20"
+            height="20"
+          />
+          <span class="visually-hidden">
+            {{ showAddPanel ? "Close Panel" : "Add Models" }}
+          </span>
         </button>
       </div>
     </div>
@@ -363,6 +380,7 @@
 
 <script setup>
 import { ref, computed, onMounted, onUnmounted, watch, nextTick } from "vue";
+import { Icon } from "@iconify/vue";
 import { useRouter, useRoute } from "vue-router";
 import axios from "axios";
 import { showToast, showDeleteConfirm } from "../utils/ui";
