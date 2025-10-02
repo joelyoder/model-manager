@@ -475,8 +475,7 @@ const fetchTotal = async () => {
 
 const debouncedUpdate = debounce(async () => {
   page.value = 1;
-  await fetchTotal();
-  await fetchModels();
+  await Promise.all([fetchTotal(), fetchModels()]);
 }, 300);
 
 const initialized = ref(false);
@@ -497,8 +496,7 @@ onMounted(async () => {
   if (saved.page !== undefined) page.value = saved.page;
 
   await fetchBaseModels();
-  await fetchTotal();
-  await fetchModels();
+  await Promise.all([fetchTotal(), fetchModels()]);
   initialized.value = true;
   if (route.query.scrollTo) {
     await nextTick();
@@ -632,9 +630,26 @@ const matchesNsfwFilter = (value) => {
   return true;
 };
 
+const modelMatchesNsfwFilter = (model) => {
+  const versions = model.versions || [];
+  if (nsfwFilter.value === "no") {
+    if (versions.length) {
+      return versions.some((v) => !Boolean(v.nsfw));
+    }
+    return !Boolean(model.nsfw);
+  }
+  if (nsfwFilter.value === "only") {
+    if (versions.length) {
+      return versions.some((v) => Boolean(v.nsfw));
+    }
+    return Boolean(model.nsfw);
+  }
+  return true;
+};
+
 const filteredModels = computed(() => {
   return models.value.filter((m) => {
-    if (!matchesNsfwFilter(m.nsfw)) return false;
+    if (!modelMatchesNsfwFilter(m)) return false;
     if (search.value) {
       const s = search.value.toLowerCase();
       const matchModel = m.name.toLowerCase().includes(s);
