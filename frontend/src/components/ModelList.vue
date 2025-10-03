@@ -177,13 +177,34 @@
               </button>
             </div>
           </div>
-          <div v-if="downloading" class="progress w-100 mb-2">
-            <div
-              class="progress-bar progress-bar-striped"
-              :style="{ width: downloadProgress + '%' }"
-            >
-              {{ downloadProgress }}%
+          <div
+            v-if="downloading"
+            class="d-flex align-items-center gap-2 w-100 mb-2"
+          >
+            <div class="progress flex-grow-1">
+              <div
+                class="progress-bar progress-bar-striped"
+                :style="{ width: downloadProgress + '%' }"
+              >
+                {{ downloadProgress }}%
+              </div>
             </div>
+            <button
+              class="btn btn-outline-danger btn-sm"
+              type="button"
+              @click="cancelDownload"
+              :disabled="canceling"
+            >
+              <span
+                v-if="canceling"
+                class="spinner-border spinner-border-sm"
+                aria-hidden="true"
+              ></span>
+              <span v-if="canceling" role="status" class="ps-2"
+                >Cancelling...</span
+              >
+              <span v-else>Cancel</span>
+            </button>
           </div>
         </div>
       </div>
@@ -400,6 +421,8 @@ const selectedVersionId = ref("");
 const loading = ref(false);
 const downloading = ref(false);
 const downloadProgress = ref(0);
+const canceling = ref(false);
+const cancelledByUser = ref(false);
 const adding = ref(false);
 let progressInterval = null;
 const router = useRouter();
@@ -820,6 +843,7 @@ const downloadSelectedVersion = async () => {
     }
   }
 
+  cancelledByUser.value = false;
   loading.value = true;
   adding.value = false;
   downloading.value = true;
@@ -840,7 +864,13 @@ const downloadSelectedVersion = async () => {
     showToast("Version downloaded successfully", "success");
   } catch (err) {
     console.error(err);
-    showToast("Download failed", "danger");
+    if (axios.isAxiosError(err) && err.response?.status === 409) {
+      if (!cancelledByUser.value) {
+        showToast("Download cancelled", "info");
+      }
+    } else {
+      showToast("Download failed", "danger");
+    }
   } finally {
     clearInterval(progressInterval);
     progressInterval = null;
@@ -851,6 +881,27 @@ const downloadSelectedVersion = async () => {
     loading.value = false;
     downloading.value = false;
     adding.value = false;
+    canceling.value = false;
+    cancelledByUser.value = false;
+  }
+};
+
+const cancelDownload = async () => {
+  if (canceling.value) return;
+  canceling.value = true;
+  cancelledByUser.value = true;
+  try {
+    const res = await axios.post("/api/download/cancel");
+    const message =
+      (res.data && (res.data.message || res.data.error)) ||
+      "Download cancelled";
+    showToast(message, "info");
+  } catch (err) {
+    cancelledByUser.value = false;
+    console.error(err);
+    showToast("Failed to cancel download", "danger");
+  } finally {
+    canceling.value = false;
   }
 };
 

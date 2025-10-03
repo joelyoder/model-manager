@@ -1,6 +1,7 @@
 package api
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -430,9 +431,21 @@ func SyncVersionByID(c *gin.Context) {
 				base := strings.TrimSuffix(fileName, ext)
 				fileName = fmt.Sprintf("%s_%d%s", base, verData.ID, ext)
 			}
-			filePath, size, _ = DownloadFile(downloadURL, destDir, fileName)
+			var err error
+			filePath, size, err = DownloadFile(downloadURL, destDir, fileName)
+			if err != nil {
+				if errors.Is(err, context.Canceled) {
+					c.JSON(http.StatusConflict, gin.H{"error": "Download cancelled"})
+				} else {
+					log.Printf("failed to download file: %v", err)
+					c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to download file"})
+				}
+				return
+			}
 			if size < 110 {
-				moveToTrash(filePath)
+				if filePath != "" {
+					moveToTrash(filePath)
+				}
 				c.JSON(http.StatusInternalServerError, gin.H{"error": "Downloaded file too small"})
 				return
 			}
@@ -555,9 +568,20 @@ func processModel(item CivitModel, apiKey string) {
 				base := strings.TrimSuffix(fileName, ext)
 				fileName = fmt.Sprintf("%s_%d%s", base, verData.ID, ext)
 			}
-			filePath, size, _ = DownloadFile(downloadURL, destDir, fileName)
+			var err error
+			filePath, size, err = DownloadFile(downloadURL, destDir, fileName)
+			if err != nil {
+				if errors.Is(err, context.Canceled) {
+					log.Printf("download cancelled for version %d", verData.ID)
+					return
+				}
+				log.Printf("failed to download file: %v", err)
+				continue
+			}
 			if size < 110 {
-				moveToTrash(filePath)
+				if filePath != "" {
+					moveToTrash(filePath)
+				}
 				log.Printf("downloaded %s is too small", fileName)
 				continue
 			}
