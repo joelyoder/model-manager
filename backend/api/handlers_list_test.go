@@ -72,11 +72,13 @@ func TestGetModelsAndCountFilters(t *testing.T) {
 		{"searchTrained", "?search=delta-key", []string{"Delta"}},
 		{"baseModel", "?baseModel=SD1", []string{"Beta", "Alpha"}},
 		{"modelType", "?modelType=lora", []string{"Delta", "Beta"}},
-		{"hideNsfw", "?hideNsfw=1", []string{"Delta", "Gamma", "Alpha"}},
+		{"nsfwNo", "?nsfwFilter=no", []string{"Delta", "Gamma", "Alpha"}},
+		{"nsfwOnly", "?nsfwFilter=only", []string{"Beta"}},
+		{"hideNsfwLegacy", "?hideNsfw=1", []string{"Delta", "Gamma", "Alpha"}},
 		{"tags", "?tags=tag3", []string{"Delta", "Beta"}},
 		{"multiTags", "?tags=tag1,tag2", []string{"Gamma"}},
 		{"combo", "?baseModel=SD2&modelType=checkpoint", []string{"Gamma"}},
-		{"comboNone", "?baseModel=SD1&modelType=lora&hideNsfw=1", []string{}},
+		{"comboNone", "?baseModel=SD1&modelType=lora&nsfwFilter=no", []string{}},
 	}
 
 	for _, tt := range tests {
