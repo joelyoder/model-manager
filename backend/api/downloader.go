@@ -1,6 +1,7 @@
 package api
 
 import (
+	"context"
 	"crypto/sha256"
 	"encoding/hex"
 	"image"
@@ -12,9 +13,17 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"sync"
 )
 
 var CurrentDownloadProgress int64
+
+var (
+	downloadMu            sync.Mutex
+	currentDownloadCancel context.CancelFunc
+	currentDownloadPath   string
+	currentDownloadToken  *struct{}
+)
 
 // DownloadFile streams the content at url into destDir/filename. The caller
 // must supply a destination directory and filename; the handler ensures the
@@ -22,38 +31,76 @@ var CurrentDownloadProgress int64
 // package-level CurrentDownloadProgress, and returns the absolute path and
 // number of bytes written. It performs filesystem writes as a side effect.
 func DownloadFile(url, destDir, filename string) (string, int64, error) {
-	token := getCivitaiAPIKey()
+	apiToken := getCivitaiAPIKey()
 	log.Printf("Downloading %s", url)
 
-	req, err := http.NewRequest("GET", url, nil)
-	if err != nil {
-		return "", 0, err
-	}
-	if token != "" {
-		req.Header.Add("Authorization", "Bearer "+token)
-	}
-
-	resp, err := http.DefaultClient.Do(req)
-	if err != nil {
-		return "", 0, err
-	}
-	defer resp.Body.Close()
-
-	os.MkdirAll(destDir, os.ModePerm)
 	fullPath := filepath.Join(destDir, filename)
 	absPath, err := filepath.Abs(fullPath)
 	if err != nil {
 		return "", 0, err
 	}
 
+	isModelDownload := strings.Contains(destDir, "downloads")
+	ctx := context.Background()
+	var cancel context.CancelFunc
+	if isModelDownload {
+		ctx, cancel = context.WithCancel(context.Background())
+	}
+
+	req, err := http.NewRequestWithContext(ctx, "GET", url, nil)
+	if err != nil {
+		if cancel != nil {
+			cancel()
+		}
+		return "", 0, err
+	}
+	var downloadToken *struct{}
+	if isModelDownload {
+		downloadToken = &struct{}{}
+		downloadMu.Lock()
+		currentDownloadCancel = cancel
+		currentDownloadPath = absPath
+		currentDownloadToken = downloadToken
+		CurrentDownloadProgress = 0
+		downloadMu.Unlock()
+	}
+	if apiToken != "" {
+		req.Header.Add("Authorization", "Bearer "+apiToken)
+	}
+
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		if cancel != nil {
+			cancel()
+		}
+		return "", 0, err
+	}
+	defer resp.Body.Close()
+
+	os.MkdirAll(destDir, os.ModePerm)
+
 	out, err := os.Create(absPath)
 	if err != nil {
+		if cancel != nil {
+			cancel()
+		}
 		return "", 0, err
 	}
 	defer out.Close()
 
-	if strings.Contains(destDir, "downloads") {
-		CurrentDownloadProgress = 0
+	if isModelDownload {
+		defer func() {
+			downloadMu.Lock()
+			if currentDownloadToken == downloadToken {
+				currentDownloadCancel = nil
+				currentDownloadPath = ""
+				currentDownloadToken = nil
+			}
+			downloadMu.Unlock()
+			if cancel != nil {
+				cancel()
+			}
+		}()
 	}
 
 	total := resp.ContentLength
@@ -66,7 +113,7 @@ func DownloadFile(url, destDir, filename string) (string, int64, error) {
 				return "", 0, werr
 			}
 			downloaded += int64(n)
-			if strings.Contains(destDir, "downloads") && total > 0 {
+			if isModelDownload && total > 0 {
 				CurrentDownloadProgress = downloaded * 100 / total
 			}
 		}
@@ -78,7 +125,7 @@ func DownloadFile(url, destDir, filename string) (string, int64, error) {
 		}
 	}
 
-	if strings.Contains(destDir, "downloads") {
+	if isModelDownload {
 		CurrentDownloadProgress = 100
 	}
 
@@ -133,4 +180,30 @@ func isVideoURL(u string) bool {
 		return true
 	}
 	return false
+}
+
+// CancelActiveDownload cancels the current model download if one is in progress.
+// It stops the HTTP request, resets the progress indicator, and removes any
+// partially written file from disk.
+func CancelActiveDownload() (bool, error) {
+	downloadMu.Lock()
+	cancel := currentDownloadCancel
+	path := currentDownloadPath
+	currentDownloadCancel = nil
+	currentDownloadPath = ""
+	currentDownloadToken = nil
+	downloadMu.Unlock()
+
+	if cancel == nil {
+		return false, nil
+	}
+
+	cancel()
+	CurrentDownloadProgress = 0
+	if path != "" {
+		if err := os.Remove(path); err != nil && !os.IsNotExist(err) {
+			return true, err
+		}
+	}
+	return true, nil
 }

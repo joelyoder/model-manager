@@ -37,6 +37,7 @@ func main() {
 		apiGroup.POST("/sync/:id", api.SyncCivitModelByID)
 		apiGroup.POST("/sync/version/:versionId", api.SyncVersionByID)
 		apiGroup.GET("/download/progress", api.GetDownloadProgress)
+		apiGroup.POST("/download/cancel", api.CancelDownload)
 		apiGroup.GET("/model/:id/versions", api.GetModelVersions)
 		apiGroup.GET("/versions/:id", api.GetVersion)
 		apiGroup.PUT("/versions/:id", api.UpdateVersion)
