@@ -49,18 +49,12 @@
                         @click="copyTrainedWords"
                         aria-label="Copy trained words"
                       >
-                        <svg
-                          xmlns="http://www.w3.org/2000/svg"
+                        <Icon
+                          icon="mdi:content-copy"
                           width="16"
                           height="16"
-                          fill="currentColor"
-                          viewBox="0 0 16 16"
                           aria-hidden="true"
-                        >
-                          <path
-                            d="M10 1.5a1 1 0 0 1 1 1V3h1.5a1 1 0 0 1 1 1V14a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V13H2.5a1 1 0 0 1-1-1V2.5a1 1 0 0 1 1-1H10Zm-1 1H2.5a.5.5 0 0 0-.5.5V12a.5.5 0 0 0 .5.5H4V4a1 1 0 0 1 1-1h4V2.5a.5.5 0 0 0-.5-.5ZM5 4v10h7.5a.5.5 0 0 0 .5-.5V4H5Z"
-                          />
-                        </svg>
+                        />
                       </button>
                     </div>
                   </td>
@@ -76,18 +70,12 @@
                         @click="copyFileBaseName"
                         aria-label="Copy filename without extension"
                       >
-                        <svg
-                          xmlns="http://www.w3.org/2000/svg"
+                        <Icon
+                          icon="mdi:file-document-outline"
                           width="16"
                           height="16"
-                          fill="currentColor"
-                          viewBox="0 0 16 16"
                           aria-hidden="true"
-                        >
-                          <path
-                            d="M10 1.5a1 1 0 0 1 1 1V3h1.5a1 1 0 0 1 1 1V14a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V13H2.5a1 1 0 0 1-1-1V2.5a1 1 0 0 1 1-1H10Zm-1 1H2.5a.5.5 0 0 0-.5.5V12a.5.5 0 0 0 .5.5H4V4a1 1 0 0 1 1-1h4V2.5a.5.5 0 0 0-.5-.5ZM5 4v10h7.5a.5.5 0 0 0 .5-.5V4H5Z"
-                          />
-                        </svg>
+                        />
                       </button>
                       <button
                         type="button"
@@ -95,18 +83,12 @@
                         @click="copyLoraTag"
                         aria-label="Copy LoRA tag"
                       >
-                        <svg
-                          xmlns="http://www.w3.org/2000/svg"
+                        <Icon
+                          icon="mdi:tag-text-outline"
                           width="16"
                           height="16"
-                          fill="currentColor"
-                          viewBox="0 0 16 16"
                           aria-hidden="true"
-                        >
-                          <path
-                            d="M10 1.5a1 1 0 0 1 1 1V3h1.5a1 1 0 0 1 1 1V14a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V13H2.5a1 1 0 0 1-1-1V2.5a1 1 0 0 1 1-1H10Zm-1 1H2.5a.5.5 0 0 0-.5.5V12a.5.5 0 0 0 .5.5H4V4a1 1 0 0 1 1-1h4V2.5a.5.5 0 0 0-.5-.5ZM5 4v10h7.5a.5.5 0 0 0 .5-.5V4H5Z"
-                          />
-                        </svg>
+                        />
                       </button>
                     </div>
                   </td>
@@ -378,6 +360,7 @@ import { useRouter, useRoute } from "vue-router";
 import axios from "axios";
 import Quill from "quill";
 import { showToast, showConfirm, showDeleteConfirm } from "../utils/ui";
+import { Icon } from "@iconify/vue";
 
 const router = useRouter();
 const route = useRoute();
