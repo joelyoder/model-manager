@@ -67,7 +67,49 @@
                 </tr>
                 <tr v-if="version.filePath">
                   <th>File</th>
-                  <td>{{ fileName }}</td>
+                  <td>
+                    <div class="d-flex align-items-center gap-2 flex-wrap">
+                      <span>{{ fileName }}</span>
+                      <button
+                        type="button"
+                        class="btn btn-outline-secondary btn-sm d-flex align-items-center justify-content-center"
+                        @click="copyFileBaseName"
+                        aria-label="Copy filename without extension"
+                      >
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          width="16"
+                          height="16"
+                          fill="currentColor"
+                          viewBox="0 0 16 16"
+                          aria-hidden="true"
+                        >
+                          <path
+                            d="M10 1.5a1 1 0 0 1 1 1V3h1.5a1 1 0 0 1 1 1V14a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V13H2.5a1 1 0 0 1-1-1V2.5a1 1 0 0 1 1-1H10Zm-1 1H2.5a.5.5 0 0 0-.5.5V12a.5.5 0 0 0 .5.5H4V4a1 1 0 0 1 1-1h4V2.5a.5.5 0 0 0-.5-.5ZM5 4v10h7.5a.5.5 0 0 0 .5-.5V4H5Z"
+                          />
+                        </svg>
+                      </button>
+                      <button
+                        type="button"
+                        class="btn btn-outline-secondary btn-sm d-flex align-items-center justify-content-center"
+                        @click="copyLoraTag"
+                        aria-label="Copy LoRA tag"
+                      >
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          width="16"
+                          height="16"
+                          fill="currentColor"
+                          viewBox="0 0 16 16"
+                          aria-hidden="true"
+                        >
+                          <path
+                            d="M10 1.5a1 1 0 0 1 1 1V3h1.5a1 1 0 0 1 1 1V14a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V13H2.5a1 1 0 0 1-1-1V2.5a1 1 0 0 1 1-1H10Zm-1 1H2.5a.5.5 0 0 0-.5.5V12a.5.5 0 0 0 .5.5H4V4a1 1 0 0 1 1-1h4V2.5a.5.5 0 0 0-.5-.5ZM5 4v10h7.5a.5.5 0 0 0 .5-.5V4H5Z"
+                          />
+                        </svg>
+                      </button>
+                    </div>
+                  </td>
                 </tr>
                 <tr v-if="version.sizeKB">
                   <th>Size</th>
@@ -400,7 +442,19 @@ const galleryImages = computed(() => {
 
 const fileName = computed(() => {
   if (!version.value.filePath) return "";
-  return version.value.filePath.split("/").pop();
+  return version.value.filePath.split(/[/\\]/).pop();
+});
+
+const fileBaseName = computed(() => {
+  const name = fileName.value;
+  if (!name) return "";
+  return name.replace(/\.[^./\\]+$/, "");
+});
+
+const loraTag = computed(() => {
+  const base = fileBaseName.value;
+  if (!base) return "";
+  return `<lora:${base}:1>`;
 });
 
 const formattedTrainedWords = computed(() => {
@@ -452,13 +506,12 @@ const deleteVersion = async () => {
   router.push("/");
 };
 
-const copyTrainedWords = async () => {
-  const words = formattedTrainedWords.value;
-  if (!words) return;
+const copyToClipboard = async (text, successMessage, errorMessage, logLabel) => {
+  if (!text) return;
 
   const fallbackCopy = () => {
     const textarea = document.createElement("textarea");
-    textarea.value = words;
+    textarea.value = text;
     textarea.setAttribute("readonly", "");
     textarea.style.position = "absolute";
     textarea.style.left = "-9999px";
@@ -475,7 +528,7 @@ const copyTrainedWords = async () => {
 
   try {
     if (navigator?.clipboard?.writeText) {
-      await navigator.clipboard.writeText(words);
+      await navigator.clipboard.writeText(text);
     } else {
       fallbackCopy();
     }
@@ -483,13 +536,40 @@ const copyTrainedWords = async () => {
     try {
       fallbackCopy();
     } catch (fallbackErr) {
-      console.error("Failed to copy trained words", fallbackErr);
-      showToast("Unable to copy trained words", "danger");
+      console.error(`Failed to copy ${logLabel || "text"}`, fallbackErr);
+      showToast(errorMessage, "danger");
       return;
     }
   }
 
-  showToast("Trained words copied", "success");
+  showToast(successMessage, "success");
+};
+
+const copyTrainedWords = async () => {
+  await copyToClipboard(
+    formattedTrainedWords.value,
+    "Trained words copied",
+    "Unable to copy trained words",
+    "trained words",
+  );
+};
+
+const copyFileBaseName = async () => {
+  await copyToClipboard(
+    fileBaseName.value,
+    "Filename copied",
+    "Unable to copy filename",
+    "filename",
+  );
+};
+
+const copyLoraTag = async () => {
+  await copyToClipboard(
+    loraTag.value,
+    "LoRA tag copied",
+    "Unable to copy LoRA tag",
+    "LoRA tag",
+  );
 };
 
 const startEdit = () => {
