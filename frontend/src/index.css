@@ -19,3 +19,15 @@ body {
   height: 450px;
   object-fit: cover;
 }
+
+.table-wrap th,
+.table-wrap td {
+  white-space: normal;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
+.table-wrap code,
+.table-wrap a {
+  word-break: break-all;
+}
