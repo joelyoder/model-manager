@@ -7,7 +7,7 @@
         type="button"
         @click="toggleNsfw"
         :disabled="togglingNsfw"
-        class="btn btn-sm"
+        class="btn btn-sm px-2"
         :class="version.nsfw ? 'btn-danger' : 'btn-secondary'"
         style="--bs-btn-padding-y: 0.25rem; --bs-btn-padding-x: 0.25rem"
         aria-label="Toggle NSFW"
@@ -111,7 +111,7 @@
               {{ version.baseModel }}
             </span>
           </div>
-          <dl class="metadata-list mt-4 pb-3">
+          <dl class="metadata-list my-4">
             <template v-if="version.tags">
               <dt class="metadata-list__label">Tags</dt>
               <dd class="metadata-list__value">
@@ -193,12 +193,6 @@
         v-if="hasVersionStats"
         class="row row-cols-1 row-cols-md-2 g-3 mb-4"
       >
-        <div v-if="version.sizeKB" class="col">
-          <dl class="metadata-summary">
-            <dt class="metadata-list__label">Size</dt>
-            <dd class="metadata-list__value">{{ versionSizeMb }}</dd>
-          </dl>
-        </div>
         <div v-if="version.createdAt" class="col">
           <dl class="metadata-summary">
             <dt class="metadata-list__label">Created</dt>
@@ -209,6 +203,12 @@
           <dl class="metadata-summary">
             <dt class="metadata-list__label">Updated</dt>
             <dd class="metadata-list__value">{{ updatedAtReadable }}</dd>
+          </dl>
+        </div>
+         <div v-if="version.sizeKB" class="col">
+          <dl class="metadata-summary">
+            <dt class="metadata-list__label">Size</dt>
+            <dd class="metadata-list__value">{{ versionSizeMb }}</dd>
           </dl>
         </div>
         <div v-if="version.sha256" class="col">
