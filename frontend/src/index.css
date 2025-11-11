@@ -32,6 +32,8 @@ body {
   word-break: break-all;
 }
 
+.metadata-list,
+.metadata-summary,
 .image-metadata {
   display: grid;
   gap: 0.5rem;
@@ -39,6 +41,7 @@ body {
   padding: 0;
 }
 
+.metadata-list__label,
 .image-metadata__label {
   margin: 0;
   font-weight: 600;
@@ -48,6 +51,7 @@ body {
   color: rgba(255, 255, 255, 0.75);
 }
 
+.metadata-list__value,
 .image-metadata__value {
   margin: 0;
   padding: 0.5rem 0.75rem;
