@@ -19,117 +19,111 @@
         <div class="col-md-8">
           <h2 class="fw-bold">{{ model.name }}</h2>
           <h3 v-if="version.name" class="mb-2">{{ version.name }}</h3>
-          <div class="table-responsive">
-            <table class="table mt-4 table-wrap">
-              <tbody>
-                <tr v-if="version.tags">
-                  <th>Tags</th>
-                  <td>{{ version.tags.split(",").join(", ") }}</td>
-                </tr>
-                <tr>
-                  <th>Type</th>
-                  <td>{{ version.type }}</td>
-                </tr>
-                <tr>
-                  <th>NSFW</th>
-                  <td>{{ version.nsfw }}</td>
-                </tr>
-                <tr>
-                  <th>Base Model</th>
-                  <td>{{ version.baseModel }}</td>
-                </tr>
-                <tr v-if="version.trainedWords">
-                  <th>Trained Words</th>
-                  <td>
-                    <div class="d-flex align-items-center gap-2 flex-wrap">
-                      <span>{{ formattedTrainedWords }}</span>
-                      <button
-                        type="button"
-                        class="btn btn-outline-secondary btn-sm d-flex align-items-center justify-content-center"
-                        @click="copyTrainedWords"
-                        aria-label="Copy trained words"
-                      >
-                        <Icon
-                          icon="mdi:content-copy"
-                          width="16"
-                          height="16"
-                          aria-hidden="true"
-                        />
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-                <tr v-if="version.filePath">
-                  <th>File</th>
-                  <td>
-                    <div class="d-flex align-items-center gap-2 flex-wrap">
-                      <span>{{ fileName }}</span>
-                      <button
-                        type="button"
-                        class="btn btn-outline-secondary btn-sm d-flex align-items-center justify-content-center"
-                        @click="copyFileBaseName"
-                        aria-label="Copy filename without extension"
-                      >
-                        <Icon
-                          icon="mdi:file-document-outline"
-                          width="16"
-                          height="16"
-                          aria-hidden="true"
-                        />
-                      </button>
-                      <button
-                        type="button"
-                        class="btn btn-outline-secondary btn-sm d-flex align-items-center justify-content-center"
-                        @click="copyLoraTag"
-                        aria-label="Copy LoRA tag"
-                      >
-                        <Icon
-                          icon="mdi:tag-text-outline"
-                          width="16"
-                          height="16"
-                          aria-hidden="true"
-                        />
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-                <tr v-if="version.sizeKB">
-                  <th>Size</th>
-                  <td>{{ (version.sizeKB / 1024).toFixed(2) }} MB</td>
-                </tr>
-                <tr v-if="version.modelUrl">
-                  <th>Model URL</th>
-                  <td>
-                    <a :href="version.modelUrl" target="_blank">{{
-                      version.modelUrl
-                    }}</a>
-                  </td>
-                </tr>
-                <tr v-if="version.createdAt">
-                  <th>Created</th>
-                  <td>{{ createdAtReadable }}</td>
-                </tr>
-                <tr v-if="version.updatedAt">
-                  <th>Updated</th>
-                  <td>{{ updatedAtReadable }}</td>
-                </tr>
-                <tr v-if="version.sha256">
-                  <th>SHA256</th>
-                  <td>
-                    <code>{{ version.sha256 }}</code>
-                  </td>
-                </tr>
-                <tr v-if="version.downloadUrl">
-                  <th>Download URL</th>
-                  <td>
-                    <a :href="version.downloadUrl" target="_blank">{{
-                      version.downloadUrl
-                    }}</a>
-                  </td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
+          <dl class="metadata-list mt-4">
+            <template v-if="version.tags">
+              <dt class="metadata-list__label">Tags</dt>
+              <dd class="metadata-list__value">
+                {{ version.tags.split(",").join(", ") }}
+              </dd>
+            </template>
+            <dt class="metadata-list__label">Type</dt>
+            <dd class="metadata-list__value">{{ version.type }}</dd>
+            <dt class="metadata-list__label">NSFW</dt>
+            <dd class="metadata-list__value">{{ version.nsfw }}</dd>
+            <dt class="metadata-list__label">Base Model</dt>
+            <dd class="metadata-list__value">{{ version.baseModel }}</dd>
+            <template v-if="version.trainedWords">
+              <dt class="metadata-list__label">Trained Words</dt>
+              <dd class="metadata-list__value">
+                <div class="d-flex align-items-center gap-2 flex-wrap">
+                  <span>{{ formattedTrainedWords }}</span>
+                  <button
+                    type="button"
+                    class="btn btn-outline-secondary btn-sm d-flex align-items-center justify-content-center"
+                    @click="copyTrainedWords"
+                    aria-label="Copy trained words"
+                  >
+                    <Icon
+                      icon="mdi:content-copy"
+                      width="16"
+                      height="16"
+                      aria-hidden="true"
+                    />
+                  </button>
+                </div>
+              </dd>
+            </template>
+            <template v-if="version.filePath">
+              <dt class="metadata-list__label">File</dt>
+              <dd class="metadata-list__value">
+                <div class="d-flex align-items-center gap-2 flex-wrap">
+                  <span>{{ fileName }}</span>
+                  <button
+                    type="button"
+                    class="btn btn-outline-secondary btn-sm d-flex align-items-center justify-content-center"
+                    @click="copyFileBaseName"
+                    aria-label="Copy filename without extension"
+                  >
+                    <Icon
+                      icon="mdi:file-document-outline"
+                      width="16"
+                      height="16"
+                      aria-hidden="true"
+                    />
+                  </button>
+                  <button
+                    type="button"
+                    class="btn btn-outline-secondary btn-sm d-flex align-items-center justify-content-center"
+                    @click="copyLoraTag"
+                    aria-label="Copy LoRA tag"
+                  >
+                    <Icon
+                      icon="mdi:tag-text-outline"
+                      width="16"
+                      height="16"
+                      aria-hidden="true"
+                    />
+                  </button>
+                </div>
+              </dd>
+            </template>
+            <template v-if="version.sizeKB">
+              <dt class="metadata-list__label">Size</dt>
+              <dd class="metadata-list__value">
+                {{ (version.sizeKB / 1024).toFixed(2) }} MB
+              </dd>
+            </template>
+            <template v-if="version.modelUrl">
+              <dt class="metadata-list__label">Model URL</dt>
+              <dd class="metadata-list__value">
+                <a :href="version.modelUrl" target="_blank">{{
+                  version.modelUrl
+                }}</a>
+              </dd>
+            </template>
+            <template v-if="version.createdAt">
+              <dt class="metadata-list__label">Created</dt>
+              <dd class="metadata-list__value">{{ createdAtReadable }}</dd>
+            </template>
+            <template v-if="version.updatedAt">
+              <dt class="metadata-list__label">Updated</dt>
+              <dd class="metadata-list__value">{{ updatedAtReadable }}</dd>
+            </template>
+            <template v-if="version.sha256">
+              <dt class="metadata-list__label">SHA256</dt>
+              <dd class="metadata-list__value">
+                <code>{{ version.sha256 }}</code>
+              </dd>
+            </template>
+            <template v-if="version.downloadUrl">
+              <dt class="metadata-list__label">Download URL</dt>
+              <dd class="metadata-list__value">
+                <a :href="version.downloadUrl" target="_blank">{{
+                  version.downloadUrl
+                }}</a>
+              </dd>
+            </template>
+          </dl>
         </div>
       </div>
       <div
