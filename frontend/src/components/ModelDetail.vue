@@ -20,7 +20,7 @@
           <h2 class="fw-bold">{{ model.name }}</h2>
           <h3 v-if="version.name" class="mb-2">{{ version.name }}</h3>
           <div class="table-responsive">
-            <table class="table mt-4">
+            <table class="table mt-4 table-wrap">
               <tbody>
                 <tr v-if="version.tags">
                   <th>Tags</th>
@@ -188,19 +188,12 @@
               Show Metadata
             </button>
             <div :id="'meta-' + img.ID" class="collapse mt-1">
-              <div class="table-responsive">
-                <table class="table table-sm mb-0">
-                  <tbody>
-                    <tr
-                      v-for="(value, key) in img.parsedMeta"
-                      :key="key"
-                    >
-                      <th class="fw-normal">{{ key }}</th>
-                      <td>{{ value }}</td>
-                    </tr>
-                  </tbody>
-                </table>
-              </div>
+              <dl class="image-metadata">
+                <template v-for="(value, key) in img.parsedMeta" :key="key">
+                  <dt class="image-metadata__label">{{ key }}</dt>
+                  <dd class="image-metadata__value">{{ value }}</dd>
+                </template>
+              </dl>
             </div>
           </div>
         </div>
