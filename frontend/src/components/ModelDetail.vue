@@ -188,19 +188,12 @@
               Show Metadata
             </button>
             <div :id="'meta-' + img.ID" class="collapse mt-1">
-              <div class="table-responsive">
-                <table class="table table-sm mb-0 table-wrap">
-                  <tbody>
-                    <tr
-                      v-for="(value, key) in img.parsedMeta"
-                      :key="key"
-                    >
-                      <th class="fw-normal">{{ key }}</th>
-                      <td>{{ value }}</td>
-                    </tr>
-                  </tbody>
-                </table>
-              </div>
+              <dl class="image-metadata">
+                <template v-for="(value, key) in img.parsedMeta" :key="key">
+                  <dt class="image-metadata__label">{{ key }}</dt>
+                  <dd class="image-metadata__value">{{ value }}</dd>
+                </template>
+              </dl>
             </div>
           </div>
         </div>

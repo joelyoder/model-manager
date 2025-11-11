@@ -31,3 +31,28 @@ body {
 .table-wrap a {
   word-break: break-all;
 }
+
+.image-metadata {
+  display: grid;
+  gap: 0.75rem;
+  margin: 0;
+  padding: 0;
+}
+
+.image-metadata__label {
+  font-weight: 600;
+  font-size: 0.875rem;
+  text-transform: uppercase;
+  color: #495057;
+}
+
+.image-metadata__value {
+  margin: 0;
+  padding: 0.75rem;
+  border: 1px solid #dee2e6;
+  border-radius: 0.5rem;
+  background-color: #f8f9fa;
+  white-space: normal;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
