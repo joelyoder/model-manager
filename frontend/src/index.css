@@ -33,6 +33,7 @@ body {
 }
 
 .metadata-list,
+.metadata-summary,
 .image-metadata {
   display: grid;
   gap: 0.5rem;

@@ -3,6 +3,84 @@
     <div class="mb-2 d-flex gap-2 pb-2" v-if="!isEditing">
       <button @click="goBack" class="btn btn-secondary">Back</button>
       <button @click="startEdit" class="btn btn-primary">Edit</button>
+      <button
+        type="button"
+        @click="toggleNsfw"
+        :disabled="togglingNsfw"
+        class="btn btn-sm"
+        :class="version.nsfw ? 'btn-danger' : 'btn-secondary'"
+        style="--bs-btn-padding-y: 0.25rem; --bs-btn-padding-x: 0.25rem"
+        aria-label="Toggle NSFW"
+        title="Toggle NSFW"
+      >
+        <span class="visually-hidden">Toggle NSFW</span>
+        <svg
+          v-if="version.nsfw"
+          width="18px"
+          height="18px"
+          viewBox="0 0 24 24"
+          stroke-width="1.5"
+          fill="none"
+          xmlns="http://www.w3.org/2000/svg"
+          color="#ffffff"
+        >
+          <path
+            d="M10.733 5.076a10.744 10.744 0 0 1 11.205 6.575 1 1 0 0 1 0 .696 10.747 10.747 0 0 1-1.444 2.49"
+            stroke="#ffffff"
+            stroke-width="1.5"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          ></path>
+          <path
+            d="M14.084 14.158a3 3 0 0 1-4.242-4.242"
+            stroke="#ffffff"
+            stroke-width="1.5"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          ></path>
+          <path
+            d="M17.479 17.499a10.75 10.75 0 0 1-15.417-5.151 1 1 0 0 1 0-.696 10.75 10.75 0 0 1 4.446-5.143"
+            stroke="#ffffff"
+            stroke-width="1.5"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          ></path>
+          <path
+            d="m2 2 20 20"
+            stroke="#ffffff"
+            stroke-width="1.5"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          ></path>
+        </svg>
+        <svg
+          v-else
+          width="18px"
+          height="18px"
+          viewBox="0 0 24 24"
+          stroke-width="1.5"
+          fill="none"
+          xmlns="http://www.w3.org/2000/svg"
+          color="#ffffff"
+        >
+          <path
+            d="M2.062 12.348a1 1 0 0 1 0-.696 10.75 10.75 0 0 1 19.876 0 1 1 0 0 1 0 .696 10.75 10.75 0 0 1-19.876 0"
+            stroke="#ffffff"
+            stroke-width="1.5"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          ></path>
+          <circle
+            cx="12"
+            cy="12"
+            r="3"
+            stroke="#ffffff"
+            stroke-width="1.5"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          ></circle>
+        </svg>
+      </button>
       <button @click="deleteVersion" class="btn btn-outline-danger ms-auto">
         Delete
       </button>
@@ -19,19 +97,27 @@
         <div class="col-md-8">
           <h2 class="fw-bold">{{ model.name }}</h2>
           <h3 v-if="version.name" class="mb-2">{{ version.name }}</h3>
-          <dl class="metadata-list mt-4">
+          <div class="d-flex flex-wrap align-items-center gap-2 mb-3">
+            <span
+              v-if="version.type"
+              class="badge rounded-pill text-bg-primary"
+            >
+              {{ version.type }}
+            </span>
+            <span
+              v-if="version.baseModel"
+              class="badge rounded-pill text-bg-success"
+            >
+              {{ version.baseModel }}
+            </span>
+          </div>
+          <dl class="metadata-list mt-4 pb-3">
             <template v-if="version.tags">
               <dt class="metadata-list__label">Tags</dt>
               <dd class="metadata-list__value">
                 {{ version.tags.split(",").join(", ") }}
               </dd>
             </template>
-            <dt class="metadata-list__label">Type</dt>
-            <dd class="metadata-list__value">{{ version.type }}</dd>
-            <dt class="metadata-list__label">NSFW</dt>
-            <dd class="metadata-list__value">{{ version.nsfw }}</dd>
-            <dt class="metadata-list__label">Base Model</dt>
-            <dd class="metadata-list__value">{{ version.baseModel }}</dd>
             <template v-if="version.trainedWords">
               <dt class="metadata-list__label">Trained Words</dt>
               <dd class="metadata-list__value">
@@ -87,39 +173,11 @@
                 </div>
               </dd>
             </template>
-            <template v-if="version.sizeKB">
-              <dt class="metadata-list__label">Size</dt>
-              <dd class="metadata-list__value">
-                {{ (version.sizeKB / 1024).toFixed(2) }} MB
-              </dd>
-            </template>
             <template v-if="version.modelUrl">
               <dt class="metadata-list__label">Model URL</dt>
               <dd class="metadata-list__value">
                 <a :href="version.modelUrl" target="_blank">{{
                   version.modelUrl
-                }}</a>
-              </dd>
-            </template>
-            <template v-if="version.createdAt">
-              <dt class="metadata-list__label">Created</dt>
-              <dd class="metadata-list__value">{{ createdAtReadable }}</dd>
-            </template>
-            <template v-if="version.updatedAt">
-              <dt class="metadata-list__label">Updated</dt>
-              <dd class="metadata-list__value">{{ updatedAtReadable }}</dd>
-            </template>
-            <template v-if="version.sha256">
-              <dt class="metadata-list__label">SHA256</dt>
-              <dd class="metadata-list__value">
-                <code>{{ version.sha256 }}</code>
-              </dd>
-            </template>
-            <template v-if="version.downloadUrl">
-              <dt class="metadata-list__label">Download URL</dt>
-              <dd class="metadata-list__value">
-                <a :href="version.downloadUrl" target="_blank">{{
-                  version.downloadUrl
                 }}</a>
               </dd>
             </template>
@@ -131,6 +189,35 @@
         v-html="version.description"
         class="mb-4"
       ></div>
+      <div
+        v-if="hasVersionStats"
+        class="row row-cols-1 row-cols-md-2 g-3 mb-4"
+      >
+        <div v-if="version.sizeKB" class="col">
+          <dl class="metadata-summary">
+            <dt class="metadata-list__label">Size</dt>
+            <dd class="metadata-list__value">{{ versionSizeMb }}</dd>
+          </dl>
+        </div>
+        <div v-if="version.createdAt" class="col">
+          <dl class="metadata-summary">
+            <dt class="metadata-list__label">Created</dt>
+            <dd class="metadata-list__value">{{ createdAtReadable }}</dd>
+          </dl>
+        </div>
+        <div v-if="version.updatedAt" class="col">
+          <dl class="metadata-summary">
+            <dt class="metadata-list__label">Updated</dt>
+            <dd class="metadata-list__value">{{ updatedAtReadable }}</dd>
+          </dl>
+        </div>
+        <div v-if="version.sha256" class="col">
+          <dl class="metadata-summary">
+            <dt class="metadata-list__label">SHA256</dt>
+            <dd class="metadata-list__value"><code>{{ version.sha256 }}</code></dd>
+          </dl>
+        </div>
+      </div>
       <div
         v-if="galleryImages.length"
         class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4 mb-4"
@@ -356,6 +443,7 @@ const version = ref({});
 const isEditing = ref(false);
 const editor = ref(null);
 let quill;
+const togglingNsfw = ref(false);
 
 const modelTypes = [
   "Checkpoint",
@@ -446,6 +534,20 @@ const updatedAtReadable = computed(() => {
   return new Date(version.value.updatedAt).toLocaleString();
 });
 
+const versionSizeMb = computed(() => {
+  if (!version.value.sizeKB) return "";
+  return `${(version.value.sizeKB / 1024).toFixed(2)} MB`;
+});
+
+const hasVersionStats = computed(() => {
+  return (
+    !!version.value.sizeKB ||
+    !!version.value.createdAt ||
+    !!version.value.updatedAt ||
+    !!version.value.sha256
+  );
+});
+
 const fetchData = async () => {
   const { versionId } = route.params;
   const res = await axios.get(`/api/versions/${versionId}`);
@@ -474,6 +576,22 @@ const deleteVersion = async () => {
   const files = choice === "deleteFiles" ? 1 : 0;
   await axios.delete(`/api/versions/${route.params.versionId}?files=${files}`);
   router.push("/");
+};
+
+const toggleNsfw = async () => {
+  if (!version.value?.ID) return;
+  const updated = { ...version.value, nsfw: !version.value.nsfw };
+  togglingNsfw.value = true;
+  try {
+    await axios.put(`/api/versions/${version.value.ID}`, updated);
+    version.value.nsfw = updated.nsfw;
+    showToast("NSFW status updated", "success");
+  } catch (err) {
+    console.error(err);
+    showToast("Failed to update NSFW status", "danger");
+  } finally {
+    togglingNsfw.value = false;
+  }
 };
 
 const copyToClipboard = async (text, successMessage, errorMessage, logLabel) => {
