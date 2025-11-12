@@ -18,5 +18,7 @@ type Model struct {
 	ImageWidth  int `json:"imageWidth"`
 	ImageHeight int `json:"imageHeight"`
 
+	Weight float64 `gorm:"default:1" json:"weight"`
+
 	Versions []Version `json:"versions"`
 }

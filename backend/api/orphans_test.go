@@ -62,7 +62,7 @@ func TestGetOrphanedFiles(t *testing.T) {
 	// Insert referenced files into DB
 	absA, _ := filepath.Abs("backend/downloads/a.pt")
 	absB, _ := filepath.Abs("backend/downloads/b.pt")
-	m := models.Model{CivitID: 1, Name: "m1", FilePath: absA}
+	m := models.Model{CivitID: 1, Name: "m1", FilePath: absA, Weight: 1}
 	if err := database.DB.Create(&m).Error; err != nil {
 		t.Fatalf("create model: %v", err)
 	}
@@ -101,7 +101,7 @@ func TestGetOrphanedFilesNone(t *testing.T) {
 	absB, _ := filepath.Abs("backend/downloads/b.pt")
 	absC, _ := filepath.Abs("backend/downloads/sub/c.pt")
 
-	m := models.Model{CivitID: 1, Name: "m1", FilePath: absA}
+	m := models.Model{CivitID: 1, Name: "m1", FilePath: absA, Weight: 1}
 	if err := database.DB.Create(&m).Error; err != nil {
 		t.Fatalf("create model: %v", err)
 	}
@@ -140,7 +140,7 @@ func TestGetOrphanedFilesSymlinkDir(t *testing.T) {
 	absB, _ := filepath.Abs("backend/downloads/b.pt")
 	absC, _ := filepath.Abs("backend/downloads/sub/c.pt")
 
-	m := models.Model{CivitID: 1, Name: "m1", FilePath: absA}
+	m := models.Model{CivitID: 1, Name: "m1", FilePath: absA, Weight: 1}
 	if err := database.DB.Create(&m).Error; err != nil {
 		t.Fatalf("create model: %v", err)
 	}
@@ -197,7 +197,7 @@ func TestGetOrphanedFilesDBSymlinkPath(t *testing.T) {
 	absSymlinkA, _ := filepath.Abs("backend/link/a.pt")
 	absB, _ := filepath.Abs("backend/downloads/b.pt")
 
-	m := models.Model{CivitID: 1, Name: "m1", FilePath: absSymlinkA}
+	m := models.Model{CivitID: 1, Name: "m1", FilePath: absSymlinkA, Weight: 1}
 	if err := database.DB.Create(&m).Error; err != nil {
 		t.Fatalf("create model: %v", err)
 	}

@@ -67,7 +67,7 @@ func TestCreateModel(t *testing.T) {
 
 func TestUpdateModel(t *testing.T) {
 	setupTestDB(t)
-	m := models.Model{CivitID: 1, Name: "orig", Type: "Checkpoint"}
+	m := models.Model{CivitID: 1, Name: "orig", Type: "Checkpoint", Weight: 1}
 	database.DB.Create(&m)
 
 	t.Run("invalid id", func(t *testing.T) {
@@ -107,7 +107,7 @@ func TestUpdateModel(t *testing.T) {
 		w := httptest.NewRecorder()
 		c, _ := gin.CreateTestContext(w)
 		c.Params = gin.Params{{Key: "id", Value: strconv.Itoa(int(m.ID))}}
-		body := models.Model{CivitID: 2, Name: "new", Type: "LORA", Tags: "t", Nsfw: true, Description: "d", ImagePath: "img", FilePath: "file", ImageWidth: 5, ImageHeight: 6}
+		body := models.Model{CivitID: 2, Name: "new", Type: "LORA", Tags: "t", Nsfw: true, Description: "d", ImagePath: "img", FilePath: "file", ImageWidth: 5, ImageHeight: 6, Weight: 0.85}
 		buf, _ := json.Marshal(body)
 		c.Request = httptest.NewRequest(http.MethodPut, "/models/1", bytes.NewBuffer(buf))
 		c.Request.Header.Set("Content-Type", "application/json")
@@ -119,7 +119,7 @@ func TestUpdateModel(t *testing.T) {
 		if err := database.DB.First(&got, m.ID).Error; err != nil {
 			t.Fatalf("db: %v", err)
 		}
-		if got.CivitID != 2 || got.Name != "new" || got.Type != "LORA" || got.Tags != "t" || !got.Nsfw || got.Description != "d" || got.ImagePath != "img" || got.FilePath != "file" || got.ImageWidth != 5 || got.ImageHeight != 6 {
+		if got.CivitID != 2 || got.Name != "new" || got.Type != "LORA" || got.Tags != "t" || !got.Nsfw || got.Description != "d" || got.ImagePath != "img" || got.FilePath != "file" || got.ImageWidth != 5 || got.ImageHeight != 6 || got.Weight != 0.85 {
 			t.Fatalf("model not updated: %+v", got)
 		}
 	})

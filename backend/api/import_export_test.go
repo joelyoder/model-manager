@@ -124,6 +124,7 @@ func TestImportDatabase(t *testing.T) {
 				CivitID: 1,
 				Name:    "M1",
 				Type:    "Checkpoint",
+				Weight:  1,
 				Versions: []models.Version{{
 					VersionID: 101,
 					Name:      "v1",
@@ -134,6 +135,7 @@ func TestImportDatabase(t *testing.T) {
 				CivitID: 2,
 				Name:    "M2",
 				Type:    "LORA",
+				Weight:  1,
 			},
 		}
 		buf, _ := json.Marshal(modelsList)
@@ -186,7 +188,7 @@ func TestImportDatabase(t *testing.T) {
 
 func TestExportModels(t *testing.T) {
 	initTestDB(t)
-	m := models.Model{CivitID: 1, Name: "M", Type: "Checkpoint", Tags: "t", Nsfw: true, Description: "d"}
+	m := models.Model{CivitID: 1, Name: "M", Type: "Checkpoint", Tags: "t", Nsfw: true, Description: "d", Weight: 1}
 	database.DB.Create(&m)
 	v := models.Version{ModelID: m.ID, VersionID: 1, Name: "v"}
 	database.DB.Create(&v)
@@ -248,7 +250,7 @@ func TestRefreshVersionData(t *testing.T) {
 
 	t.Run("metadata only", func(t *testing.T) {
 		initTestDB(t)
-		m := models.Model{CivitID: 1, Name: "Old", Description: "OldDesc"}
+		m := models.Model{CivitID: 1, Name: "Old", Description: "OldDesc", Weight: 1}
 		database.DB.Create(&m)
 		v := models.Version{ModelID: m.ID, VersionID: 10, Name: "OldVer", Description: "OldDesc"}
 		database.DB.Create(&v)
@@ -270,7 +272,7 @@ func TestRefreshVersionData(t *testing.T) {
 
 	t.Run("description only", func(t *testing.T) {
 		initTestDB(t)
-		m := models.Model{CivitID: 1, Name: "Old", Description: "OldDesc"}
+		m := models.Model{CivitID: 1, Name: "Old", Description: "OldDesc", Weight: 1}
 		database.DB.Create(&m)
 		v := models.Version{ModelID: m.ID, VersionID: 10, Name: "OldVer", Description: "OldDesc"}
 		database.DB.Create(&v)
@@ -292,7 +294,7 @@ func TestRefreshVersionData(t *testing.T) {
 
 	t.Run("all fields", func(t *testing.T) {
 		initTestDB(t)
-		m := models.Model{CivitID: 1, Name: "Old", Description: "OldDesc"}
+		m := models.Model{CivitID: 1, Name: "Old", Description: "OldDesc", Weight: 1}
 		database.DB.Create(&m)
 		v := models.Version{ModelID: m.ID, VersionID: 10, Name: "OldVer", Description: "OldDesc"}
 		database.DB.Create(&v)

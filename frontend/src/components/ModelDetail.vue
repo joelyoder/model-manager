@@ -139,6 +139,8 @@
                 </div>
               </dd>
             </template>
+            <dt class="metadata-list__label">Weight</dt>
+            <dd class="metadata-list__value">{{ weightDisplay }}</dd>
             <template v-if="version.filePath">
               <dt class="metadata-list__label">File</dt>
               <dd class="metadata-list__value">
@@ -363,6 +365,16 @@
         <input v-model="version.trainedWords" class="form-control" />
       </div>
       <div class="mb-3">
+        <label class="form-label">Weight</label>
+        <input
+          v-model.number="model.weight"
+          type="number"
+          min="0"
+          step="0.05"
+          class="form-control"
+        />
+      </div>
+      <div class="mb-3">
         <label class="form-label">Upload Image File</label>
         <div class="input-group">
           <input type="file" @change="onImageFileChange" class="form-control" />
@@ -468,6 +480,14 @@ const imageFile = ref(null);
 const modelFile = ref(null);
 const galleryFile = ref(null);
 
+const normalizeWeight = (weight) => {
+  const num = Number(weight);
+  if (Number.isFinite(num) && num > 0) {
+    return num;
+  }
+  return 1;
+};
+
 const imageUrl = computed(() => {
   const path = version.value.imagePath || model.value.imagePath;
   if (!path) return null;
@@ -496,6 +516,11 @@ const galleryImages = computed(() => {
       parsedMeta: meta,
     };
   });
+});
+
+const weightDisplay = computed(() => {
+  const weight = normalizeWeight(model.value.weight);
+  return Number(weight.toFixed(2));
 });
 
 const fileName = computed(() => {
@@ -552,6 +577,7 @@ const fetchData = async () => {
   const { versionId } = route.params;
   const res = await axios.get(`/api/versions/${versionId}`);
   model.value = res.data.model;
+  model.value.weight = normalizeWeight(model.value.weight);
   version.value = res.data.version;
 };
 
@@ -673,6 +699,7 @@ const saveEdit = async () => {
   if (quill) {
     version.value.description = quill.root.innerHTML;
   }
+  model.value.weight = normalizeWeight(model.value.weight);
   await axios.put(`/api/models/${model.value.ID}`, model.value);
   try {
     await axios.put(`/api/versions/${version.value.ID}`, version.value);

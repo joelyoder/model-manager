@@ -40,7 +40,7 @@ func setupUploadTest(t *testing.T) string {
 func TestUploadVersionFile(t *testing.T) {
 	dir := setupUploadTest(t)
 
-	m := models.Model{Name: "test", Type: "Checkpoint"}
+	m := models.Model{Name: "test", Type: "Checkpoint", Weight: 1}
 	if err := database.DB.Create(&m).Error; err != nil {
 		t.Fatalf("create model: %v", err)
 	}
