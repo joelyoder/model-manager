@@ -518,8 +518,10 @@ const galleryImages = computed(() => {
   });
 });
 
+const normalizedWeight = computed(() => normalizeWeight(model.value.weight));
+
 const weightDisplay = computed(() => {
-  const weight = normalizeWeight(model.value.weight);
+  const weight = normalizedWeight.value;
   return Number(weight.toFixed(2));
 });
 
@@ -537,7 +539,8 @@ const fileBaseName = computed(() => {
 const loraTag = computed(() => {
   const base = fileBaseName.value;
   if (!base) return "";
-  return `<lora:${base}:1>`;
+  const weight = Number(normalizedWeight.value.toFixed(2));
+  return `<lora:${base}:${weight}>`;
 });
 
 const formattedTrainedWords = computed(() => {
