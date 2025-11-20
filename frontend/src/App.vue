@@ -60,43 +60,12 @@
       id="toast-container"
       class="toast-container position-fixed bottom-0 end-0 p-3"
     ></div>
-    <div class="modal fade" id="confirm-modal" tabindex="-1">
-      <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content">
-          <div class="modal-body">Are you sure?</div>
-          <div class="modal-footer">
-            <button
-              type="button"
-              class="btn btn-secondary"
-              data-bs-dismiss="modal"
-            >
-              Cancel
-            </button>
-            <button id="confirm-ok" type="button" class="btn btn-primary">
-              OK
-            </button>
-            <button
-              id="confirm-delete"
-              type="button"
-              class="btn btn-warning d-none"
-            >
-              Delete Version
-            </button>
-            <button
-              id="confirm-delete-files"
-              type="button"
-              class="btn btn-danger d-none"
-            >
-              Delete Version &amp; Files
-            </button>
-          </div>
-        </div>
-      </div>
-    </div>
+    <ConfirmModal />
   </div>
 </template>
 
 <script setup>
 import BackToTop from "./components/BackToTop.vue";
+import ConfirmModal from "./components/ConfirmModal.vue";
 import { Icon } from "@iconify/vue";
 </script>
