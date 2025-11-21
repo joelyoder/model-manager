@@ -203,6 +203,9 @@ const downloadSelectedVersion = async () => {
   try {
     await startDownload(selectedVersionId.value);
     emit("added");
+    modelUrl.value = "";
+    versions.value = [];
+    selectedVersionId.value = "";
   } finally {
     loading.value = false;
   }
