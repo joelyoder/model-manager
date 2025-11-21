@@ -10,6 +10,7 @@ const routes = [
   { path: "/utilities", component: Utilities },
   {
     path: "/model/:modelId/version/:versionId",
+    name: "ModelDetail",
     component: ModelDetail,
     props: true,
   },

@@ -128,7 +128,7 @@ const createManualModel = async () => {
 const goToModel = (modelId, versionId) => {
   router.push({
     name: "ModelDetail",
-    params: { versionId },
+    params: { modelId, versionId },
   });
 };
 
