@@ -18,7 +18,7 @@ export function useDownloads() {
         // Start polling progress
         progressInterval = setInterval(async () => {
             try {
-                const res = await axios.get("/api/sync/progress");
+                const res = await axios.get("/api/download/progress");
                 if (res.data && typeof res.data.progress === "number") {
                     downloadProgress.value = Math.round(res.data.progress);
                 }
@@ -56,7 +56,7 @@ export function useDownloads() {
     const cancelDownload = async () => {
         canceling.value = true;
         try {
-            await axios.post("/api/sync/cancel");
+            await axios.post("/api/download/cancel");
             cancelledByUser.value = true;
             showToast("Download cancelled", "info");
         } catch (err) {
