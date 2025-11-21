@@ -150,7 +150,15 @@ const toggleVersionNsfw = async (version) => {
   const updated = { ...version, nsfw: !version.nsfw };
   try {
     await axios.put(`/api/versions/${version.ID}`, updated);
-    version.nsfw = updated.nsfw;
+    
+    // Update the source of truth in models.value to trigger reactivity
+    const model = models.value.find(m => m.ID === version.modelId);
+    if (model && model.versions) {
+      const v = model.versions.find(v => v.ID === version.ID);
+      if (v) {
+        v.nsfw = updated.nsfw;
+      }
+    }
     showToast("NSFW status updated", "success");
   } catch (err) {
     console.error(err);
