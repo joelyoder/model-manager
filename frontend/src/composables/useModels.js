@@ -75,12 +75,16 @@ export function useModels() {
     const imageUrl = model.imagePath
       ? model.imagePath.replace(/^.*[\\/]backend[\\/]images/, "/images")
       : null;
-    const versions = (model.versions || []).map((v) => {
-      const vImage = v.imagePath
-        ? v.imagePath.replace(/^.*[\\/]backend[\\/]images/, "/images")
-        : null;
-      return { ...v, imageUrl: vImage };
+    const versionsMap = new Map();
+    (model.versions || []).forEach((v) => {
+      if (!versionsMap.has(v.ID)) {
+        const vImage = v.imagePath
+          ? v.imagePath.replace(/^.*[\\/]backend[\\/]images/, "/images")
+          : null;
+        versionsMap.set(v.ID, { ...v, imageUrl: vImage });
+      }
     });
+    const versions = Array.from(versionsMap.values());
     return {
       ...model,
       versions,
