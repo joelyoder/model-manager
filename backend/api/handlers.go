@@ -401,12 +401,23 @@ func SyncVersionByID(c *gin.Context) {
 			CivitID: modelData.ID,
 			Name:    modelData.Name,
 			Type:    modelData.Type,
+			Weight:  1,
 		}
 		database.DB.Create(&model)
-	} else if model.Type == "" {
-		// ensure type is populated for older records
-		model.Type = modelData.Type
-		database.DB.Save(&model)
+	} else {
+		updated := false
+		if model.Type == "" {
+			// ensure type is populated for older records
+			model.Type = modelData.Type
+			updated = true
+		}
+		if model.Weight <= 0 {
+			model.Weight = 1
+			updated = true
+		}
+		if updated {
+			database.DB.Save(&model)
+		}
 	}
 
 	var filePath, imagePath string
@@ -530,12 +541,23 @@ func processModel(item CivitModel, apiKey string) {
 			CivitID: item.ID,
 			Name:    item.Name,
 			Type:    item.Type,
+			Weight:  1,
 		}
 		database.DB.Create(&existing)
-	} else if existing.Type == "" {
-		// populate missing type on older records
-		existing.Type = item.Type
-		database.DB.Save(&existing)
+	} else {
+		updated := false
+		if existing.Type == "" {
+			// populate missing type on older records
+			existing.Type = item.Type
+			updated = true
+		}
+		if existing.Weight <= 0 {
+			existing.Weight = 1
+			updated = true
+		}
+		if updated {
+			database.DB.Save(&existing)
+		}
 	}
 
 	for _, version := range item.ModelVersions {
@@ -814,7 +836,7 @@ func DeleteVersion(c *gin.Context) {
 // model and version rows are written as a side effect.
 func CreateModel(c *gin.Context) {
 	civitID := -int(time.Now().UnixNano())
-	model := models.Model{CivitID: civitID, Name: "New Model", Type: "Checkpoint"}
+	model := models.Model{CivitID: civitID, Name: "New Model", Type: "Checkpoint", Weight: 1}
 	if err := database.DB.Create(&model).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create model"})
 		return
@@ -863,6 +885,10 @@ func UpdateModel(c *gin.Context) {
 	model.FilePath = input.FilePath
 	model.ImageWidth = input.ImageWidth
 	model.ImageHeight = input.ImageHeight
+	if input.Weight <= 0 {
+		input.Weight = 1
+	}
+	model.Weight = input.Weight
 
 	if err := database.DB.Save(&model).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update model"})

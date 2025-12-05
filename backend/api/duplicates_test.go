@@ -22,8 +22,8 @@ func TestGetDuplicateFilePaths(t *testing.T) {
 	gin.SetMode(gin.TestMode)
 	setupDuplicatesTest(t)
 
-	m1 := models.Model{CivitID: 1, Name: "m1"}
-	m2 := models.Model{CivitID: 2, Name: "m2"}
+	m1 := models.Model{CivitID: 1, Name: "m1", Weight: 1}
+	m2 := models.Model{CivitID: 2, Name: "m2", Weight: 1}
 	if err := database.DB.Create(&[]models.Model{m1, m2}).Error; err != nil {
 		t.Fatalf("create models: %v", err)
 	}
@@ -71,7 +71,7 @@ func TestGetDuplicateFilePaths(t *testing.T) {
 func TestGetDuplicateFilePathsNone(t *testing.T) {
 	gin.SetMode(gin.TestMode)
 	setupDuplicatesTest(t)
-	m := models.Model{CivitID: 1, Name: "m1"}
+	m := models.Model{CivitID: 1, Name: "m1", Weight: 1}
 	if err := database.DB.Create(&m).Error; err != nil {
 		t.Fatalf("create model: %v", err)
 	}

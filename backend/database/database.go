@@ -1,6 +1,7 @@
 package database
 
 import (
+	"log"
 	"os"
 
 	"gorm.io/driver/sqlite"
@@ -21,4 +22,8 @@ func ConnectDatabase() {
 	}
 	database.AutoMigrate(&models.Model{}, &models.Version{}, &models.VersionImage{}, &models.Setting{})
 	DB = database
+
+	if err := applyMigrations(database); err != nil {
+		log.Printf("failed to run database migrations: %v", err)
+	}
 }

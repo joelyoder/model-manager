@@ -117,11 +117,25 @@ func ImportModels(c *gin.Context) {
 				Tags:        tags,
 				Nsfw:        nsfw,
 				Description: r.Description,
+				Weight:      1,
 			}
 			if err = database.DB.Create(&model).Error; err != nil {
 				log.Printf("failed to create model %s: %v", r.Name, err)
 				failures = append(failures, fmt.Sprintf("%s: %v", r.Name, err))
 				continue
+			}
+		} else {
+			updated := false
+			if model.Weight <= 0 {
+				model.Weight = 1
+				updated = true
+			}
+			if updated {
+				if err = database.DB.Save(&model).Error; err != nil {
+					log.Printf("failed to update model %s weight: %v", r.Name, err)
+					failures = append(failures, fmt.Sprintf("%s: %v", r.Name, err))
+					continue
+				}
 			}
 		}
 

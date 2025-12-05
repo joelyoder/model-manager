@@ -17,7 +17,7 @@ func setupListDB(t *testing.T) {
 	t.Setenv("MODELS_DB_PATH", "file::memory:?cache=shared")
 	database.ConnectDatabase()
 
-	m1 := models.Model{CivitID: 1, Name: "Alpha"}
+	m1 := models.Model{CivitID: 1, Name: "Alpha", Weight: 1}
 	if err := database.DB.Create(&m1).Error; err != nil {
 		t.Fatalf("create model1: %v", err)
 	}
@@ -25,7 +25,7 @@ func setupListDB(t *testing.T) {
 		t.Fatalf("create version1: %v", err)
 	}
 
-	m2 := models.Model{CivitID: 2, Name: "Beta"}
+	m2 := models.Model{CivitID: 2, Name: "Beta", Weight: 1}
 	if err := database.DB.Create(&m2).Error; err != nil {
 		t.Fatalf("create model2: %v", err)
 	}
@@ -33,7 +33,7 @@ func setupListDB(t *testing.T) {
 		t.Fatalf("create version2: %v", err)
 	}
 
-	m3 := models.Model{CivitID: 3, Name: "Gamma"}
+	m3 := models.Model{CivitID: 3, Name: "Gamma", Weight: 1}
 	if err := database.DB.Create(&m3).Error; err != nil {
 		t.Fatalf("create model3: %v", err)
 	}
@@ -41,7 +41,7 @@ func setupListDB(t *testing.T) {
 		t.Fatalf("create version3: %v", err)
 	}
 
-	m4 := models.Model{CivitID: 4, Name: "Delta"}
+	m4 := models.Model{CivitID: 4, Name: "Delta", Weight: 1}
 	if err := database.DB.Create(&m4).Error; err != nil {
 		t.Fatalf("create model4: %v", err)
 	}
