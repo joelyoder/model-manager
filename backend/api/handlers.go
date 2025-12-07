@@ -583,7 +583,7 @@ func processModel(item CivitModel, apiKey string) {
 			selectedFile = selectModelFile(verData.ModelFiles)
 			downloadURL = selectedFile.DownloadURL
 			fileName := selectedFile.Name
-			destDir := "./backend/downloads/" + item.Type
+			destDir := filepath.Join(database.GetModelPath(), item.Type)
 			destPath := filepath.Join(destDir, fileName)
 			if _, err := os.Stat(destPath); err == nil {
 				ext := filepath.Ext(fileName)
@@ -628,7 +628,7 @@ func processModel(item CivitModel, apiKey string) {
 			CivitUpdatedAt:       verData.Updated,
 			SHA256:               fileSHA,
 			DownloadURL:          downloadURL,
-			FilePath:             filePath,
+			FilePath:             MakeRelativePath(filePath, database.GetModelPath()),
 		}
 		database.DB.Create(&versionRec)
 
@@ -644,13 +644,13 @@ func processModel(item CivitModel, apiKey string) {
 			if isVideoURL(imageURL) {
 				continue
 			}
-			imgPath, _, _ := DownloadFile(imageURL, "./backend/images/"+item.Type, fmt.Sprintf("%d_%d.jpg", verData.ID, idx))
+			imgPath, _, _ := DownloadFile(imageURL, database.GetImagePath(), fmt.Sprintf("%d_%d.jpg", verData.ID, idx))
 			w, h, _ := GetImageDimensions(imgPath)
 			hash, _ := FileHash(imgPath)
 			metaBytes, _ := json.Marshal(img.Meta)
 			database.DB.Create(&models.VersionImage{
 				VersionID: versionRec.ID,
-				Path:      imgPath,
+				Path:      MakeRelativePath(imgPath, database.GetImagePath()),
 				Width:     w,
 				Height:    h,
 				Hash:      hash,
@@ -663,16 +663,16 @@ func processModel(item CivitModel, apiKey string) {
 			}
 		}
 
-		versionRec.ImagePath = imagePath
+		versionRec.ImagePath = MakeRelativePath(imagePath, database.GetImagePath())
 		database.DB.Save(&versionRec)
 
 		if existing.ImagePath == "" && imagePath != "" {
-			existing.ImagePath = imagePath
+			existing.ImagePath = MakeRelativePath(imagePath, database.GetImagePath())
 			existing.ImageWidth = imgW
 			existing.ImageHeight = imgH
 		}
 		if existing.FilePath == "" && filePath != "" {
-			existing.FilePath = filePath
+			existing.FilePath = MakeRelativePath(filePath, database.GetModelPath())
 		}
 		database.DB.Save(&existing)
 	}
@@ -1079,9 +1079,9 @@ func UploadVersionFile(c *gin.Context) {
 		modelType = "Checkpoint"
 	}
 
-	destDir := "./backend/downloads/" + modelType
+	destDir := filepath.Join(database.GetModelPath(), modelType)
 	if kind == "image" {
-		destDir = "./backend/images/" + modelType
+		destDir = filepath.Join(database.GetImagePath(), modelType)
 	}
 	os.MkdirAll(destDir, os.ModePerm)
 	filename := filepath.Base(header.Filename)
@@ -1102,18 +1102,18 @@ func UploadVersionFile(c *gin.Context) {
 	absPath, _ := filepath.Abs(destPath)
 
 	if kind == "image" {
-		version.ImagePath = absPath
+		version.ImagePath = MakeRelativePath(absPath, database.GetImagePath())
 		if model.ImagePath == "" {
-			model.ImagePath = absPath
+			model.ImagePath = version.ImagePath
 			if w, h, err := GetImageDimensions(absPath); err == nil {
 				model.ImageWidth = w
 				model.ImageHeight = h
 			}
 		}
 	} else {
-		version.FilePath = absPath
+		version.FilePath = MakeRelativePath(absPath, database.GetModelPath())
 		if model.FilePath == "" {
-			model.FilePath = absPath
+			model.FilePath = version.FilePath
 		}
 	}
 
@@ -1166,7 +1166,7 @@ func UploadVersionImage(c *gin.Context) {
 		modelType = "Checkpoint"
 	}
 
-	destDir := "./backend/images/" + modelType
+	destDir := filepath.Join(database.GetImagePath(), modelType)
 	os.MkdirAll(destDir, os.ModePerm)
 	filename := filepath.Base(header.Filename)
 	destPath := filepath.Join(destDir, filename)
@@ -1191,7 +1191,7 @@ func UploadVersionImage(c *gin.Context) {
 
 	img := models.VersionImage{
 		VersionID: version.ID,
-		Path:      absPath,
+		Path:      MakeRelativePath(absPath, database.GetImagePath()),
 		Width:     w,
 		Height:    h,
 		Hash:      hash,

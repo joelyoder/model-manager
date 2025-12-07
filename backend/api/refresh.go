@@ -115,13 +115,15 @@ func refreshVersionData(id int, fields string) error {
 			if isVideoURL(imageURL) {
 				continue
 			}
-			imgPath, _, _ := DownloadFile(imageURL, "./backend/images/"+modelType, fmt.Sprintf("%d_%d.jpg", verData.ID, idx))
+			imgPath, _, _ := DownloadFile(imageURL, database.GetImagePath(), fmt.Sprintf("%d_%d.jpg", verData.ID, idx))
+			// Convert to relative path for storage
+			storedPath := MakeRelativePath(imgPath, database.GetImagePath())
 			w, h, _ := GetImageDimensions(imgPath)
 			hash, _ := FileHash(imgPath)
 			metaBytes, _ := json.Marshal(img.Meta)
 			database.DB.Create(&models.VersionImage{
 				VersionID: version.ID,
-				Path:      imgPath,
+				Path:      storedPath,
 				Width:     w,
 				Height:    h,
 				Hash:      hash,

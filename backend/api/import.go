@@ -167,7 +167,7 @@ func ImportModels(c *gin.Context) {
 		var filePath string
 		if r.Location != "" {
 			baseName := filepath.Base(r.Location)
-			cand := filepath.Join("./backend/downloads", r.ModelType, baseName)
+			cand := filepath.Join(database.GetModelPath(), r.ModelType, baseName)
 			if info, err := os.Stat(cand); err == nil && !info.IsDir() {
 				if abs, aerr := filepath.Abs(cand); aerr == nil {
 					filePath = abs
@@ -184,7 +184,7 @@ func ImportModels(c *gin.Context) {
 		var imgW, imgH int
 		if r.Location != "" {
 			base := strings.TrimSuffix(filepath.Base(r.Location), filepath.Ext(r.Location))
-			imgDir := filepath.Join("./backend/images", r.ModelType)
+			imgDir := filepath.Join(database.GetImagePath(), r.ModelType)
 			for _, ext := range []string{".jpg", ".jpeg", ".png"} {
 				cand := filepath.Join(imgDir, base+ext)
 				if info, err := os.Stat(cand); err == nil && !info.IsDir() {
@@ -217,8 +217,8 @@ func ImportModels(c *gin.Context) {
 			ModelURL:       r.URL,
 			SHA256:         r.SHA256Hash,
 			DownloadURL:    r.DownloadURL,
-			FilePath:       filePath,
-			ImagePath:      imagePath,
+			FilePath:       MakeRelativePath(filePath, database.GetModelPath()),
+			ImagePath:      MakeRelativePath(imagePath, database.GetImagePath()),
 			CivitCreatedAt: createdStr,
 		}
 		if err = database.DB.Create(&ver).Error; err != nil {

@@ -32,3 +32,21 @@ func GetAllSettings() ([]models.Setting, error) {
 	}
 	return settings, nil
 }
+
+// GetModelPath returns the configured path for storing models.
+// Defaults to "./backend/downloads" if not set.
+func GetModelPath() string {
+	if val := GetSettingValue("model_path"); val != "" {
+		return val
+	}
+	return "./backend/downloads"
+}
+
+// GetImagePath returns the configured path for storing images.
+// Defaults to "./backend/images" if not set.
+func GetImagePath() string {
+	if val := GetSettingValue("image_path"); val != "" {
+		return val
+	}
+	return "./backend/images"
+}
