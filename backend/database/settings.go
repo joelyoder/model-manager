@@ -3,12 +3,19 @@ package database
 import "model-manager/backend/models"
 
 // GetSettingValue returns the value for the given key or empty string if not found.
+// GetSettingValue returns the value for the given key or empty string if not found.
 func GetSettingValue(key string) string {
 	var s models.Setting
-	// Quote "key" to avoid keyword collision in some DBs
-	result := DB.Where("`key` = ?", key).Limit(1).Find(&s)
-	if result.Error == nil && result.RowsAffected > 0 {
+	// Use struct-based query to avoid SQL keyword issues
+	result := DB.Where(&models.Setting{Key: key}).First(&s)
+	if result.Error == nil {
+		// Log success for debugging (verbose, but necessary right now)
+		// fmt.Println("GetSettingValue", key, "found:", s.Value)
 		return s.Value
+	}
+	// Log missing key only if it's expected to be there (ignore some like migration keys if common)
+	if key == "model_path" || key == "image_path" {
+		// fmt.Println("GetSettingValue", key, "NOT FOUND, using default")
 	}
 	return ""
 }
@@ -16,8 +23,7 @@ func GetSettingValue(key string) string {
 // SetSettingValue creates or updates the setting with the specified key.
 func SetSettingValue(key, value string) error {
 	var s models.Setting
-	// Quote "key" to avoid keyword collision in some DBs
-	if err := DB.First(&s, "`key` = ?", key).Error; err == nil {
+	if err := DB.Where(&models.Setting{Key: key}).First(&s).Error; err == nil {
 		s.Value = value
 		return DB.Save(&s).Error
 	}
