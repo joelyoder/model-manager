@@ -32,7 +32,7 @@ var (
 // number of bytes written. It performs filesystem writes as a side effect.
 func DownloadFile(url, destDir, filename string) (string, int64, error) {
 	apiToken := getCivitaiAPIKey()
-	log.Printf("Downloading %s", url)
+	log.Printf("Downloading %s to dir: %s as %s", url, destDir, filename)
 
 	fullPath := filepath.Join(destDir, filename)
 	absPath, err := filepath.Abs(fullPath)
