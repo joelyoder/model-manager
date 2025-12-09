@@ -434,7 +434,7 @@ func SyncVersionByID(c *gin.Context) {
 		selectedFile = selectModelFile(verData.ModelFiles)
 		downloadURL = selectedFile.DownloadURL
 		fileName := selectedFile.Name
-		destDir := "./backend/downloads/" + modelType
+		destDir := filepath.Join(database.GetModelPath(), modelType)
 		destPath := filepath.Join(destDir, fileName)
 		if shouldDownload {
 			if _, err := os.Stat(destPath); err == nil {
@@ -482,7 +482,7 @@ func SyncVersionByID(c *gin.Context) {
 		CivitUpdatedAt:       verData.Updated,
 		SHA256:               fileSHA,
 		DownloadURL:          downloadURL,
-		FilePath:             filePath,
+		FilePath:             MakeRelativePath(filePath, database.GetModelPath()),
 	}
 	database.DB.Create(&versionRecord)
 
@@ -498,13 +498,13 @@ func SyncVersionByID(c *gin.Context) {
 		if isVideoURL(imageURL) {
 			continue
 		}
-		imgPath, _, _ := DownloadFile(imageURL, "./backend/images/"+modelType, fmt.Sprintf("%d_%d.jpg", verData.ID, idx))
+		imgPath, _, _ := DownloadFile(imageURL, database.GetImagePath(), fmt.Sprintf("%d_%d.jpg", verData.ID, idx))
 		w, h, _ := GetImageDimensions(imgPath)
 		hash, _ := FileHash(imgPath)
 		metaBytes, _ := json.Marshal(img.Meta)
 		database.DB.Create(&models.VersionImage{
 			VersionID: versionRecord.ID,
-			Path:      imgPath,
+			Path:      MakeRelativePath(imgPath, database.GetImagePath()),
 			Width:     w,
 			Height:    h,
 			Hash:      hash,
