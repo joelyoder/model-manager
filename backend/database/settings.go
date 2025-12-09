@@ -5,7 +5,8 @@ import "model-manager/backend/models"
 // GetSettingValue returns the value for the given key or empty string if not found.
 func GetSettingValue(key string) string {
 	var s models.Setting
-	result := DB.Where("key = ?", key).Limit(1).Find(&s)
+	// Quote "key" to avoid keyword collision in some DBs
+	result := DB.Where("`key` = ?", key).Limit(1).Find(&s)
 	if result.Error == nil && result.RowsAffected > 0 {
 		return s.Value
 	}
@@ -15,7 +16,8 @@ func GetSettingValue(key string) string {
 // SetSettingValue creates or updates the setting with the specified key.
 func SetSettingValue(key, value string) error {
 	var s models.Setting
-	if err := DB.First(&s, "key = ?", key).Error; err == nil {
+	// Quote "key" to avoid keyword collision in some DBs
+	if err := DB.First(&s, "`key` = ?", key).Error; err == nil {
 		s.Value = value
 		return DB.Save(&s).Error
 	}
