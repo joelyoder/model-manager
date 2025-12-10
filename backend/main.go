@@ -12,6 +12,7 @@ import (
 )
 
 func main() {
+	log.Println("=== MODEL MANAGER STARTING (build 2024-12-09-v2) ===")
 	godotenv.Load()
 	database.ConnectDatabase()
 
