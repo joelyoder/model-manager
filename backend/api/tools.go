@@ -44,21 +44,32 @@ func MigratePaths(c *gin.Context) {
 	if err := database.DB.Find(&modelsList).Error; err == nil {
 		for _, m := range modelsList {
 			updated := false
-			if m.FilePath != "" && isAbsolutePath(m.FilePath) {
-				newPath := MakeRelativePath(m.FilePath, modelRoot)
-				if newPath != m.FilePath {
-					m.FilePath = newPath
-					updated = true
+			if m.FilePath != "" {
+				isAbs := isAbsolutePath(m.FilePath)
+				log.Printf("Model %d FilePath: %s (isAbs: %v)", m.ID, m.FilePath, isAbs)
+				if isAbs {
+					newPath := MakeRelativePath(m.FilePath, modelRoot)
+					log.Printf("  -> Converted to: %s", newPath)
+					if newPath != m.FilePath {
+						m.FilePath = newPath
+						updated = true
+					}
 				}
 			}
-			if m.ImagePath != "" && isAbsolutePath(m.ImagePath) {
-				newPath := MakeRelativePath(m.ImagePath, imageRoot)
-				if newPath != m.ImagePath {
-					m.ImagePath = newPath
-					updated = true
+			if m.ImagePath != "" {
+				isAbs := isAbsolutePath(m.ImagePath)
+				log.Printf("Model %d ImagePath: %s (isAbs: %v)", m.ID, m.ImagePath, isAbs)
+				if isAbs {
+					newPath := MakeRelativePath(m.ImagePath, imageRoot)
+					log.Printf("  -> Converted to: %s", newPath)
+					if newPath != m.ImagePath {
+						m.ImagePath = newPath
+						updated = true
+					}
 				}
 			}
 			if updated {
+				log.Printf("Saving updated model %d", m.ID)
 				database.DB.Save(&m)
 			}
 		}
