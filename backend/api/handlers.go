@@ -517,16 +517,16 @@ func SyncVersionByID(c *gin.Context) {
 		}
 	}
 
-	versionRecord.ImagePath = imagePath
+	versionRecord.ImagePath = MakeRelativePath(imagePath, database.GetImagePath())
 	database.DB.Save(&versionRecord)
 
 	if model.ImagePath == "" && imagePath != "" {
-		model.ImagePath = imagePath
+		model.ImagePath = MakeRelativePath(imagePath, database.GetImagePath())
 		model.ImageWidth = imgW
 		model.ImageHeight = imgH
 	}
 	if model.FilePath == "" && filePath != "" {
-		model.FilePath = filePath
+		model.FilePath = MakeRelativePath(filePath, database.GetModelPath())
 	}
 	database.DB.Save(&model)
 
