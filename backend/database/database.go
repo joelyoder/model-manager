@@ -4,9 +4,10 @@ import (
 	"log"
 	"os"
 
+	"model-manager/backend/models"
+
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
-	"model-manager/backend/models"
 )
 
 var DB *gorm.DB
@@ -16,6 +17,7 @@ func ConnectDatabase() {
 	if path == "" {
 		path = "backend/models.db"
 	}
+	log.Printf("Connecting to database at: %s", path)
 	database, err := gorm.Open(sqlite.Open(path), &gorm.Config{})
 	if err != nil {
 		panic("Failed to connect to database")
@@ -26,4 +28,8 @@ func ConnectDatabase() {
 	if err := applyMigrations(database); err != nil {
 		log.Printf("failed to run database migrations: %v", err)
 	}
+
+	// Log configured paths at startup for debugging
+	log.Printf("Configured model_path: '%s'", GetModelPath())
+	log.Printf("Configured image_path: '%s'", GetImagePath())
 }
