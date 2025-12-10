@@ -1,21 +1,18 @@
 package database
 
-import "model-manager/backend/models"
+import (
+	"model-manager/backend/models"
 
-// GetSettingValue returns the value for the given key or empty string if not found.
+	"gorm.io/gorm"
+)
+
 // GetSettingValue returns the value for the given key or empty string if not found.
 func GetSettingValue(key string) string {
 	var s models.Setting
 	// Use struct-based query to avoid SQL keyword issues
 	result := DB.Where(&models.Setting{Key: key}).First(&s)
 	if result.Error == nil {
-		// Log success for debugging (verbose, but necessary right now)
-		// fmt.Println("GetSettingValue", key, "found:", s.Value)
 		return s.Value
-	}
-	// Log missing key only if it's expected to be there (ignore some like migration keys if common)
-	if key == "model_path" || key == "image_path" {
-		// fmt.Println("GetSettingValue", key, "NOT FOUND, using default")
 	}
 	return ""
 }
@@ -23,9 +20,11 @@ func GetSettingValue(key string) string {
 // SetSettingValue creates or updates the setting with the specified key.
 func SetSettingValue(key, value string) error {
 	var s models.Setting
-	if err := DB.Where(&models.Setting{Key: key}).First(&s).Error; err == nil {
+	// Use Unscoped to find even soft-deleted records to avoid unique index violation on creation
+	if err := DB.Unscoped().Where(&models.Setting{Key: key}).First(&s).Error; err == nil {
 		s.Value = value
-		return DB.Save(&s).Error
+		s.DeletedAt = gorm.DeletedAt{} // Restore if deleted
+		return DB.Unscoped().Save(&s).Error
 	}
 	s.Key = key
 	s.Value = value

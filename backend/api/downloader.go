@@ -32,7 +32,7 @@ var (
 // number of bytes written. It performs filesystem writes as a side effect.
 func DownloadFile(url, destDir, filename string) (string, int64, error) {
 	apiToken := getCivitaiAPIKey()
-	log.Printf("Downloading %s to dir: %s as %s", url, destDir, filename)
+	log.Printf("Downloading %s", url)
 
 	fullPath := filepath.Join(destDir, filename)
 	absPath, err := filepath.Abs(fullPath)
@@ -46,12 +46,14 @@ func DownloadFile(url, destDir, filename string) (string, int64, error) {
 	if isModelDownload {
 		ctx, cancel = context.WithCancel(context.Background())
 	}
-
-	req, err := http.NewRequestWithContext(ctx, "GET", url, nil)
-	if err != nil {
+	defer func() {
 		if cancel != nil {
 			cancel()
 		}
+	}()
+
+	req, err := http.NewRequestWithContext(ctx, "GET", url, nil)
+	if err != nil {
 		return "", 0, err
 	}
 	var downloadToken *struct{}
@@ -70,9 +72,6 @@ func DownloadFile(url, destDir, filename string) (string, int64, error) {
 
 	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
-		if cancel != nil {
-			cancel()
-		}
 		return "", 0, err
 	}
 	defer resp.Body.Close()
@@ -81,9 +80,6 @@ func DownloadFile(url, destDir, filename string) (string, int64, error) {
 
 	out, err := os.Create(absPath)
 	if err != nil {
-		if cancel != nil {
-			cancel()
-		}
 		return "", 0, err
 	}
 	defer out.Close()
