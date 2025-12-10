@@ -46,8 +46,10 @@ func MakeRelativePath(absPath, basePath string) string {
 	}
 
 	// Normalize both paths to forward slashes for comparison
-	normalizedAbs := filepath.ToSlash(absPath)
-	normalizedBase := filepath.ToSlash(basePath)
+	// Note: filepath.ToSlash only converts the current OS separator, so on Linux
+	// it won't convert Windows backslashes. We must explicitly replace them.
+	normalizedAbs := strings.ReplaceAll(absPath, "\\", "/")
+	normalizedBase := strings.ReplaceAll(basePath, "\\", "/")
 
 	// Try standard filepath.Rel first (works when both are on same OS format)
 	absBase, err := filepath.Abs(basePath)
