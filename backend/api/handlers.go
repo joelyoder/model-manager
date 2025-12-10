@@ -498,7 +498,7 @@ func SyncVersionByID(c *gin.Context) {
 		if isVideoURL(imageURL) {
 			continue
 		}
-		imgPath, _, _ := DownloadFile(imageURL, database.GetImagePath(), fmt.Sprintf("%d_%d.jpg", verData.ID, idx))
+		imgPath, _, _ := DownloadFile(imageURL, filepath.Join(database.GetImagePath(), modelType), fmt.Sprintf("%d_%d.jpg", verData.ID, idx))
 		w, h, _ := GetImageDimensions(imgPath)
 		hash, _ := FileHash(imgPath)
 		metaBytes, _ := json.Marshal(img.Meta)
