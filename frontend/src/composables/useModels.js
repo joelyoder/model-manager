@@ -75,6 +75,7 @@ export function useModels() {
   // Handles old absolute paths (with /backend/images) and new relative paths
   const normalizeImagePath = (path) => {
     if (!path) return null;
+    console.log("Normalizing path:", path);
     // Normalize backslashes to forward slashes
     let normalized = path.replace(/\\/g, "/");
     // If it's an old absolute path containing /backend/images, extract the relative part
