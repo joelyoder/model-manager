@@ -79,26 +79,42 @@ func TestUploadVersionFile(t *testing.T) {
 	if err := json.Unmarshal(rec.Body.Bytes(), &resp); err != nil {
 		t.Fatalf("decode: %v", err)
 	}
-	expected := filepath.Join(dir, "backend", "downloads", "Checkpoint", "file.txt")
-	if resp.Path != expected {
-		t.Fatalf("path = %s, want %s", resp.Path, expected)
+	// The API returns the absolute path for convenience
+	// expectedAbs := filepath.Join(dir, "backend", "downloads", "Checkpoint", "file.txt")
+	// Correction: UploadVersionFile now writes to configurable paths.
+	// In test, defaults are ./backend/downloads (config not set).
+	// But handlers.go:1082 calls filepath.Join(database.GetModelPath(), ...).
+	// In setupUploadTest, we didn't set model_path, so it defaults to "./backend/downloads".
+	// However, we changed handling to store relative path in DB.
+
+	expectedAbs := filepath.Join(dir, "backend", "downloads", "Checkpoint", "file.txt")
+	if resp.Path != expectedAbs {
+		t.Fatalf("resp path = %s, want %s", resp.Path, expectedAbs)
 	}
 	if _, err := os.Stat(resp.Path); err != nil {
 		t.Fatalf("uploaded file missing: %v", err)
 	}
+
+	// Check DB - should be relative
+	expectedRel := filepath.Join("Checkpoint", "file.txt")
+	// MakeRelativePath normalizes to slash, so we should expect forward slashes if not on windows or if we enforced it
+	// My MakeRelativePath uses filepath.ToSlash. on Windows this is forward slash.
+	expectedRelSlash := filepath.ToSlash(expectedRel)
+
 	var vdb models.Version
 	if err := database.DB.First(&vdb, v.ID).Error; err != nil {
 		t.Fatalf("version from db: %v", err)
 	}
-	if vdb.FilePath != expected {
-		t.Errorf("version filepath = %s, want %s", vdb.FilePath, expected)
+	// normalize DB path for comparison just in case
+	if filepath.ToSlash(vdb.FilePath) != expectedRelSlash {
+		t.Errorf("version filepath = %s, want %s", vdb.FilePath, expectedRelSlash)
 	}
 	var mdb models.Model
 	if err := database.DB.First(&mdb, m.ID).Error; err != nil {
 		t.Fatalf("model from db: %v", err)
 	}
-	if mdb.FilePath != expected {
-		t.Errorf("model filepath = %s, want %s", mdb.FilePath, expected)
+	if filepath.ToSlash(mdb.FilePath) != expectedRelSlash {
+		t.Errorf("model filepath = %s, want %s", mdb.FilePath, expectedRelSlash)
 	}
 }
 

@@ -71,16 +71,30 @@ export function useModels() {
 
   const debouncedSave = debounce(saveState, 300);
 
+  // Helper to normalize image paths for display
+  // Handles old absolute paths (with /backend/images) and new relative paths
+  const normalizeImagePath = (path) => {
+    if (!path) return null;
+    console.log("Normalizing path:", path);
+    // Normalize backslashes to forward slashes
+    let normalized = path.replace(/\\/g, "/");
+    // If it's an old absolute path containing /backend/images, extract the relative part
+    if (normalized.includes("/backend/images/")) {
+      normalized = normalized.replace(/^.*\/backend\/images/, "/images");
+    }
+    // If path doesn't start with / or http, prepend /images/
+    if (!normalized.startsWith("/") && !normalized.startsWith("http")) {
+      normalized = "/images/" + normalized;
+    }
+    return normalized;
+  };
+
   const mapModel = (model) => {
-    const imageUrl = model.imagePath
-      ? model.imagePath.replace(/^.*[\\/]backend[\\/]images/, "/images")
-      : null;
+    const imageUrl = normalizeImagePath(model.imagePath);
     const versionsMap = new Map();
     (model.versions || []).forEach((v) => {
       if (!versionsMap.has(v.ID)) {
-        const vImage = v.imagePath
-          ? v.imagePath.replace(/^.*[\\/]backend[\\/]images/, "/images")
-          : null;
+        const vImage = normalizeImagePath(v.imagePath);
         versionsMap.set(v.ID, { ...v, imageUrl: vImage });
       }
     });

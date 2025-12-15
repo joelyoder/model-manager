@@ -147,6 +147,23 @@
         </div>
       </div>
     </div>
+    <div class="card card-body mb-4">
+      <h3>Database Maintenance</h3>
+      <h4 class="h5 my-3">Migrate Paths</h4>
+      <p class="text-white-50">
+        Convert absolute paths in the database to relative paths based on the current
+        configured Model and Image paths. This is useful for making your library portable.
+      </p>
+      <div class="mb-3">
+        <button
+          @click="migratePaths"
+          class="btn btn-warning"
+          :disabled="migrating"
+        >
+          {{ migrating ? "Migrating..." : "Migrate Paths to Relative" }}
+        </button>
+      </div>
+    </div>
     <div class="card card-body">
       <h3>Library Cleanup</h3>
       <h4 class="h5 my-3">Find Orphaned Model Files</h4>
@@ -418,6 +435,24 @@ const orphanFiles = ref([]);
 const searchDone = ref(false);
 const duplicatePaths = ref([]);
 const dupSearchDone = ref(false);
+
+const migrating = ref(false);
+
+const migratePaths = async () => {
+    if (!confirm("Are you sure you want to migrate paths? This operation modifies the database.")) {
+        return;
+    }
+    migrating.value = true;
+    try {
+        await axios.post("/api/tools/migrate-paths");
+        showToast("Path migration complete", "success");
+    } catch (err) {
+        console.error(err);
+        showToast("Path migration failed", "danger");
+    } finally {
+        migrating.value = false;
+    }
+};
 
 const onFileChange = (e) => {
   importFile.value = e.target.files[0] || null;

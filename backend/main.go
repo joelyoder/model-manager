@@ -12,6 +12,7 @@ import (
 )
 
 func main() {
+	log.Println("=== MODEL MANAGER STARTING (build 2024-12-09-v2) ===")
 	godotenv.Load()
 	database.ConnectDatabase()
 
@@ -19,8 +20,28 @@ func main() {
 	r.SetTrustedProxies(nil) // safe for local dev
 
 	// Serve static assets
-	r.Static("/images", "./backend/images")
-	r.Static("/downloads", "./backend/downloads")
+	// Serve static assets
+	// We use custom handlers for /images and /downloads to support dynamic paths via settings
+	r.GET("/images/*filepath", func(c *gin.Context) {
+		relativePath := c.Param("filepath")
+		fullPath := api.ResolveImagePath(relativePath)
+		if _, err := os.Stat(fullPath); os.IsNotExist(err) {
+			c.Status(404)
+			return
+		}
+		c.File(fullPath)
+	})
+
+	r.GET("/downloads/*filepath", func(c *gin.Context) {
+		relativePath := c.Param("filepath")
+		fullPath := api.ResolveModelPath(relativePath)
+		if _, err := os.Stat(fullPath); os.IsNotExist(err) {
+			c.Status(404)
+			return
+		}
+		c.File(fullPath)
+	})
+
 	r.Static("/assets", "./frontend/dist/assets")
 
 	// API routes
@@ -55,6 +76,7 @@ func main() {
 		apiGroup.GET("/duplicate-file-paths", api.GetDuplicateFilePaths)
 		apiGroup.GET("/settings", api.GetSettings)
 		apiGroup.POST("/settings", api.UpdateSetting)
+		apiGroup.POST("/tools/migrate-paths", api.MigratePaths)
 	}
 
 	// Vue SPA fallback for all other routes (no wildcard)

@@ -1,12 +1,17 @@
 package database
 
-import "model-manager/backend/models"
+import (
+	"model-manager/backend/models"
+
+	"gorm.io/gorm"
+)
 
 // GetSettingValue returns the value for the given key or empty string if not found.
 func GetSettingValue(key string) string {
 	var s models.Setting
-	result := DB.Where("key = ?", key).Limit(1).Find(&s)
-	if result.Error == nil && result.RowsAffected > 0 {
+	// Use struct-based query to avoid SQL keyword issues
+	result := DB.Where(&models.Setting{Key: key}).First(&s)
+	if result.Error == nil {
 		return s.Value
 	}
 	return ""
@@ -15,9 +20,11 @@ func GetSettingValue(key string) string {
 // SetSettingValue creates or updates the setting with the specified key.
 func SetSettingValue(key, value string) error {
 	var s models.Setting
-	if err := DB.First(&s, "key = ?", key).Error; err == nil {
+	// Use Unscoped to find even soft-deleted records to avoid unique index violation on creation
+	if err := DB.Unscoped().Where(&models.Setting{Key: key}).First(&s).Error; err == nil {
 		s.Value = value
-		return DB.Save(&s).Error
+		s.DeletedAt = gorm.DeletedAt{} // Restore if deleted
+		return DB.Unscoped().Save(&s).Error
 	}
 	s.Key = key
 	s.Value = value
@@ -31,4 +38,22 @@ func GetAllSettings() ([]models.Setting, error) {
 		return nil, err
 	}
 	return settings, nil
+}
+
+// GetModelPath returns the configured path for storing models.
+// Defaults to "./backend/downloads" if not set.
+func GetModelPath() string {
+	if val := GetSettingValue("model_path"); val != "" {
+		return val
+	}
+	return "./backend/downloads"
+}
+
+// GetImagePath returns the configured path for storing images.
+// Defaults to "./backend/images" if not set.
+func GetImagePath() string {
+	if val := GetSettingValue("image_path"); val != "" {
+		return val
+	}
+	return "./backend/images"
 }

@@ -49,7 +49,7 @@ func GetOrphanedFiles(c *gin.Context) {
 	}
 
 	var orphans []string
-	root := filepath.Join("backend", "downloads")
+	root := database.GetModelPath()
 	absRoot, err := filepath.Abs(root)
 	if err != nil {
 		log.Printf("failed to resolve downloads directory %s: %v", root, err)

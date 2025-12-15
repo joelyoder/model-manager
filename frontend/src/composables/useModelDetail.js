@@ -16,11 +16,33 @@ export function useModelDetail() {
         return 1;
     };
 
+    const normalizeImagePath = (path) => {
+        if (!path) return null;
+        let normalized = path.replace(/\\/g, "/");
+        if (normalized.includes("/backend/images/")) {
+            normalized = normalized.replace(/^.*\/backend\/images/, "/images");
+        }
+        if (!normalized.startsWith("/") && !normalized.startsWith("http")) {
+            normalized = "/images/" + normalized;
+        }
+        return normalized;
+    };
+
     const fetchData = async (versionId) => {
         const res = await axios.get(`/api/versions/${versionId}`);
         model.value = res.data.model;
         model.value.weight = normalizeWeight(model.value.weight);
-        version.value = res.data.version;
+        model.value.imagePath = normalizeImagePath(model.value.imagePath);
+
+        const v = res.data.version;
+        v.imagePath = normalizeImagePath(v.imagePath);
+        if (v.images && Array.isArray(v.images)) {
+            v.images = v.images.map(img => ({
+                ...img,
+                path: normalizeImagePath(img.path)
+            }));
+        }
+        version.value = v;
     };
 
     const toggleNsfw = async () => {
