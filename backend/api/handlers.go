@@ -129,6 +129,7 @@ func GetModels(c *gin.Context) {
 	}
 
 	q.Order("models.id DESC").Limit(limit).Offset((page - 1) * limit).Find(&modelsList)
+	populateClientStatus(modelsList)
 	c.JSON(http.StatusOK, modelsList)
 }
 
@@ -206,6 +207,11 @@ func GetModel(c *gin.Context) {
 		c.JSON(http.StatusNotFound, gin.H{"error": "Model not found"})
 		return
 	}
+
+	// Populate ClientStatus using helper
+	tmp := []models.Model{model}
+	populateClientStatus(tmp)
+	model = tmp[0]
 
 	c.JSON(http.StatusOK, model)
 }
@@ -764,6 +770,12 @@ func GetVersion(c *gin.Context) {
 		return
 	}
 
+	// Populate ClientStatus for the single version
+	var cf models.ClientFile
+	if err := database.DB.Where("model_version_id = ?", version.ID).First(&cf).Error; err == nil {
+		version.ClientStatus = cf.Status
+	}
+
 	c.JSON(http.StatusOK, gin.H{"model": model, "version": version})
 }
 
@@ -1253,4 +1265,39 @@ func DeleteVersionImage(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, gin.H{"message": "Image deleted"})
+}
+
+func populateClientStatus(modelsList []models.Model) {
+	var versionIDs []uint
+	for i := range modelsList {
+		for j := range modelsList[i].Versions {
+			versionIDs = append(versionIDs, modelsList[i].Versions[j].ID)
+		}
+	}
+	if len(versionIDs) == 0 {
+		return
+	}
+
+	var clientFiles []models.ClientFile
+	database.DB.Where("model_version_id IN ?", versionIDs).Find(&clientFiles)
+
+	statusMap := make(map[uint]string)
+	for _, cf := range clientFiles {
+		// Prioritize "installed" over "pending" if multiple clients exist
+		if current, ok := statusMap[cf.ModelVersionID]; ok {
+			if current != "installed" && cf.Status == "installed" {
+				statusMap[cf.ModelVersionID] = "installed"
+			}
+		} else {
+			statusMap[cf.ModelVersionID] = cf.Status
+		}
+	}
+
+	for i := range modelsList {
+		for j := range modelsList[i].Versions {
+			if status, ok := statusMap[modelsList[i].Versions[j].ID]; ok {
+				modelsList[i].Versions[j].ClientStatus = status
+			}
+		}
+	}
 }

@@ -25,4 +25,7 @@ type Version struct {
 	FilePath             string  `json:"filePath"`
 
 	Images []VersionImage `json:"images"`
+
+	// ClientStatus is a calculated field for the default client, not stored in DB
+	ClientStatus string `gorm:"-" json:"clientStatus"`
 }

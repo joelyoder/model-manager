@@ -12,6 +12,16 @@
         <span class="ms-1 badge rounded-pill text-bg-success">{{
           version.baseModel
         }}</span>
+        <span
+          v-if="version.clientStatus === 'installed'"
+          class="ms-1 badge rounded-pill text-bg-success"
+          >Client</span
+        >
+        <span
+          v-else-if="version.clientStatus === 'pending'"
+          class="ms-1 badge rounded-pill text-bg-warning"
+          >Syncing...</span
+        >
         <button
           @click.stop="$emit('toggleNsfw', version)"
           class="btn btn-sm position-absolute top-0 end-0 m-2"
@@ -99,6 +109,25 @@
       >
         More details
       </button>
+
+      <button
+        v-if="version.clientStatus === 'installed'"
+        @click="dispatch('delete')"
+        :disabled="isDispatching"
+        class="btn btn-outline-danger btn-sm"
+        title="Remove from Client"
+      >
+        <i class="bi bi-pc-display"></i> Remove
+      </button>
+      <button
+        v-else-if="!version.clientStatus"
+        @click="dispatch('download')"
+        :disabled="isDispatching"
+        class="btn btn-outline-info btn-sm"
+        title="Push to Client"
+      >
+        <i class="bi bi-pc-display"></i> Push
+      </button>
       <button
         @click="$emit('delete', version.ID)"
         class="btn btn-outline-danger ms-auto"
@@ -110,11 +139,18 @@
 </template>
 
 <script setup>
-defineProps({
+import { useRemote } from '../composables/useRemote';
+
+const props = defineProps({
   model: Object,
   version: Object,
   imageUrl: String,
 });
 
-defineEmits(["click", "delete", "toggleNsfw"]);
+const emit = defineEmits(["click", "delete", "toggleNsfw"]);
+
+const { dispatchAction, isDispatching } = useRemote();
+const dispatch = (action) => {
+  dispatchAction(action, props.model, props.version);
+};
 </script>
