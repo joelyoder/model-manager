@@ -33,6 +33,7 @@ SERVER_URL = CONFIG.get('server_url')
 API_KEY = CONFIG.get('api_key')
 ROOT_PATH = CONFIG.get('root_path')
 CLIENT_ID = CONFIG.get('client_id')
+CIVITAI_API_KEY = CONFIG.get('civitai_api_key')
 
 if not all([SERVER_URL, API_KEY, ROOT_PATH, CLIENT_ID]):
     print("Missing configuration values in config.json")
@@ -81,17 +82,37 @@ def sanitize_path(subdirectory, filename):
 
 def handle_download(ws_app, data):
     url = data.get('url')
-    filename = data.get('filename')
-    subdirectory = data.get('subdirectory', '')
     model_version_id = data.get('model_version_id')
 
+    # Resolve URL against server
+    if url and url.startswith('/'):
+        u = urlparse(SERVER_URL)
+        scheme = 'https' if u.scheme == 'wss' else 'http'
+        base_url = f"{scheme}://{u.netloc}"
+        url = base_url + url
+
     try:
-        target_path = sanitize_path(subdirectory, filename)
-        os.makedirs(os.path.dirname(target_path), exist_ok=True)
+        # Determine target path from URL (remove /downloads/ prefix)
+        rel_path = data.get('url', '').replace('/downloads/', '', 1)
+        rel_path = rel_path.lstrip('/').lstrip('\\')
         
+        from urllib.parse import unquote
+        rel_path = unquote(rel_path)
+        
+        # Security check - basic
+        if '..' in rel_path:
+             raise ValueError("Invalid path components")
+             
+        target_path = os.path.join(ROOT_PATH, rel_path)
+        target_path = os.path.abspath(target_path)
+        
+        if not target_path.startswith(os.path.abspath(ROOT_PATH)):
+             raise ValueError("Path traversal attempt")
+             
+        os.makedirs(os.path.dirname(target_path), exist_ok=True)
         print(f"Downloading {url} to {target_path}...")
         
-        # Stream download
+        # Download
         with requests.get(url, stream=True) as r:
             r.raise_for_status()
             with open(target_path, 'wb') as f:
@@ -109,15 +130,22 @@ def handle_download(ws_app, data):
         
     except Exception as e:
         print(f"Download invalid: {e}")
-        # Could send error back if needed
 
 def handle_delete(ws_app, data):
-    filename = data.get('filename')
-    subdirectory = data.get('subdirectory', '')
+    filename = data.get('filename') # Now contains relative path
     model_version_id = data.get('model_version_id')
     
     try:
-        target_path = sanitize_path(subdirectory, filename)
+        # Security check
+        if '..' in filename:
+             raise ValueError("Invalid path components")
+
+        target_path = os.path.join(ROOT_PATH, filename)
+        target_path = os.path.abspath(target_path)
+        
+        if not target_path.startswith(os.path.abspath(ROOT_PATH)):
+            raise ValueError("Path traversal attempt detected")
+
         if os.path.exists(target_path):
             os.remove(target_path)
             print(f"Deleted {target_path}")
@@ -132,6 +160,7 @@ def handle_delete(ws_app, data):
             
     except Exception as e:
         print(f"Delete failed: {e}")
+
 
 def on_error(ws_app, error):
     print(f"WebSocket Error: {error}")

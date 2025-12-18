@@ -5,6 +5,7 @@ import "gorm.io/gorm"
 type Version struct {
 	gorm.Model
 	ModelID              uint    `gorm:"index" json:"modelId"`
+	ParentModel          Model   `json:"model" gorm:"foreignKey:ModelID"`
 	VersionID            int     `gorm:"uniqueIndex" json:"versionId"`
 	Name                 string  `gorm:"index" json:"name"`
 	BaseModel            string  `json:"baseModel"`

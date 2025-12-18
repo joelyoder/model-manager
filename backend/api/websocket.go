@@ -15,8 +15,8 @@ import (
 )
 
 var (
-	// Clients maps ClientID -> WebSocket connection
-	Clients      = make(map[string]*websocket.Conn)
+	// Clients maps ClientID -> thread-safe connection wrapper
+	Clients      = make(map[string]*ClientConnection)
 	ClientsMutex sync.Mutex
 	upgrader     = websocket.Upgrader{
 		CheckOrigin: func(r *http.Request) bool {
@@ -24,6 +24,17 @@ var (
 		},
 	}
 )
+
+type ClientConnection struct {
+	Conn *websocket.Conn
+	mu   sync.Mutex
+}
+
+func (c *ClientConnection) WriteJSON(v interface{}) error {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	return c.Conn.WriteJSON(v)
+}
 
 type ClientMessage struct {
 	Type           string `json:"type"` // "complete", "deleted", "error"
@@ -63,9 +74,11 @@ func HandleWebSocket(c *gin.Context) {
 	}
 	defer conn.Close()
 
+	clientConn := &ClientConnection{Conn: conn}
+
 	// Register client
 	ClientsMutex.Lock()
-	Clients[clientID] = conn
+	Clients[clientID] = clientConn
 	ClientsMutex.Unlock()
 
 	log.Printf("Client connected: %s", clientID)
@@ -124,14 +137,14 @@ func handleClientMessage(msg ClientMessage) {
 // Helper to send to specific client
 func SendToClient(clientID string, payload interface{}) error {
 	ClientsMutex.Lock()
-	conn, ok := Clients[clientID]
+	clientConn, ok := Clients[clientID]
 	ClientsMutex.Unlock()
 
-	if !ok || conn == nil {
+	if !ok || clientConn == nil {
 		return &ClientNotFoundError{ClientID: clientID}
 	}
 
-	return conn.WriteJSON(payload)
+	return clientConn.WriteJSON(payload)
 }
 
 type ClientNotFoundError struct {

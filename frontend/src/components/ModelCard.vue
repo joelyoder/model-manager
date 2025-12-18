@@ -12,16 +12,7 @@
         <span class="ms-1 badge rounded-pill text-bg-success">{{
           version.baseModel
         }}</span>
-        <span
-          v-if="version.clientStatus === 'installed'"
-          class="ms-1 badge rounded-pill text-bg-success"
-          >Client</span
-        >
-        <span
-          v-else-if="version.clientStatus === 'pending'"
-          class="ms-1 badge rounded-pill text-bg-warning"
-          >Syncing...</span
-        >
+        
         <button
           @click.stop="$emit('toggleNsfw', version)"
           class="btn btn-sm position-absolute top-0 end-0 m-2"
@@ -110,23 +101,43 @@
         More details
       </button>
 
+      <!-- Smart Remote Button -->
       <button
         v-if="version.clientStatus === 'installed'"
         @click="dispatch('delete')"
+        @mouseenter="isHovering = true"
+        @mouseleave="isHovering = false"
         :disabled="isDispatching"
-        class="btn btn-outline-danger btn-sm"
-        title="Remove from Client"
+        class="btn btn-sm"
+        :class="isHovering ? 'btn-danger' : 'btn-success'"
+        :title="isHovering ? 'Remove from Client' : 'Installed on Client'"
       >
-        <i class="bi bi-pc-display"></i> Remove
+        <Icon 
+          :icon="isHovering ? 'mdi:trash-can' : 'mdi:check'" 
+          width="16" 
+          height="16" 
+        />
       </button>
+      
       <button
-        v-else-if="!version.clientStatus"
+        v-else-if="version.clientStatus === 'pending'"
+        disabled
+        class="btn btn-warning btn-sm"
+        title="Syncing..."
+      >
+        <div class="spinner-border spinner-border-sm" role="status">
+          <span class="visually-hidden">Syncing...</span>
+        </div>
+      </button>
+
+      <button
+        v-else
         @click="dispatch('download')"
         :disabled="isDispatching"
-        class="btn btn-outline-info btn-sm"
+        class="btn btn-outline-secondary btn-sm"
         title="Push to Client"
       >
-        <i class="bi bi-pc-display"></i> Push
+        <Icon icon="mdi:cloud-download" width="16" height="16" />
       </button>
       <button
         @click="$emit('delete', version.ID)"
@@ -140,6 +151,10 @@
 
 <script setup>
 import { useRemote } from '../composables/useRemote';
+import { ref } from 'vue';
+import { Icon } from "@iconify/vue";
+
+const isHovering = ref(false);
 
 const props = defineProps({
   model: Object,
