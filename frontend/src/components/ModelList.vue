@@ -280,13 +280,11 @@ const versionCards = computed(() => {
         return true;
       })
       .map((v) => {
-        let trained = v.trainedWords;
-        if (typeof trained === "string") {
-          trained = trained ? trained.split(",") : [];
-        }
+        // trainedWords parsing removed as ModelCard doesn't use it, 
+        // and we need to preserve the reactive reference of 'v'.
         return {
           model,
-          version: { ...v, trainedWordsArr: trained },
+          version: v, 
           imageUrl: v.imageUrl || model.imageUrl,
         };
       });

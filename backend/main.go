@@ -77,7 +77,13 @@ func main() {
 		apiGroup.GET("/settings", api.GetSettings)
 		apiGroup.POST("/settings", api.UpdateSetting)
 		apiGroup.POST("/tools/migrate-paths", api.MigratePaths)
+
+		// Remote Management
+		apiGroup.POST("/remote/dispatch", api.DispatchRemote)
 	}
+
+	// WebSocket
+	r.GET("/ws", api.HandleWebSocket)
 
 	// Vue SPA fallback for all other routes (no wildcard)
 	r.NoRoute(func(c *gin.Context) {

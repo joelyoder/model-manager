@@ -5,6 +5,7 @@ import "gorm.io/gorm"
 type Version struct {
 	gorm.Model
 	ModelID              uint    `gorm:"index" json:"modelId"`
+	ParentModel          Model   `json:"model" gorm:"foreignKey:ModelID"`
 	VersionID            int     `gorm:"uniqueIndex" json:"versionId"`
 	Name                 string  `gorm:"index" json:"name"`
 	BaseModel            string  `json:"baseModel"`
@@ -25,4 +26,7 @@ type Version struct {
 	FilePath             string  `json:"filePath"`
 
 	Images []VersionImage `json:"images"`
+
+	// ClientStatus is a calculated field for the default client, not stored in DB
+	ClientStatus string `gorm:"-" json:"clientStatus"`
 }

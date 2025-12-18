@@ -12,6 +12,7 @@
         <span class="ms-1 badge rounded-pill text-bg-success">{{
           version.baseModel
         }}</span>
+        
         <button
           @click.stop="$emit('toggleNsfw', version)"
           class="btn btn-sm position-absolute top-0 end-0 m-2"
@@ -99,6 +100,45 @@
       >
         More details
       </button>
+
+      <!-- Smart Remote Button -->
+      <button
+        v-if="version.clientStatus === 'installed'"
+        @click="dispatch('delete')"
+        @mouseenter="isHovering = true"
+        @mouseleave="isHovering = false"
+        :disabled="isDispatching"
+        class="btn btn-sm"
+        :class="isHovering ? 'btn-danger' : 'btn-success'"
+        :title="isHovering ? 'Remove from Client' : 'Installed on Client'"
+      >
+        <Icon 
+          :icon="isHovering ? 'mdi:trash-can' : 'mdi:check'" 
+          width="16" 
+          height="16" 
+        />
+      </button>
+      
+      <button
+        v-else-if="version.clientStatus === 'pending'"
+        disabled
+        class="btn btn-warning btn-sm"
+        title="Syncing..."
+      >
+        <div class="spinner-border spinner-border-sm" role="status">
+          <span class="visually-hidden">Syncing...</span>
+        </div>
+      </button>
+
+      <button
+        v-else
+        @click="dispatch('download')"
+        :disabled="isDispatching"
+        class="btn btn-outline-secondary btn-sm"
+        title="Push to Client"
+      >
+        <Icon icon="mdi:cloud-download" width="16" height="16" />
+      </button>
       <button
         @click="$emit('delete', version.ID)"
         class="btn btn-outline-danger ms-auto"
@@ -110,11 +150,22 @@
 </template>
 
 <script setup>
-defineProps({
+import { useRemote } from '../composables/useRemote';
+import { ref } from 'vue';
+import { Icon } from "@iconify/vue";
+
+const isHovering = ref(false);
+
+const props = defineProps({
   model: Object,
   version: Object,
   imageUrl: String,
 });
 
-defineEmits(["click", "delete", "toggleNsfw"]);
+const emit = defineEmits(["click", "delete", "toggleNsfw"]);
+
+const { dispatchAction, isDispatching } = useRemote();
+const dispatch = (action) => {
+  dispatchAction(action, props.model, props.version);
+};
 </script>
