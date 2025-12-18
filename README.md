@@ -48,6 +48,41 @@ Install or provision the following before working with the project:
    ```
 5. Open the URL printed by Vite (typically http://localhost:5173). The dev server proxies `/api` and `/images` to `http://localhost:8080`; if you run the Go backend on a different port, update the proxy targets in `frontend/vite.config.js` to match.
 
+## Desktop Client
+
+The project includes a Python-based desktop client (located in the `client` directory) that runs in the system tray. This client allows the backend to remotely manage files on another machine (e.g., your primary workstation) via WebSockets.
+
+### Prerequisites
+
+- **Python**: version 3.8 or newer.
+- **Python Packages**: install required dependencies:
+  ```sh
+  pip install -r client/requirements.txt
+  ```
+
+### Configuration
+
+1. Copy `client/config.json.example` to `client/config.json`.
+2. Edit `client/config.json` with your settings:
+   - `server_url`: The WebSocket URL of your backend (e.g., `ws://localhost:8080/ws`).
+   - `api_key`: A secret key used for authentication. This **must match** the `CLIENT_SECRET` environment variable set on the backend.
+   - `root_path`: The local directory where models will be managed.
+   - `client_id`: A unique name for this client.
+
+### Running & Building
+
+To run the client during development:
+```sh
+python client/client_tray.py
+```
+
+To build a standalone executable for Windows:
+```sh
+cd client
+build_client.bat
+```
+The executable will be generated in `client/dist/ModelManagerClient.exe`.
+
 ## Environment Variables
 
 Set variables in your shell or a `.env` file located at the repository root:
@@ -57,6 +92,7 @@ Set variables in your shell or a `.env` file located at the repository root:
 | `PORT` | Port the Go HTTP server listens on. | `8080` |
 | `MODELS_DB_PATH` | Filesystem path to the SQLite database used by GORM. Relative paths resolve from the server's working directory. | `backend/models.db` |
 | `CIVIT_API_KEY` | Personal access token for authenticating requests to the Civitai API (required for syncing and downloads). | _unset_ |
+| `CLIENT_SECRET` | Secret key for authenticating the desktop client WebSocket connection (must match `api_key` in client config). | _unset_ |
 
 Create a `.env` file in the repository root to persist these variables locally. Generate a Civitai token from <https://civitai.com/user/account/api> and assign it to `CIVIT_API_KEY` to enable synchronization features.
 
@@ -123,5 +159,3 @@ Use the model detail page to upload additional images or remove existing gallery
     - Add a tag to multiple models at once
     - Remove a tag from multiple models at once
     - A way to see all current tags in the library and see all models with that tag
-- Settings
-    - Add a setting to change the models and image folder locations

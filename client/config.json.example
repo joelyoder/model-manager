@@ -2,6 +2,5 @@
     "server_url": "ws://localhost:8080/ws",
     "api_key": "your-secret-key",
     "root_path": "C:\\AI\\RemoteLibrary",
-    "client_id": "My-Desktop-PC",
-    "civitai_api_key": "your-civitai-api-key"
+    "client_id": "My-Desktop-PC"
 }

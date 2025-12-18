@@ -33,7 +33,6 @@ SERVER_URL = CONFIG.get('server_url')
 API_KEY = CONFIG.get('api_key')
 ROOT_PATH = CONFIG.get('root_path')
 CLIENT_ID = CONFIG.get('client_id')
-CIVITAI_API_KEY = CONFIG.get('civitai_api_key')
 
 if not all([SERVER_URL, API_KEY, ROOT_PATH, CLIENT_ID]):
     print("Missing configuration values in config.json")
