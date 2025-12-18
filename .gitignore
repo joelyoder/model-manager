@@ -1,6 +1,8 @@
-
 /frontend/node_modules
 .env
 /backend/downloads/*
 /backend/images/*
 /backend/models.db
+/client/config.json
+/client/dist/*
+/client/build/*
