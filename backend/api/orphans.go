@@ -17,11 +17,18 @@ import (
 
 // GetOrphanedFiles scans the backend/downloads directory tree and returns any
 // SAFETensors/PT files not referenced by models or versions in the database.
-// The handler accepts no parameters, walks the filesystem (following directory
-// symlinks), and reports orphaned absolute paths as JSON. It does not modify
-// database records but logs extensively and may resolve symlinks during the
-// scan.
 func GetOrphanedFiles(c *gin.Context) {
+	// 1. Resolve the root library path first
+	root := database.GetModelPath()
+	absRoot, err := filepath.Abs(root)
+	if err != nil {
+		log.Printf("failed to resolve downloads directory %s: %v", root, err)
+		// Fallback to purely relative or fail?
+		// If Abs fails, subsequent Abs calls might also fail or produce weird results.
+		// We'll proceed with best effort.
+	}
+	log.Printf("walking downloads directory: %s", absRoot)
+
 	// Collect file paths from models and versions
 	var modelPaths []string
 	database.DB.Model(&models.Model{}).Where("file_path <> ''").Pluck("file_path", &modelPaths)
@@ -30,6 +37,11 @@ func GetOrphanedFiles(c *gin.Context) {
 
 	dbFiles := make(map[string]struct{})
 	for _, p := range append(modelPaths, versionPaths...) {
+		// If the path is relative, join it with the library root
+		if !filepath.IsAbs(p) {
+			p = filepath.Join(absRoot, p)
+		}
+
 		abs, err := filepath.Abs(p)
 		if err != nil {
 			log.Printf("failed to get abs path for %s: %v", p, err)
@@ -49,12 +61,6 @@ func GetOrphanedFiles(c *gin.Context) {
 	}
 
 	var orphans []string
-	root := database.GetModelPath()
-	absRoot, err := filepath.Abs(root)
-	if err != nil {
-		log.Printf("failed to resolve downloads directory %s: %v", root, err)
-	}
-	log.Printf("walking downloads directory: %s", absRoot)
 
 	visited := make(map[string]struct{})
 	var walkFn func(string, fs.DirEntry, error) error
