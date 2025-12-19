@@ -221,6 +221,10 @@ func ImportModels(c *gin.Context) {
 			ImagePath:      MakeRelativePath(imagePath, database.GetImagePath()),
 			CivitCreatedAt: createdStr,
 		}
+		// Archive images in description
+		if newDesc, changed := ArchiveDescriptionImages(versionID, ver.Description); changed {
+			ver.Description = newDesc
+		}
 		if err = database.DB.Create(&ver).Error; err != nil {
 			log.Printf("failed to create version for %s: %v", r.Name, err)
 			failures = append(failures, fmt.Sprintf("%s: %v", r.Name, err))

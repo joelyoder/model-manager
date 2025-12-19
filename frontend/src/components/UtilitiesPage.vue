@@ -163,6 +163,23 @@
           {{ migrating ? "Migrating..." : "Migrate Paths to Relative" }}
         </button>
       </div>
+      <h4 class="h5 my-3">Archive Description Images</h4>
+      <p class="text-white-50">
+        Download external images found in model descriptions and store them locally
+        to prevent broken links. This operation modifies model descriptions.
+      </p>
+      <div class="mb-3">
+        <button
+          @click="archiveImages"
+          class="btn btn-warning"
+          :disabled="isArchiving"
+        >
+          {{ isArchiving ? "Archiving..." : "Archive Images" }}
+        </button>
+        <p v-if="archiveResult" class="mt-2 mb-0">
+          {{ archiveResult }}
+        </p>
+      </div>
     </div>
     <div class="card card-body">
       <h3>Library Cleanup</h3>
@@ -437,6 +454,27 @@ const duplicatePaths = ref([]);
 const dupSearchDone = ref(false);
 
 const migrating = ref(false);
+const isArchiving = ref(false);
+const archiveResult = ref("");
+
+const archiveImages = async () => {
+  if (!confirm("This will download external images and modify model descriptions. Continue?")) {
+    return;
+  }
+  isArchiving.value = true;
+  archiveResult.value = "";
+  try {
+    const res = await axios.post("/api/tools/archive-images");
+    const { processed, updated } = res.data;
+    archiveResult.value = `Scanned ${processed} versions, updated ${updated}.`;
+    showToast("Archive complete", "success");
+  } catch (err) {
+    console.error(err);
+    showToast("Archive failed", "danger");
+  } finally {
+    isArchiving.value = false;
+  }
+};
 
 const migratePaths = async () => {
     if (!confirm("Are you sure you want to migrate paths? This operation modifies the database.")) {

@@ -490,6 +490,10 @@ func SyncVersionByID(c *gin.Context) {
 		DownloadURL:          downloadURL,
 		FilePath:             MakeRelativePath(filePath, database.GetModelPath()),
 	}
+	// Archive images in description
+	if newDesc, changed := ArchiveDescriptionImages(verData.ID, versionRecord.Description); changed {
+		versionRecord.Description = newDesc
+	}
 	database.DB.Create(&versionRecord)
 
 	images := collectVersionImages(apiKey, verData)
@@ -635,6 +639,10 @@ func processModel(item CivitModel, apiKey string) {
 			SHA256:               fileSHA,
 			DownloadURL:          downloadURL,
 			FilePath:             MakeRelativePath(filePath, database.GetModelPath()),
+		}
+		// Archive images in description
+		if newDesc, changed := ArchiveDescriptionImages(verData.ID, versionRec.Description); changed {
+			versionRec.Description = newDesc
 		}
 		database.DB.Create(&versionRec)
 
