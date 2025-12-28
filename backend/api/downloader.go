@@ -9,6 +9,7 @@ import (
 	_ "image/png"
 	"io"
 	"log"
+	"model-manager/backend/database"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -40,7 +41,18 @@ func DownloadFile(url, destDir, filename string) (string, int64, error) {
 		return "", 0, err
 	}
 
-	isModelDownload := strings.Contains(destDir, "downloads")
+	// Determine if this is a model download by checking if it matches the configured model path
+	modelPath, _ := filepath.Abs(database.GetModelPath())
+	destAbs, _ := filepath.Abs(destDir)
+	// Simple check: is destAbs inside modelPath?
+	// or just check if it contains the model path root
+	isModelDownload := strings.HasPrefix(strings.ToLower(destAbs), strings.ToLower(modelPath))
+
+	// Fallback to "downloads" check if path resolution fails or is weird
+	if !isModelDownload {
+		isModelDownload = strings.Contains(strings.ToLower(destDir), "downloads")
+	}
+
 	ctx := context.Background()
 	var cancel context.CancelFunc
 	if isModelDownload {
