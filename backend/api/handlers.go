@@ -490,6 +490,10 @@ func SyncVersionByID(c *gin.Context) {
 		DownloadURL:          downloadURL,
 		FilePath:             MakeRelativePath(filePath, database.GetModelPath()),
 	}
+	// Archive images in description
+	if newDesc, changed := ArchiveDescriptionImages(verData.ID, versionRecord.Description); changed {
+		versionRecord.Description = newDesc
+	}
 	database.DB.Create(&versionRecord)
 
 	images := collectVersionImages(apiKey, verData)
@@ -636,6 +640,10 @@ func processModel(item CivitModel, apiKey string) {
 			DownloadURL:          downloadURL,
 			FilePath:             MakeRelativePath(filePath, database.GetModelPath()),
 		}
+		// Archive images in description
+		if newDesc, changed := ArchiveDescriptionImages(verData.ID, versionRec.Description); changed {
+			versionRec.Description = newDesc
+		}
 		database.DB.Create(&versionRec)
 
 		images := collectVersionImages(apiKey, verData)
@@ -719,26 +727,32 @@ func DeleteModel(c *gin.Context) {
 	}
 
 	if model.FilePath != "" {
-		moveToTrash(model.FilePath)
+		moveToTrash(ResolveModelPath(model.FilePath))
 	}
 	if model.ImagePath != "" {
-		moveToTrash(model.ImagePath)
+		moveToTrash(ResolveImagePath(model.ImagePath))
 	}
 	for _, v := range model.Versions {
 		if v.FilePath != "" {
-			moveToTrash(v.FilePath)
+			moveToTrash(ResolveModelPath(v.FilePath))
 		}
 		if v.ImagePath != "" {
-			moveToTrash(v.ImagePath)
+			moveToTrash(ResolveImagePath(v.ImagePath))
 		}
 		var imgs []models.VersionImage
 		database.DB.Where("version_id = ?", v.ID).Find(&imgs)
 		for _, img := range imgs {
 			if img.Path != "" {
-				moveToTrash(img.Path)
+				moveToTrash(ResolveImagePath(img.Path))
 			}
 		}
 		database.DB.Where("version_id = ?", v.ID).Delete(&models.VersionImage{})
+
+		// Remove archived images directory
+		archiveDir := filepath.Join(database.GetImagePath(), "archives", fmt.Sprintf("%d", v.VersionID))
+		if _, err := os.Stat(archiveDir); err == nil {
+			moveToTrash(archiveDir)
+		}
 	}
 
 	database.DB.Unscoped().Where("model_id = ?", model.ID).Delete(&models.Version{})
@@ -804,15 +818,21 @@ func DeleteVersion(c *gin.Context) {
 
 	if deleteFiles {
 		if version.FilePath != "" {
-			moveToTrash(version.FilePath)
+			moveToTrash(ResolveModelPath(version.FilePath))
 		}
 		if version.ImagePath != "" {
-			moveToTrash(version.ImagePath)
+			moveToTrash(ResolveImagePath(version.ImagePath))
 		}
 		for _, img := range imgs {
 			if img.Path != "" {
-				moveToTrash(img.Path)
+				moveToTrash(ResolveImagePath(img.Path))
 			}
+		}
+
+		// Remove archived images directory
+		archiveDir := filepath.Join(database.GetImagePath(), "archives", fmt.Sprintf("%d", version.VersionID))
+		if _, err := os.Stat(archiveDir); err == nil {
+			moveToTrash(archiveDir)
 		}
 	}
 

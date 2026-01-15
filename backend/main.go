@@ -76,7 +76,9 @@ func main() {
 		apiGroup.GET("/duplicate-file-paths", api.GetDuplicateFilePaths)
 		apiGroup.GET("/settings", api.GetSettings)
 		apiGroup.POST("/settings", api.UpdateSetting)
+
 		apiGroup.POST("/tools/migrate-paths", api.MigratePaths)
+		apiGroup.POST("/tools/archive-images", api.ArchiveImages)
 
 		// Remote Management
 		apiGroup.POST("/remote/dispatch", api.DispatchRemote)

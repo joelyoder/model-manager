@@ -20,8 +20,16 @@ var runtimeGOOS = runtime.GOOS
 func moveToTrash(path string) error {
 	switch runtimeGOOS {
 	case "windows":
+		info, err := os.Stat(path)
+		if err != nil {
+			return err
+		}
+		method := "DeleteFile"
+		if info.IsDir() {
+			method = "DeleteDirectory"
+		}
 		cmd := exec.Command("powershell", "-NoProfile", "-Command",
-			fmt.Sprintf(`Add-Type -AssemblyName Microsoft.VisualBasic; [Microsoft.VisualBasic.FileIO.FileSystem]::DeleteFile(%q, [Microsoft.VisualBasic.FileIO.UIOption]::OnlyErrorDialogs, [Microsoft.VisualBasic.FileIO.RecycleOption]::SendToRecycleBin)`, path))
+			fmt.Sprintf(`Add-Type -AssemblyName Microsoft.VisualBasic; [Microsoft.VisualBasic.FileIO.FileSystem]::%s(%q, [Microsoft.VisualBasic.FileIO.UIOption]::OnlyErrorDialogs, [Microsoft.VisualBasic.FileIO.RecycleOption]::SendToRecycleBin)`, method, path))
 		if out, err := cmd.CombinedOutput(); err != nil {
 			return fmt.Errorf("powershell recycle failed: %v: %s", err, strings.TrimSpace(string(out)))
 		}
