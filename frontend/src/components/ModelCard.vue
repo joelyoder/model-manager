@@ -1,150 +1,115 @@
 <template>
-  <div :id="`model-${version.ID}`" class="model-card card h-100">
-    <div class="position-relative">
+  <div
+    :id="`model-${version.ID}`"
+    class="model-card card h-100 border-0 shadow-sm clickable-card transition-hover"
+    @click="$emit('click', model.ID, version.ID)"
+  >
+    <!-- Image & Overlays -->
+    <div class="position-relative overflow-hidden rounded-top-2">
       <img
         v-if="imageUrl"
         :src="imageUrl"
-        class="card-img-top"
-        style="width: 100%; height: 450px; object-fit: cover"
+        class="card-img-top object-fit-cover transition-zoom"
+        style="height: 450px; width: 100%"
+        loading="lazy"
       />
-      <div class="card-img-overlay z-2">
-        <span class="badge rounded-pill text-bg-primary">{{ version.type }}</span>
-        <span class="ms-1 badge rounded-pill text-bg-success">{{
-          version.baseModel
-        }}</span>
-        
+      
+      <!-- Top Left Badges -->
+      <div class="position-absolute top-0 start-0 p-2 d-flex flex-row gap-1 z-2 flex-wrap">
+        <span class="badge rounded-pill fw-normal shadow-sm" :class="getBadgeColor(version.type)">{{ version.type }}</span>
+        <span class="badge rounded-pill fw-normal shadow-sm" :class="getBadgeColor(version.baseModel)">{{ version.baseModel }}</span>
+      </div>
+
+      <!-- Top Right Actions -->
+      <div class="position-absolute top-0 end-0 p-2 z-2">
         <button
           @click.stop="$emit('toggleNsfw', version)"
-          class="btn btn-sm position-absolute top-0 end-0 m-2"
-          :class="version.nsfw ? 'btn-danger' : 'btn-secondary'"
-          style="--bs-btn-padding-y: 0.25rem; --bs-btn-padding-x: 0.25rem"
+          class="btn btn-sm rounded-circle d-flex align-items-center justify-content-center p-1"
+          :class="version.nsfw ? 'btn-danger' : 'btn-dark bg-opacity-50 text-white'"
+          style="width: 32px; height: 32px; backdrop-filter: blur(4px);"
+          title="Toggle NSFW"
         >
-          <svg
-            v-if="version.nsfw"
-            width="18px"
-            height="18px"
-            viewBox="0 0 24 24"
-            stroke-width="1.5"
-            fill="none"
-            xmlns="http://www.w3.org/2000/svg"
-            color="#ffffff"
-          >
-            <path
-              d="M10.733 5.076a10.744 10.744 0 0 1 11.205 6.575 1 1 0 0 1 0 .696 10.747 10.747 0 0 1-1.444 2.49"
-              stroke="#ffffff"
-              stroke-width="1.5"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-            ></path>
-            <path
-              d="M14.084 14.158a3 3 0 0 1-4.242-4.242"
-              stroke="#ffffff"
-              stroke-width="1.5"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-            ></path>
-            <path
-              d="M17.479 17.499a10.75 10.75 0 0 1-15.417-5.151 1 1 0 0 1 0-.696 10.75 10.75 0 0 1 4.446-5.143"
-              stroke="#ffffff"
-              stroke-width="1.5"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-            ></path>
-            <path
-              d="m2 2 20 20"
-              stroke="#ffffff"
-              stroke-width="1.5"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-            ></path>
-          </svg>
-          <svg
-            v-else
-            width="18px"
-            height="18px"
-            viewBox="0 0 24 24"
-            stroke-width="1.5"
-            fill="none"
-            xmlns="http://www.w3.org/2000/svg"
-            color="#ffffff"
-          >
-            <path
-              d="M2.062 12.348a1 1 0 0 1 0-.696 10.75 10.75 0 0 1 19.876 0 1 1 0 0 1 0 .696 10.75 10.75 0 0 1-19.876 0"
-              stroke="#ffffff"
-              stroke-width="1.5"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-            ></path>
-            <circle
-              cx="12"
-              cy="12"
-              r="3"
-              stroke="#ffffff"
-              stroke-width="1.5"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-            ></circle>
-          </svg>
+          <Icon :icon="version.nsfw ? 'mdi:eye-off' : 'mdi:eye'" width="18" height="18" />
         </button>
       </div>
-    </div>
-    <div class="card-body z-3">
-      <h3 class="card-title h5">
-        {{ model.name }} - {{ version.name }}
-      </h3>
-    </div>
-    <div class="d-flex gap-2 card-footer z-2">
-      <button
-        @click="$emit('click', model.ID, version.ID)"
-        class="btn btn-outline-primary"
-      >
-        More details
-      </button>
-
-      <!-- Smart Remote Button -->
-      <button
-        v-if="version.clientStatus === 'installed'"
-        @click="dispatch('delete')"
-        @mouseenter="isHovering = true"
-        @mouseleave="isHovering = false"
-        :disabled="isDispatching"
-        class="btn btn-sm"
-        :class="isHovering ? 'btn-danger' : 'btn-success'"
-        :title="isHovering ? 'Remove from Client' : 'Installed on Client'"
-      >
-        <Icon 
-          :icon="isHovering ? 'mdi:trash-can' : 'mdi:check'" 
-          width="16" 
-          height="16" 
-        />
-      </button>
       
-      <button
-        v-else-if="version.clientStatus === 'pending'"
-        disabled
-        class="btn btn-warning btn-sm"
-        title="Syncing..."
-      >
-        <div class="spinner-border spinner-border-sm" role="status">
-          <span class="visually-hidden">Syncing...</span>
-        </div>
-      </button>
+      <!-- Hover Gradient (Optional Polish) -->
+      <div class="model-card-overlay position-absolute bottom-0 start-0 w-100 h-25 bg-gradient-to-t-transparent-black opacity-0"></div>
+    </div>
 
-      <button
-        v-else
-        @click="dispatch('download')"
-        :disabled="isDispatching"
-        class="btn btn-outline-secondary btn-sm"
-        title="Push to Client"
-      >
-        <Icon icon="mdi:cloud-download" width="16" height="16" />
-      </button>
-      <button
-        @click="$emit('delete', version.ID)"
-        class="btn btn-outline-danger ms-auto"
-      >
-        Delete
-      </button>
+    <!-- Minimal Footer -->
+    <div class="card-body p-3 z-3 bg-dark-subtle rounded-bottom-2">
+      <div class="d-flex justify-content-between align-items-start gap-2">
+        <div class="flex-grow-1 min-width-0">
+          <h6 class="card-title fw-bold mb-1 lh-sm text-body-emphasis">
+            {{ model.name }}
+          </h6>
+          <div class="small text-muted mb-0">
+            {{ version.name }}
+          </div>
+        </div>
+
+        <!-- Actions Group -->
+        <div class="d-flex align-items-center gap-1 flex-shrink-0">
+             <!-- Smart Remote Button -->
+            <button
+                v-if="version.clientStatus === 'installed'"
+                @click.stop="dispatch('delete')"
+                @mouseenter="isHovering = true"
+                @mouseleave="isHovering = false"
+                :disabled="isDispatching"
+                class="btn btn-sm rounded-circle d-flex align-items-center justify-content-center"
+                :class="isHovering ? 'btn-danger' : 'btn-success'"
+                :title="isHovering ? 'Remove from Client' : 'Installed on Client'"
+                style="width: 32px; height: 32px;"
+            >
+                <Icon 
+                :icon="isHovering ? 'mdi:trash-can' : 'mdi:check'" 
+                width="16" 
+                height="16" 
+                />
+            </button>
+            <button
+                v-else-if="version.clientStatus === 'pending'"
+                disabled
+                class="btn btn-warning btn-sm rounded-circle d-flex align-items-center justify-content-center"
+                style="width: 32px; height: 32px;"
+                title="Syncing..."
+            >
+                <span class="spinner-border spinner-border-sm" style="width:1rem;height:1rem;" aria-hidden="true"></span>
+            </button>
+            <button
+                v-else
+                @click.stop="dispatch('download')"
+                :disabled="isDispatching"
+                class="btn btn-outline-secondary btn-sm rounded-circle d-flex align-items-center justify-content-center download-btn"
+                style="width: 32px; height: 32px;"
+                title="Push to Client"
+            >
+                <Icon icon="mdi:cloud-download" width="16" height="16" />
+            </button>
+
+            <!-- Kebab Menu for Delete -->
+            <div class="dropdown">
+                <button 
+                    class="btn btn-link p-0 ms-1 kebab-btn" 
+                    type="button" 
+                    data-bs-toggle="dropdown" 
+                    aria-expanded="false"
+                    @click.stop
+                >
+                    <Icon icon="mdi:dots-vertical" width="20" height="20" />
+                </button>
+                <ul class="dropdown-menu dropdown-menu-end shadow">
+                    <li>
+                        <button class="dropdown-item text-danger d-flex align-items-center" @click.stop="$emit('delete', version.ID)">
+                             <Icon icon="mdi:trash-can-outline" class="me-2" /> Delete Version
+                        </button>
+                    </li>
+                </ul>
+            </div>
+        </div>
+      </div>
     </div>
   </div>
 </template>
@@ -168,4 +133,63 @@ const { dispatchAction, isDispatching } = useRemote();
 const dispatch = (action) => {
   dispatchAction(action, props.model, props.version);
 };
+
+const getBadgeColor = (text) => {
+  if (!text) return 'text-bg-secondary';
+  const t = text.toLowerCase();
+  
+  // Model Types
+  if (t.includes('checkpoint')) return 'text-bg-primary'; // Blue
+  if (t.includes('lora')) return 'text-bg-info text-white'; // Cyan/Info
+  if (t.includes('embedding')) return 'text-bg-success'; // Green
+  if (t.includes('controlnet')) return 'text-bg-warning'; // Yellow
+  
+  // Base Models
+  if (t.includes('sdxl')) return 'text-bg-danger'; // Red
+  if (t.includes('1.5')) return 'text-bg-indigo'; // Custom or Purple-ish (using bootstrap custom if avail or fallback)
+  if (t.includes('pony')) return 'text-bg-pink'; // Custom or Pink
+  
+  // Fallbacks
+  return 'text-bg-secondary';
+};
 </script>
+
+<style scoped>
+.transition-zoom {
+  transition: transform 0.4s ease;
+}
+
+.model-card:hover .transition-zoom {
+  transform: scale(1.05); /* Slight zoom on hover */
+}
+
+/* Custom colors if Bootstrap doesn't provide them */
+.text-bg-indigo {
+  background-color: #6610f2;
+  color: #fff;
+}
+.text-bg-pink {
+  background-color: #d63384;
+  color: #fff;
+}
+
+/* Kebab button hover brighter */
+.kebab-btn {
+  color: var(--bs-secondary);
+  transition: color 0.2s;
+}
+.kebab-btn:hover {
+  color: var(--bs-white); /* Brighter on hover */
+}
+
+/* Download button fixes */
+.download-btn {
+  border-color: var(--bs-border-color-translucent);
+  color: var(--bs-secondary);
+}
+.download-btn:hover {
+  background-color: var(--bs-secondary);
+  color: white;
+  border-color: var(--bs-secondary);
+}
+</style>
