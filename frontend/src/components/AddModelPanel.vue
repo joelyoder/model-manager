@@ -1,49 +1,51 @@
 <template>
-  <div class="mx-auto card card-body my-3" style="max-width: 1000px">
-    <div class="row g-3">
-      <div class="col-md-2">
-        <button @click="$emit('createManual')" class="btn btn-primary w-100">
-          Add Model
-        </button>
-      </div>
-      <div class="col">
-        <div class="input-group mb-2">
-          <!-- Paste URL and fetch versions -->
-          <input
-            v-model="modelUrl"
-            placeholder="Paste CivitAI model URL"
-            class="form-control"
-            style="min-width: 200px"
-            @keyup.enter="loadVersions"
-          />
-          <div class="input-group-append">
-            <button
-              @click="loadVersions"
-              :disabled="loading || !modelUrl"
-              class="btn btn-primary"
-            >
-              Load Versions
-            </button>
-          </div>
-        </div>
+  <div>
+    <!-- Manual Add Button -->
+    <div class="mb-4">
+      <button @click="$emit('createManual')" class="btn btn-primary w-100 py-2">
+        <Icon icon="mdi:plus" class="me-2" />
+        Add New Model Manually
+      </button>
+    </div>
 
-        <div class="input-group mb-2">
-          <!-- Version selector -->
-          <select
-            v-if="versions.length"
-            v-model="selectedVersionId"
-            class="form-select"
-            style="min-width: 200px"
-          >
-            <option disabled value="">Select version</option>
-            <option v-for="v in versions" :value="v.id" :key="v.id">
-              {{ v.name }} | {{ v.baseModel }} |
-              {{ ((v.sizeKB || 0) / 1024).toFixed(2) }} MB
-            </option>
-          </select>
-          <div class="input-group-append">
-            <!-- Add version without downloading -->
-            <button
+    <div class="text-light mb-2 small fw-bold">Import from Civitai</div>
+
+    <!-- URL Input -->
+    <div class="input-group mb-3">
+      <input
+        v-model="modelUrl"
+        placeholder="Paste Civitai model URL"
+        class="form-control"
+        @keyup.enter="loadVersions"
+      />
+      <button
+        @click="loadVersions"
+        :disabled="loading || !modelUrl"
+        class="btn btn-primary"
+      >
+        Load Versions
+      </button>
+    </div>
+
+    <!-- Version Selection -->
+    <div>
+      <div class="input-group mb-2">
+        <select
+          v-if="versions.length"
+          v-model="selectedVersionId"
+          class="form-select"
+          style="min-width: 200px"
+        >
+          <option disabled value="">Select version</option>
+          <option v-for="v in versions" :value="v.id" :key="v.id">
+            {{ v.name }} | {{ v.baseModel }} |
+            {{ ((v.sizeKB || 0) / 1024).toFixed(2) }} MB
+          </option>
+        </select>
+        
+        <!-- Actions -->
+        <template v-if="versions.length">
+             <button
               v-if="selectedVersionId"
               @click="addSelectedVersion"
               :disabled="loading"
@@ -60,7 +62,6 @@
               <span v-else>Add</span>
             </button>
 
-            <!-- Download version -->
             <button
               v-if="selectedVersionId"
               @click="downloadSelectedVersion"
@@ -77,37 +78,38 @@
               >
               <span v-else>Download</span>
             </button>
-          </div>
-        </div>
-        <div
-          v-if="downloading"
-          class="d-flex align-items-center gap-2 w-100 mb-2"
-        >
-          <div class="progress flex-grow-1">
-            <div
-              class="progress-bar progress-bar-striped"
-              :style="{ width: downloadProgress + '%' }"
-            >
-              {{ downloadProgress }}%
-            </div>
-          </div>
-          <button
-            class="btn btn-outline-danger btn-sm"
-            type="button"
-            @click="cancelDownload"
-            :disabled="canceling"
+        </template>
+      </div>
+
+       <!-- Downloading Progress -->
+      <div
+        v-if="downloading"
+        class="d-flex align-items-center gap-2 w-100 mb-2 mt-3"
+      >
+        <div class="progress flex-grow-1">
+          <div
+            class="progress-bar progress-bar-striped"
+            :style="{ width: downloadProgress + '%' }"
           >
-            <span
-              v-if="canceling"
-              class="spinner-border spinner-border-sm"
-              aria-hidden="true"
-            ></span>
-            <span v-if="canceling" role="status" class="ps-2"
-              >Cancelling...</span
-            >
-            <span v-else>Cancel</span>
-          </button>
+            {{ downloadProgress }}%
+          </div>
         </div>
+        <button
+          class="btn btn-outline-danger btn-sm"
+          type="button"
+          @click="cancelDownload"
+          :disabled="canceling"
+        >
+          <span
+            v-if="canceling"
+            class="spinner-border spinner-border-sm"
+            aria-hidden="true"
+          ></span>
+          <span v-if="canceling" role="status" class="ps-2"
+            >Cancelling...</span
+          >
+          <span v-else>Cancel</span>
+        </button>
       </div>
     </div>
   </div>
