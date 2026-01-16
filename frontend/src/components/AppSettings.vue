@@ -1,35 +1,51 @@
 <template>
-  <div class="container px-4">
-    <div class="mb-2 d-flex gap-2 pb-2">
-      <button @click="goBack" class="btn btn-secondary">Back</button>
-      <button class="btn btn-primary" @click="save">Save</button>
+  <div class="container px-2 px-md-4 max-w-xl mx-auto">
+    <div class="mb-3 d-flex gap-2 align-items-center px-2 px-md-0">
+      <button 
+        @click="goBack" 
+        class="btn btn-outline-secondary btn-sm d-flex align-items-center justify-content-center border-0"
+        aria-label="Back"
+        title="Back"
+        style="width: 40px; height: 40px;"
+      >
+        <Icon icon="mdi:arrow-left" width="24" height="24" />
+      </button>
+      <h2 class="h5 mb-0 fw-bold ms-2">Settings</h2>
+      <button 
+        class="btn btn-outline-primary btn-sm d-flex align-items-center justify-content-center border-0 ms-auto" 
+        @click="save"
+        aria-label="Save"
+        title="Save"
+        style="width: 40px; height: 40px;"
+      >
+        <Icon icon="mdi:content-save" width="24" height="24" />
+      </button>
     </div>
-    <h2 class="mb-3">Settings</h2>
-    <div class="mb-3 row">
-      <label class="col-sm-3 col-form-label">Civitai API Key</label>
-      <div class="col-sm-9">
-        <input v-model="apiKey" type="text" class="form-control" />
-      </div>
-    </div>
-    <div class="mb-3 row">
-      <label class="col-sm-3 col-form-label">Model Path</label>
-      <div class="col-sm-9">
-        <input v-model="modelPath" type="text" class="form-control" placeholder="./backend/downloads" />
-        <small class="text-white-50">Local directory where models are stored.</small>
-      </div>
-    </div>
-    <div class="mb-3 row">
-      <label class="col-sm-3 col-form-label">Image Path</label>
-      <div class="col-sm-9">
-        <input v-model="imagePath" type="text" class="form-control" placeholder="./backend/images" />
-        <small class="text-white-50">Local directory where images are stored.</small>
-      </div>
+
+    <div class="card border-0 shadow-sm bg-dark-subtle rounded-3 p-4">
+        <div class="mb-3">
+            <label class="form-label text-secondary fw-bold small text-uppercase">Civitai API Key</label>
+            <input v-model="apiKey" type="text" class="form-control bg-dark border-0 text-white shadow-none" placeholder="Enter API Key" />
+        </div>
+        
+        <div class="mb-3">
+            <label class="form-label text-secondary fw-bold small text-uppercase">Model Path</label>
+            <input v-model="modelPath" type="text" class="form-control bg-dark border-0 text-white shadow-none" placeholder="./backend/downloads" />
+            <small class="text-secondary opacity-75 d-block mt-1">Local directory where models are stored.</small>
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label text-secondary fw-bold small text-uppercase">Image Path</label>
+            <input v-model="imagePath" type="text" class="form-control bg-dark border-0 text-white shadow-none" placeholder="./backend/images" />
+            <small class="text-secondary opacity-75 d-block mt-1">Local directory where images are stored.</small>
+        </div>
     </div>
   </div>
 </template>
 
 <script setup>
 import { ref, onMounted } from "vue";
+import { Icon } from "@iconify/vue";
 import { useRouter } from "vue-router";
 import axios from "axios";
 import { showToast } from "../utils/ui";

@@ -65,12 +65,13 @@ func GetModels(c *gin.Context) {
 	modelType := c.Query("modelType")
 	onlySafe, onlyNSFW := resolveNSFWFilter(c)
 	tags := c.Query("tags")
+	synced := c.Query("synced") == "1"
 
 	var modelsList []models.Model
 	q := database.DB.Model(&models.Model{})
 
 	// Filter models by versions when filters are provided or when searching
-	needJoin := search != "" || baseModel != "" || modelType != "" || onlySafe || onlyNSFW || tags != ""
+	needJoin := search != "" || baseModel != "" || modelType != "" || onlySafe || onlyNSFW || tags != "" || synced
 	if needJoin {
 		q = q.Joins("JOIN versions ON versions.model_id = models.id")
 	}
@@ -97,6 +98,9 @@ func GetModels(c *gin.Context) {
 				q = q.Where("LOWER(versions.tags) LIKE ?", "%"+t+"%")
 			}
 		}
+	}
+	if synced {
+		q = q.Joins("JOIN client_files ON client_files.model_version_id = versions.id").Where("client_files.status = ?", "installed")
 	}
 
 	if c.DefaultQuery("includeVersions", "1") == "1" {
@@ -120,7 +124,10 @@ func GetModels(c *gin.Context) {
 					}
 				}
 			}
-			return db.Order("id DESC")
+			if synced {
+				db = db.Joins("JOIN client_files ON client_files.model_version_id = versions.id").Where("client_files.status = ?", "installed")
+			}
+			return db.Order("versions.id DESC")
 		})
 	}
 
@@ -142,10 +149,11 @@ func GetModelsCount(c *gin.Context) {
 	modelType := c.Query("modelType")
 	onlySafe, onlyNSFW := resolveNSFWFilter(c)
 	tags := c.Query("tags")
+	synced := c.Query("synced") == "1"
 
 	var count int64
 	q := database.DB.Model(&models.Model{})
-	needJoin := search != "" || baseModel != "" || modelType != "" || onlySafe || onlyNSFW || tags != ""
+	needJoin := search != "" || baseModel != "" || modelType != "" || onlySafe || onlyNSFW || tags != "" || synced
 	if needJoin {
 		q = q.Joins("JOIN versions ON versions.model_id = models.id")
 	}
@@ -171,6 +179,9 @@ func GetModelsCount(c *gin.Context) {
 				q = q.Where("LOWER(versions.tags) LIKE ?", "%"+t+"%")
 			}
 		}
+	}
+	if synced {
+		q = q.Joins("JOIN client_files ON client_files.model_version_id = versions.id").Where("client_files.status = ?", "installed")
 	}
 	if needJoin {
 		q = q.Group("models.id")

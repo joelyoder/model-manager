@@ -1,15 +1,17 @@
 <template>
   <button
-    class="btn btn-primary back-to-top"
-    v-show="visible"
+    class="btn btn-primary back-to-top d-flex align-items-center justify-content-center p-0 shadow-lg"
+    v-if="visible"
     @click="scrollToTop"
+    style="width: 40px; height: 40px; border-radius: 50%;"
   >
-    <svg width="22px" height="22px" viewBox="0 0 24 24" stroke-width="1.5" fill="none" xmlns="http://www.w3.org/2000/svg" color="#ffffff"><path d="M6 11L12 5L18 11" stroke="#ffffff" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path><path d="M6 19L12 13L18 19" stroke="#ffffff" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+    <Icon icon="mdi:arrow-up" width="24" height="24" />
   </button>
 </template>
 
 <script setup>
 import { ref, onMounted, onUnmounted } from "vue";
+import { Icon } from "@iconify/vue";
 
 const visible = ref(false);
 

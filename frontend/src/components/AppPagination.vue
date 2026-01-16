@@ -1,54 +1,62 @@
 <template>
-  <nav v-if="totalPages > 1" class="mb-4">
-    <ul class="pagination justify-content-center align-items-center gap-1">
-      <li class="page-item" :class="{ disabled: page === 1 }">
-        <a class="page-link" href="#" @click.prevent="$emit('changePage', 1)"
-          >First</a
-        >
-      </li>
-      <li class="page-item" :class="{ disabled: page === 1 }">
-        <a
-          class="page-link"
-          href="#"
-          @click.prevent="$emit('changePage', page - 1)"
-          >Previous</a
-        >
-      </li>
-      <li class="d-flex align-items-center">
+  <nav v-if="totalPages > 1" class="mb-4 d-flex justify-content-center align-items-center gap-2">
+    <button 
+        class="btn btn-outline-secondary btn-sm d-flex align-items-center justify-content-center" 
+        :disabled="page === 1" 
+        @click="$emit('changePage', 1)"
+        title="First Page"
+        style="width: 32px; height: 32px;"
+    >
+        <Icon icon="mdi:chevron-double-left" width="20" height="20" />
+    </button>
+    <button 
+        class="btn btn-outline-secondary btn-sm d-flex align-items-center justify-content-center" 
+        :disabled="page === 1" 
+        @click="$emit('changePage', page - 1)"
+        title="Previous Page"
+        style="width: 32px; height: 32px;"
+    >
+        <Icon icon="mdi:chevron-left" width="20" height="20" />
+    </button>
+    
+    <div class="d-flex align-items-center bg-dark-subtle rounded px-2 border border-secondary border-opacity-25" style="height: 32px;">
         <input
-          type="number"
-          min="1"
-          :max="totalPages"
-          :value="page"
-          @input="pageInput = Number($event.target.value)"
-          @keyup.enter="onEnter"
-          class="form-control"
-          style="width: 80px"
+            type="number"
+            min="1"
+            :max="totalPages"
+            :value="page"
+            @input="pageInput = Number($event.target.value)"
+            @keyup.enter="onEnter"
+            class="form-control form-control-sm bg-transparent border-0 text-white shadow-none text-center p-0"
+            style="width: 40px"
         />
-        <span class="ms-1">/ {{ totalPages }}</span>
-      </li>
-      <li class="page-item" :class="{ disabled: page === totalPages }">
-        <a
-          class="page-link"
-          href="#"
-          @click.prevent="$emit('changePage', page + 1)"
-          >Next</a
-        >
-      </li>
-      <li class="page-item" :class="{ disabled: page === totalPages }">
-        <a
-          class="page-link"
-          href="#"
-          @click.prevent="$emit('changePage', totalPages)"
-          >Last</a
-        >
-      </li>
-    </ul>
+        <span class="text-secondary small ms-1 user-select-none">/ {{ totalPages }}</span>
+    </div>
+
+    <button 
+        class="btn btn-outline-secondary btn-sm d-flex align-items-center justify-content-center" 
+        :disabled="page === totalPages" 
+        @click="$emit('changePage', page + 1)"
+        title="Next Page"
+        style="width: 32px; height: 32px;"
+    >
+         <Icon icon="mdi:chevron-right" width="20" height="20" />
+    </button>
+    <button 
+        class="btn btn-outline-secondary btn-sm d-flex align-items-center justify-content-center" 
+        :disabled="page === totalPages" 
+        @click="$emit('changePage', totalPages)"
+        title="Last Page"
+        style="width: 32px; height: 32px;"
+    >
+        <Icon icon="mdi:chevron-double-right" width="20" height="20" />
+    </button>
   </nav>
 </template>
 
 <script setup>
 import { ref, watch } from "vue";
+import { Icon } from "@iconify/vue";
 
 const props = defineProps({
   page: Number,

@@ -3,7 +3,7 @@ import { Toast, Modal } from "bootstrap";
 export function showToast(message, variant = "primary") {
   const container = document.getElementById("toast-container");
   const wrapper = document.createElement("div");
-  wrapper.className = `toast align-items-center text-bg-${variant}`;
+  wrapper.className = `toast align-items-center text-bg-${variant} border-0 shadow-lg`;
   wrapper.setAttribute("role", "alert");
   wrapper.setAttribute("aria-live", "assertive");
   wrapper.setAttribute("aria-atomic", "true");
@@ -18,7 +18,7 @@ export function showConfirm(message) {
     const el = document.getElementById("confirm-modal");
     el.querySelector(".modal-body").textContent = message;
     const okBtn = el.querySelector("#confirm-ok");
-    const cancelBtn = el.querySelector(".btn-secondary");
+    const cancelBtn = el.querySelector("#confirm-cancel");
     const delBtn = el.querySelector("#confirm-delete");
     const delFilesBtn = el.querySelector("#confirm-delete-files");
     delBtn.classList.add("d-none");
@@ -51,7 +51,7 @@ export function showDeleteConfirm(message) {
     const okBtn = el.querySelector("#confirm-ok");
     const delBtn = el.querySelector("#confirm-delete");
     const delFilesBtn = el.querySelector("#confirm-delete-files");
-    const cancelBtn = el.querySelector(".btn-secondary");
+    const cancelBtn = el.querySelector("#confirm-cancel");
     okBtn.classList.add("d-none");
     delBtn.classList.remove("d-none");
     delFilesBtn.classList.remove("d-none");

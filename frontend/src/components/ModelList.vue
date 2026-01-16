@@ -1,71 +1,65 @@
 <template>
-  <div class="mx-4">
-    <FilterBar
-      v-model:search="search"
-      v-model:tagsSearch="tagsSearch"
-      v-model:selectedCategory="selectedCategory"
-      v-model:selectedBaseModel="selectedBaseModel"
-      v-model:selectedModelType="selectedModelType"
-      v-model:nsfwFilter="nsfwFilter"
-      :categories="categories"
-      :baseModels="baseModels"
-      :modelTypes="modelTypes"
-      @clear="clearFilters"
+  <div class="d-flex" style="min-height: calc(100vh - 80px)">
+    <!-- Sidebar -->
+    <aside 
+      class="sidebar-wrapper bg-dark" 
+      :class="{ 'show-mobile': showSidebar }"
     >
-      <template #actions>
-        <button
-          type="button"
-          class="btn btn-outline-primary d-inline-flex align-items-center justify-content-center"
-          @click="showAddPanel = !showAddPanel"
-          :aria-label="showAddPanel ? 'Close panel' : 'Add models'"
-          :title="showAddPanel ? 'Close panel' : 'Add models'"
-        >
-          <Icon
-            :icon="showAddPanel ? 'mdi:close' : 'mdi:plus'"
-            width="20"
-            height="20"
-          />
-          <span class="visually-hidden">
-            {{ showAddPanel ? "Close Panel" : "Add Models" }}
-          </span>
-        </button>
-      </template>
-    </FilterBar>
+      <FilterSidebar
+        v-model:search="search"
+        v-model:tagsSearch="tagsSearch"
+        v-model:selectedCategory="selectedCategory"
+        v-model:selectedBaseModel="selectedBaseModel"
+        v-model:selectedModelType="selectedModelType"
+        v-model:nsfwFilter="nsfwFilter"
+        v-model:syncedFilter="syncedFilter"
+        :categories="categories"
+        :baseModels="baseModels"
+        :modelTypes="modelTypes"
+        @clear="clearFilters"
+        @close="showSidebar = false"
+      >
+        <template #actions>
+        </template>
+      </FilterSidebar>
+    </aside>
 
-    <AddModelPanel
-      v-show="showAddPanel"
-      @createManual="createManualModel"
-      @added="fetchModels"
-    />
+    <!-- Overlay -->
+    <div v-if="showSidebar" class="sidebar-overlay d-md-none" @click="showSidebar = false"></div>
 
-    <AppPagination
-      :page="page"
-      :totalPages="totalPages"
-      @changePage="changePage"
-    />
+    <!-- Main Content -->
+    <main class="flex-grow-1 p-3 p-md-4" style="min-width: 0;">
+        <!-- Mobile Header Removed -->
 
-    <div class="m-4 text-center" v-if="models.length === 0">
-      No models found.
-    </div>
+        <AppPagination
+            :page="page"
+            :totalPages="totalPages"
+            @changePage="changePage"
+        />
 
-    <div class="model-grid p-4">
-      <ModelCard
-        v-for="card in versionCards"
-        :key="card.version.ID"
-        :model="card.model"
-        :version="card.version"
-        :imageUrl="card.imageUrl"
-        @click="goToModel"
-        @delete="deleteVersion"
-        @toggleNsfw="toggleVersionNsfw"
-      />
-    </div>
+        <div class="m-4 text-center" v-if="models.length === 0">
+            No models found.
+        </div>
 
-    <AppPagination
-      :page="page"
-      :totalPages="totalPages"
-      @changePage="changePage"
-    />
+        <div class="model-grid p-4">
+            <ModelCard
+                v-for="card in versionCards"
+                :key="card.version.ID"
+                :model="card.model"
+                :version="card.version"
+                :imageUrl="card.imageUrl"
+                @click="goToModel"
+                @delete="deleteVersion"
+                @toggleNsfw="toggleVersionNsfw"
+            />
+        </div>
+
+        <AppPagination
+            :page="page"
+            :totalPages="totalPages"
+            @changePage="changePage"
+        />
+    </main>
   </div>
 </template>
 
@@ -76,14 +70,13 @@ import axios from "axios";
 import { Icon } from "@iconify/vue";
 import { showToast, showDeleteConfirm } from "../utils/ui";
 import { useModels } from "../composables/useModels";
-import FilterBar from "./FilterBar.vue";
+import FilterSidebar from "./FilterSidebar.vue";
 import AppPagination from "./AppPagination.vue";
 import ModelCard from "./ModelCard.vue";
-import AddModelPanel from "./AddModelPanel.vue";
 
 const router = useRouter();
 const route = useRoute();
-const showAddPanel = ref(false);
+const showAddPanel = ref(false); // remove this
 
 const {
   models,
@@ -93,11 +86,13 @@ const {
   selectedBaseModel,
   selectedModelType,
   nsfwFilter,
+  syncedFilter,
   page,
   totalPages,
   baseModels,
   modelTypes,
   categories,
+  showSidebar, // Destructured from useModels
   init,
   clearFilters,
   fetchModels,
@@ -107,23 +102,7 @@ const changePage = (p) => {
   page.value = p;
 };
 
-const createManualModel = async () => {
-  try {
-    const res = await axios.post("/api/models", {
-      name: "New Model",
-      type: "Checkpoint",
-    });
-    await fetchModels();
-    router.push({
-      name: "ModelDetail",
-      params: { versionId: res.data.version.ID },
-      query: { edit: "1" },
-    });
-  } catch (err) {
-    console.error(err);
-    showToast("Failed to create model", "danger");
-  }
-};
+
 
 const goToModel = (modelId, versionId) => {
   router.push({
@@ -165,37 +144,6 @@ const toggleVersionNsfw = async (version) => {
     showToast("Failed to update NSFW status", "danger");
   }
 };
-
-// Computed properties for filtering logic that was in ModelList
-// Wait, useModels handles fetching, but does it handle client-side filtering?
-// The original code had `filteredModels` and `versionCards` computed properties.
-// `useModels` fetches from API with params.
-// Let's check `useModels` again. It fetches from API.
-// But `ModelList.vue` original code had `filteredModels` which filtered `models.value` client-side as well?
-// Original `fetchModels` fetched with params.
-// Original `filteredModels` filtered `models.value` again?
-// Yes, lines 673-689 in original `ModelList.vue` filtered `models.value`.
-// But `fetchModels` (line 471) already sent params to server.
-// It seems the server filtering might be incomplete or the client filtering is for immediate feedback?
-// Actually, `debouncedUpdate` calls `fetchModels`.
-// The `filteredModels` computed property seems to be doing additional filtering or maybe the server returns more than needed?
-// Wait, `models.value` is populated by `fetchModels`.
-// If `fetchModels` uses the search params, then `models.value` should already be filtered.
-// The original code had:
-// `const res = await axios.get("/api/models", { params });`
-// `models.value = res.data.map(mapModel);`
-// And `filteredModels` used `models.value`.
-// If the API handles filtering, `filteredModels` might be redundant or refining.
-// However, `versionCards` (line 691) iterates over `filteredModels` and filters VERSIONS.
-// The API returns models, which contain versions.
-// The filters (like `selectedBaseModel`) might apply to versions, not just models.
-// If the API filters models that HAVE a matching version, we still need to filter the versions to show only the matching ones in the card list.
-// Yes, `versionCards` logic is crucial for flattening the list of versions.
-// I need to move `versionCards` logic to `ModelList.vue` or `useModels`.
-// Since it depends on the `models` data and filter states, it fits in `useModels` or `ModelList`.
-// I'll put it in `ModelList` for now as it's view-specific (flattening for display), or `useModels` if I want to expose "cards".
-// `useModels` has the filter states.
-// I'll add `versionCards` to `ModelList.vue` using the data from `useModels`.
 
 const matchesNsfwFilter = (value) => {
   const isNsfw = Boolean(value);
@@ -251,6 +199,8 @@ const versionCards = computed(() => {
         if (selectedModelType.value && v.type !== selectedModelType.value)
           return false;
         if (!matchesNsfwFilter(v.nsfw)) return false;
+        if (syncedFilter.value && v.clientStatus !== 'installed') return false;
+
         if (search.value) {
           const s = search.value.toLowerCase();
           const matchModel = model.name.toLowerCase().includes(s);
@@ -280,8 +230,6 @@ const versionCards = computed(() => {
         return true;
       })
       .map((v) => {
-        // trainedWords parsing removed as ModelCard doesn't use it, 
-        // and we need to preserve the reactive reference of 'v'.
         return {
           model,
           version: v, 
@@ -304,6 +252,39 @@ onMounted(async () => {
     router.replace({ path: route.path, query: rest });
   }
 });
-
-
 </script>
+
+<style scoped>
+.sidebar-wrapper {
+  width: 280px;
+  flex-shrink: 0;
+  transition: transform 0.3s ease-in-out;
+  position: sticky;
+  top: 80px;
+  height: calc(100vh - 80px);
+  overflow-y: auto;
+}
+
+@media (max-width: 767.98px) {
+  .sidebar-wrapper {
+    position: fixed;
+    top: 0;
+    left: 0;
+    height: 100vh;
+    z-index: 1045;
+    transform: translateX(-100%);
+  }
+  .sidebar-wrapper.show-mobile {
+    transform: translateX(0);
+  }
+  .sidebar-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(0,0,0,0.5);
+    z-index: 1040;
+  }
+}
+</style>
