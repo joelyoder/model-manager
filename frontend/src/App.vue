@@ -5,12 +5,13 @@
       <div class="d-flex align-items-center d-md-none z-1">
         <button
           v-if="isModelList"
-          class="btn btn-outline-secondary btn-sm d-inline-flex align-items-center justify-content-center"
+          class="btn btn-dark bg-opacity-25 btn-sm d-inline-flex align-items-center justify-content-center text-secondary-emphasis"
           @click="showSidebar = !showSidebar"
           aria-label="Toggle Filters"
           title="Toggle Filters"
+          style="width: 32px; height: 32px;"
         >
-          <Icon icon="mdi:filter" width="22" height="22" />
+          <Icon icon="mdi:filter" width="20" height="20" />
         </button>
       </div>
 
@@ -18,12 +19,13 @@
       <div class="d-flex align-items-center z-1 ms-2">
         <button
           v-if="isModelList"
-          class="btn btn-outline-secondary btn-sm d-inline-flex align-items-center justify-content-center"
+          class="btn btn-dark bg-opacity-25 btn-sm d-inline-flex align-items-center justify-content-center text-secondary-emphasis"
           @click="showAddPanel = !showAddPanel"
           aria-label="Add Model"
           title="Add Model"
+          style="width: 32px; height: 32px;"
         >
-           <Icon :icon="showAddPanel ? 'mdi:close' : 'mdi:plus'" width="22" height="22" />
+           <Icon :icon="showAddPanel ? 'mdi:close' : 'mdi:plus'" width="20" height="20" />
         </button>
       </div>
 
@@ -65,22 +67,24 @@
       </div>
 
       <!-- Right: Actions -->
-      <div class="d-flex gap-3 flex-grow-1 justify-content-end ms-auto z-1">
+      <div class="d-flex gap-2 flex-grow-1 justify-content-end ms-auto z-1">
         <router-link
           to="/utilities"
-          class="btn btn-outline-secondary btn-sm d-inline-flex align-items-center justify-content-center"
+          class="btn btn-dark bg-opacity-25 btn-sm d-inline-flex align-items-center justify-content-center text-secondary-emphasis"
           aria-label="Utilities"
           title="Utilities"
+          style="width: 32px; height: 32px;"
         >
-          <Icon icon="mdi:wrench" width="22" height="22" />
+          <Icon icon="mdi:wrench" width="20" height="20" />
         </router-link>
         <router-link
           to="/settings"
-          class="btn btn-outline-secondary btn-sm d-inline-flex align-items-center justify-content-center"
+          class="btn btn-dark bg-opacity-25 btn-sm d-inline-flex align-items-center justify-content-center text-secondary-emphasis"
           aria-label="Settings"
           title="Settings"
+          style="width: 32px; height: 32px;"
         >
-          <Icon icon="mdi:cog" width="22" height="22" />
+          <Icon icon="mdi:cog" width="20" height="20" />
         </router-link>
       </div>
     </div>
@@ -88,10 +92,10 @@
 
      <!-- Add Model Slideout Panel -->
     <div 
-        class="add-panel-slideout bg-dark border-end" 
+        class="add-panel-slideout bg-dark shadow-lg" 
         :class="{ 'show': showAddPanel }"
     >
-        <div class="d-flex justify-content-between align-items-center p-3 border-bottom">
+        <div class="d-flex justify-content-between align-items-center p-3 border-bottom border-dark-subtle">
             <h5 class="m-0">Add Model</h5>
             <button type="button" class="btn-close btn-close-white" aria-label="Close" @click="showAddPanel = false"></button>
         </div>

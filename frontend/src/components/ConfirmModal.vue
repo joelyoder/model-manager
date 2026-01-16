@@ -1,12 +1,13 @@
 <template>
   <div class="modal fade" id="confirm-modal" tabindex="-1">
     <div class="modal-dialog modal-dialog-centered">
-      <div class="modal-content">
+      <div class="modal-content bg-dark text-white border-0 shadow-lg">
         <div class="modal-body">Are you sure?</div>
-        <div class="modal-footer">
+        <div class="modal-footer border-0">
           <button
+            id="confirm-cancel"
             type="button"
-            class="btn btn-secondary"
+            class="btn btn-outline-secondary"
             data-bs-dismiss="modal"
           >
             Cancel
@@ -17,7 +18,7 @@
           <button
             id="confirm-delete"
             type="button"
-            class="btn btn-warning d-none"
+            class="btn btn-outline-warning d-none"
           >
             Delete Version
           </button>

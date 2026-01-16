@@ -2,26 +2,26 @@
   <div>
     <!-- Manual Add Button -->
     <div class="mb-4">
-      <button @click="$emit('createManual')" class="btn btn-primary w-100 py-2">
+      <button @click="$emit('createManual')" class="btn btn-outline-primary w-auto px-4 py-2 border-2 fw-bold">
         <Icon icon="mdi:plus" class="me-2" />
-        Add New Model Manually
+        Create New Model Manually
       </button>
     </div>
 
-    <div class="text-light mb-2 small fw-bold">Import from Civitai</div>
+    <div class="text-secondary mb-2 small fw-bold text-uppercase tracking-wide">Import from Civitai</div>
 
     <!-- URL Input -->
     <div class="input-group mb-3">
       <input
         v-model="modelUrl"
         placeholder="Paste Civitai model URL"
-        class="form-control"
+        class="form-control bg-dark-subtle border-0 text-white shadow-none"
         @keyup.enter="loadVersions"
       />
       <button
         @click="loadVersions"
         :disabled="loading || !modelUrl"
-        class="btn btn-primary"
+        class="btn btn-primary border-0"
       >
         Load Versions
       </button>
@@ -33,7 +33,7 @@
         <select
           v-if="versions.length"
           v-model="selectedVersionId"
-          class="form-select"
+          class="form-select bg-dark-subtle border-0 text-white shadow-none"
           style="min-width: 200px"
         >
           <option disabled value="">Select version</option>
@@ -49,7 +49,7 @@
               v-if="selectedVersionId"
               @click="addSelectedVersion"
               :disabled="loading"
-              class="btn btn-secondary"
+              class="btn btn-secondary border-0"
             >
               <span
                 v-if="loading && adding"
@@ -66,7 +66,7 @@
               v-if="selectedVersionId"
               @click="downloadSelectedVersion"
               :disabled="loading"
-              class="btn btn-primary"
+              class="btn btn-primary border-0"
             >
               <span
                 v-if="loading && !adding"
@@ -86,29 +86,21 @@
         v-if="downloading"
         class="d-flex align-items-center gap-2 w-100 mb-2 mt-3"
       >
-        <div class="progress flex-grow-1">
+        <div class="progress flex-grow-1 bg-dark-subtle" style="height: 10px;">
           <div
-            class="progress-bar progress-bar-striped"
+            class="progress-bar progress-bar-striped progress-bar-animated bg-primary"
             :style="{ width: downloadProgress + '%' }"
           >
-            {{ downloadProgress }}%
           </div>
         </div>
+        <small class="text-white">{{ downloadProgress }}%</small>
         <button
-          class="btn btn-outline-danger btn-sm"
+          class="btn btn-outline-danger btn-sm border-0"
           type="button"
           @click="cancelDownload"
           :disabled="canceling"
         >
-          <span
-            v-if="canceling"
-            class="spinner-border spinner-border-sm"
-            aria-hidden="true"
-          ></span>
-          <span v-if="canceling" role="status" class="ps-2"
-            >Cancelling...</span
-          >
-          <span v-else>Cancel</span>
+          <Icon icon="mdi:close" />
         </button>
       </div>
     </div>

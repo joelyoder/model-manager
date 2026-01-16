@@ -1,137 +1,128 @@
 <template>
-  <div class="px-4 container">
-    <div class="mb-2 d-flex gap-2 pb-2" v-if="!isEditing">
-      <button @click="goBack" class="btn btn-secondary">Back</button>
-      <button @click="isEditing = true" class="btn btn-primary">Edit</button>
-      <button
-        type="button"
-        @click="toggleNsfw"
-        :disabled="togglingNsfw"
-        class="btn btn-sm px-2"
-        :class="version.nsfw ? 'btn-danger' : 'btn-secondary'"
-        style="--bs-btn-padding-y: 0.25rem; --bs-btn-padding-x: 0.25rem"
-        aria-label="Toggle NSFW"
-        title="Toggle NSFW"
+  <div class="px-2 px-md-4 container max-w-xl mx-auto">
+    <!-- Header / Actions -->
+    <div class="mb-3 d-flex gap-2 align-items-center px-2 px-md-0" v-if="!isEditing">
+      <button 
+        @click="goBack" 
+        class="btn btn-outline-secondary btn-sm d-flex align-items-center justify-content-center border-0"
+        aria-label="Back"
+        title="Back"
+        style="width: 40px; height: 40px;"
       >
-        <span class="visually-hidden">Toggle NSFW</span>
-        <svg
-          v-if="version.nsfw"
-          width="18px"
-          height="18px"
-          viewBox="0 0 24 24"
-          stroke-width="1.5"
-          fill="none"
-          xmlns="http://www.w3.org/2000/svg"
-          color="#ffffff"
-        >
-          <path
-            d="M10.733 5.076a10.744 10.744 0 0 1 11.205 6.575 1 1 0 0 1 0 .696 10.747 10.747 0 0 1-1.444 2.49"
-            stroke="#ffffff"
-            stroke-width="1.5"
-            stroke-linecap="round"
-            stroke-linejoin="round"
-          ></path>
-          <path
-            d="M14.084 14.158a3 3 0 0 1-4.242-4.242"
-            stroke="#ffffff"
-            stroke-width="1.5"
-            stroke-linecap="round"
-            stroke-linejoin="round"
-          ></path>
-          <path
-            d="M17.479 17.499a10.75 10.75 0 0 1-15.417-5.151 1 1 0 0 1 0-.696 10.75 10.75 0 0 1 4.446-5.143"
-            stroke="#ffffff"
-            stroke-width="1.5"
-            stroke-linecap="round"
-            stroke-linejoin="round"
-          ></path>
-          <path
-            d="m2 2 20 20"
-            stroke="#ffffff"
-            stroke-width="1.5"
-            stroke-linecap="round"
-            stroke-linejoin="round"
-          ></path>
-        </svg>
-        <svg
-          v-else
-          width="18px"
-          height="18px"
-          viewBox="0 0 24 24"
-          stroke-width="1.5"
-          fill="none"
-          xmlns="http://www.w3.org/2000/svg"
-          color="#ffffff"
-        >
-          <path
-            d="M2.062 12.348a1 1 0 0 1 0-.696 10.75 10.75 0 0 1 19.876 0 1 1 0 0 1 0 .696 10.75 10.75 0 0 1-19.876 0"
-            stroke="#ffffff"
-            stroke-width="1.5"
-            stroke-linecap="round"
-            stroke-linejoin="round"
-          ></path>
-          <circle
-            cx="12"
-            cy="12"
-            r="3"
-            stroke="#ffffff"
-            stroke-width="1.5"
-            stroke-linecap="round"
-            stroke-linejoin="round"
-          ></circle>
-        </svg>
+        <Icon icon="mdi:arrow-left" width="24" height="24" />
       </button>
-      <button @click="handleDelete" class="btn btn-outline-danger ms-auto">
-        Delete
+      
+      <div class="ms-auto d-flex gap-2">
+        <button 
+            @click="isEditing = true" 
+            class="btn btn-outline-primary btn-sm d-flex align-items-center justify-content-center border-0"
+            aria-label="Edit"
+            title="Edit"
+            style="width: 40px; height: 40px;"
+        >
+            <Icon icon="mdi:pencil" width="24" height="24" />
+        </button>
+        
+        <button
+            type="button"
+            @click="toggleNsfw"
+            :disabled="togglingNsfw"
+            class="btn btn-sm d-flex align-items-center justify-content-center border-0"
+            :class="version.nsfw ? 'btn-danger' : 'btn-outline-secondary'"
+            style="width: 40px; height: 40px;"
+            aria-label="Toggle NSFW"
+            title="Toggle NSFW"
+        >
+            <Icon :icon="version.nsfw ? 'mdi:eye-off' : 'mdi:eye'" width="24" height="24" />
+        </button>
+        
+        <button 
+            @click="handleDelete" 
+            class="btn btn-outline-danger btn-sm d-flex align-items-center justify-content-center border-0"
+            aria-label="Delete"
+            title="Delete"
+            style="width: 40px; height: 40px;"
+        >
+            <Icon icon="mdi:delete" width="24" height="24" />
+        </button>
+      </div>
+    </div>
+    
+    <div v-else class="mb-3 d-flex gap-2 align-items-center justify-content-end">
+      <button 
+        @click="cancelEdit" 
+        class="btn btn-outline-secondary btn-sm d-flex align-items-center justify-content-center border-0"
+        aria-label="Cancel"
+        title="Cancel"
+        style="width: 40px; height: 40px;"
+      >
+        <Icon icon="mdi:close" width="24" height="24" />
       </button>
-    </div>
-    <div v-else class="mb-2 d-flex gap-2 pb-2">
-      <button @click="cancelEdit" class="btn btn-secondary">Cancel</button>
-      <button @click="saveEdit" class="btn btn-primary">Save</button>
-    </div>
-
-    <div v-if="!isEditing">
-      <MetadataDisplay :model="model" :version="version" />
-
-      <ImageGallery
-        :images="version.images"
-        :currentImagePath="version.imagePath"
-        :versionId="version.ID"
-        :versionType="version.type"
-        :versionMode="version.mode"
-        @setMain="setMainImage"
-        @remove="removeImage"
-        @uploaded="fetchData(route.params.versionId)"
-      />
-
-      <div class="mb-2 d-flex justify-content-center gap-2 pb-2">
-        <button @click="updateMeta" class="btn btn-secondary btn-sm">
-          Update Metadata
-        </button>
-        <button @click="updateDesc" class="btn btn-secondary btn-sm">
-          Update Description
-        </button>
-        <button @click="updateImages" class="btn btn-secondary btn-sm">
-          Refresh Images
-        </button>
-        <button @click="updateAll" class="btn btn-secondary btn-sm">
-          Update All
+      <div class="ms-auto d-flex gap-2">
+        <button 
+        @click="saveEdit" 
+        class="btn btn-outline-primary btn-sm d-flex align-items-center justify-content-center border-0"
+        aria-label="Save"
+        title="Save"
+        style="width: 40px; height: 40px;"
+        >
+        <Icon icon="mdi:content-save" width="24" height="24" />
         </button>
       </div>
     </div>
 
+    <!-- Main Content -->
+    <div v-if="!isEditing">
+      <div class="card border-0 shadow-sm bg-dark-subtle rounded-3 overflow-hidden">
+        <div class="card-body p-4">
+            <MetadataDisplay :model="model" :version="version" />
+
+            <div class="my-4 border-top border-secondary opacity-25"></div>
+
+            <ImageGallery
+                :images="version.images"
+                :currentImagePath="version.imagePath"
+                :versionId="version.ID"
+                :versionType="version.type"
+                :versionMode="version.mode"
+                @setMain="setMainImage"
+                @remove="removeImage"
+                @uploaded="fetchData(route.params.versionId)"
+            />
+        </div>
+        
+         <div class="card-footer border-0 bg-dark-subtle p-3 d-flex justify-content-center gap-2">
+            <button @click="updateMeta" class="btn btn-outline-secondary btn-sm">
+            Update Metadata
+            </button>
+            <button @click="updateDesc" class="btn btn-outline-secondary btn-sm">
+            Update Description
+            </button>
+            <button @click="updateImages" class="btn btn-outline-secondary btn-sm">
+            Refresh Images
+            </button>
+            <button @click="updateAll" class="btn btn-outline-secondary btn-sm">
+            Update All
+            </button>
+        </div>
+      </div>
+    </div>
+
     <div v-else>
-      <MetadataEditor
-        v-model:model="model"
-        v-model:version="version"
-        :modelTypes="modelTypes"
-      />
+      <div class="card border-0 shadow-sm bg-dark-subtle rounded-3 p-4">
+        <MetadataEditor
+            v-model:model="model"
+            v-model:version="version"
+            :modelTypes="modelTypes"
+        />
+      </div>
     </div>
   </div>
 </template>
 
 <script setup>
 import { onMounted } from "vue";
+import { Icon } from "@iconify/vue";
 import { useRouter, useRoute } from "vue-router";
 import axios from "axios";
 import { showToast, showConfirm, showDeleteConfirm } from "../utils/ui";

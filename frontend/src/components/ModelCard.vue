@@ -135,22 +135,22 @@ const dispatch = (action) => {
 };
 
 const getBadgeColor = (text) => {
-  if (!text) return 'text-bg-secondary';
+  if (!text) return 'bg-secondary bg-opacity-75 text-white';
   const t = text.toLowerCase();
   
   // Model Types
-  if (t.includes('checkpoint')) return 'text-bg-primary'; // Blue
-  if (t.includes('lora')) return 'text-bg-info text-white'; // Cyan/Info
-  if (t.includes('embedding')) return 'text-bg-success'; // Green
-  if (t.includes('controlnet')) return 'text-bg-warning'; // Yellow
+  if (t.includes('checkpoint')) return 'bg-primary bg-opacity-75 text-white';
+  if (t.includes('lora')) return 'bg-info bg-opacity-75 text-white';
+  if (t.includes('embedding')) return 'bg-success bg-opacity-75 text-white';
+  if (t.includes('controlnet')) return 'bg-warning bg-opacity-75 text-white';
   
   // Base Models
-  if (t.includes('sdxl')) return 'text-bg-danger'; // Red
-  if (t.includes('1.5')) return 'text-bg-indigo'; // Custom or Purple-ish (using bootstrap custom if avail or fallback)
-  if (t.includes('pony')) return 'text-bg-pink'; // Custom or Pink
+  if (t.includes('sdxl')) return 'bg-danger bg-opacity-75 text-white';
+  if (t.includes('1.5')) return 'bg-indigo bg-opacity-75 text-white';
+  if (t.includes('pony')) return 'bg-pink bg-opacity-75 text-white';
   
   // Fallbacks
-  return 'text-bg-secondary';
+  return 'bg-secondary bg-opacity-75 text-white';
 };
 </script>
 
