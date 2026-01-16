@@ -259,6 +259,10 @@ onMounted(async () => {
   width: 280px;
   flex-shrink: 0;
   transition: transform 0.3s ease-in-out;
+  position: sticky;
+  top: 80px;
+  height: calc(100vh - 80px);
+  overflow-y: auto;
 }
 
 @media (max-width: 767.98px) {
