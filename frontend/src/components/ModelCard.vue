@@ -118,6 +118,7 @@
 import { useRemote } from '../composables/useRemote';
 import { ref } from 'vue';
 import { Icon } from "@iconify/vue";
+import { getBadgeColor } from "../utils/colors";
 
 const isHovering = ref(false);
 
@@ -134,24 +135,6 @@ const dispatch = (action) => {
   dispatchAction(action, props.model, props.version);
 };
 
-const getBadgeColor = (text) => {
-  if (!text) return 'bg-secondary bg-opacity-75 text-white';
-  const t = text.toLowerCase();
-  
-  // Model Types
-  if (t.includes('checkpoint')) return 'bg-primary bg-opacity-75 text-white';
-  if (t.includes('lora')) return 'bg-info bg-opacity-75 text-white';
-  if (t.includes('embedding')) return 'bg-success bg-opacity-75 text-white';
-  if (t.includes('controlnet')) return 'bg-warning bg-opacity-75 text-white';
-  
-  // Base Models
-  if (t.includes('sdxl')) return 'bg-danger bg-opacity-75 text-white';
-  if (t.includes('1.5')) return 'bg-indigo bg-opacity-75 text-white';
-  if (t.includes('pony')) return 'bg-pink bg-opacity-75 text-white';
-  
-  // Fallbacks
-  return 'bg-secondary bg-opacity-75 text-white';
-};
 </script>
 
 <style scoped>
@@ -161,16 +144,6 @@ const getBadgeColor = (text) => {
 
 .model-card:hover .transition-zoom {
   transform: scale(1.05); /* Slight zoom on hover */
-}
-
-/* Custom colors if Bootstrap doesn't provide them */
-.text-bg-indigo {
-  background-color: #6610f2;
-  color: #fff;
-}
-.text-bg-pink {
-  background-color: #d63384;
-  color: #fff;
 }
 
 /* Kebab button hover brighter */

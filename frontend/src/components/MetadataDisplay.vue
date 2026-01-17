@@ -137,6 +137,7 @@
 import { computed } from "vue";
 import { Icon } from "@iconify/vue";
 import { showToast } from "../utils/ui";
+import { getBadgeColor } from "../utils/colors";
 
 const props = defineProps({
   model: Object,
@@ -286,22 +287,5 @@ const copyLoraTag = async () => {
   );
 };
 
-const getBadgeColor = (text) => {
-  if (!text) return 'bg-secondary bg-opacity-75 text-white';
-  const t = text.toLowerCase();
-  
-  // Model Types
-  if (t.includes('checkpoint')) return 'bg-primary bg-opacity-75 text-white';
-  if (t.includes('lora')) return 'bg-info bg-opacity-75 text-white';
-  if (t.includes('embedding')) return 'bg-success bg-opacity-75 text-white';
-  if (t.includes('controlnet')) return 'bg-warning bg-opacity-75 text-white';
-  
-  // Base Models
-  if (t.includes('sdxl')) return 'bg-danger bg-opacity-75 text-white';
-  if (t.includes('1.5')) return 'bg-indigo bg-opacity-75 text-white';
-  if (t.includes('pony')) return 'bg-pink bg-opacity-75 text-white';
-  
-  // Fallbacks
-  return 'bg-secondary bg-opacity-75 text-white';
-};
+// Local getBadgeColor removed in favor of utility
 </script>

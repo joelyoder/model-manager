@@ -63,3 +63,19 @@ body {
   overflow-wrap: anywhere;
   word-break: break-word;
 }
+
+/* Custom Tag Colors */
+.bg-tag-emerald { background-color: #10b981; color: white !important; }
+.bg-tag-indigo { background-color: #6366f1; color: white !important; }
+.bg-tag-amber { background-color: #f59e0b; color: white !important; }
+.bg-tag-rose { background-color: #f43f5e; color: white !important; }
+.bg-tag-cyan { background-color: #06b6d4; color: white !important; }
+.bg-tag-violet { background-color: #8b5cf6; color: white !important; }
+.bg-tag-pink { background-color: #ec4899; color: white !important; }
+.bg-tag-orange { background-color: #f97316; color: white !important; }
+.bg-tag-purple { background-color: #a855f7; color: white !important; }
+.bg-tag-teal { background-color: #14b8a6; color: white !important; }
+.bg-tag-lime { background-color: #84cc16; color: white !important; }
+.bg-tag-sky { background-color: #0ea5e9; color: white !important; }
+.bg-tag-fuchsia { background-color: #d946ef; color: white !important; }
+.bg-tag-slate { background-color: #64748b; color: white !important; }
