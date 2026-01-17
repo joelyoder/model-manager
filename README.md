@@ -1,6 +1,6 @@
 # Model Manager
 
-This is a desktop application to download and manage models for local image generation.
+This is a web application to download and manage models for local image generation that can be run as a standalone application or server with desktop client.
 
 ![Application preview screenshot](homepage-preview.png)
 
@@ -18,6 +18,8 @@ Model Manager combines a Go backend and a Vue 3 single-page application to provi
 - Gallery management, including uploading supplemental images, setting main previews, and pruning outdated assets.
 - Metadata import/export utilities and library statistics to keep local collections organized.
 - Integration with the Civitai API for synchronizing models and refreshing version information.
+- **Smart Remote Management**: Interactive controls for seamless downloading, syncing, and removal of models on remote clients with real-time status updates.
+- **Image Archiving**: Automated tools to archive external descriptive images to local storage, ensuring content remains available even if the source disappears.
 
 ## Prerequisites
 

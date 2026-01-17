@@ -41,9 +41,9 @@ const KNOWN_MAPPINGS = {
     'sdxl turbo': 'bg-tag-lime',
     'pony': 'bg-tag-pink',
     'flux': 'bg-tag-cyan',
-    'illustrious': 'bg-tag-amber',
+    'illustrious': 'bg-tag-emerald',
     'qwen': 'bg-tag-fuchsia',
-    'zimage': 'bg-tag-emerald',
+    'zimage': 'bg-tag-amber',
 };
 
 /**
