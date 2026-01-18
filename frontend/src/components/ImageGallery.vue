@@ -131,7 +131,7 @@ const galleryImages = computed(() => {
     }
     return {
       ...img,
-      url: img.path.replace(/^.*[\\/]backend[\\/]images/, "/images"),
+      url: (img.path || "").replace(/^.*[\\/]backend[\\/]images/, "/images"),
       parsedMeta: meta,
     };
   });

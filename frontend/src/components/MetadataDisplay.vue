@@ -20,6 +20,26 @@
             {{ version.baseModel }}
           </span>
         </div>
+        
+        <!-- Collections -->
+        <div v-if="collections && collections.length > 0" class="d-flex flex-wrap align-items-center gap-2 mb-4">
+             <router-link 
+                v-for="col in collections" 
+                :key="col.ID" 
+                :to="`/collections/${col.ID}`"
+                class="badge bg-secondary text-decoration-none bg-opacity-25 text-white border border-secondary border-opacity-25 clickable-badge"
+            >
+                <Icon icon="mdi:folder-outline" class="me-1"/> {{ col.name }}
+            </router-link>
+             <button class="btn btn-sm btn-outline-secondary py-0 px-2 rounded-pill border-secondary border-opacity-25 text-white" @click="$emit('addCollection')" title="Add to Collection">
+                 <Icon icon="mdi:plus" />
+            </button>
+        </div>
+        <div v-else class="mb-4">
+             <button class="btn btn-sm btn-outline-secondary py-0 px-2 rounded-pill border-secondary border-opacity-25 text-white" @click="$emit('addCollection')">
+                 <Icon icon="mdi:plus" class="me-1"/> Add to Collection
+            </button>
+        </div>
 
         <div class="row g-3">
             <!-- Tags -->
@@ -142,7 +162,10 @@ import { getBadgeColor } from "../utils/colors";
 const props = defineProps({
   model: Object,
   version: Object,
+  collections: Array,
 });
+
+const emit = defineEmits(["addCollection"]);
 
 const imageUrl = computed(() => {
   const path = props.version.imagePath || props.model.imagePath;

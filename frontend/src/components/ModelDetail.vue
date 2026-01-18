@@ -71,11 +71,20 @@
       </div>
     </div>
 
+
+
+
+
     <!-- Main Content -->
     <div v-if="!isEditing">
       <div class="card border-0 shadow-sm bg-dark-subtle rounded-3 overflow-hidden">
         <div class="card-body p-4">
-            <MetadataDisplay :model="model" :version="version" />
+            <MetadataDisplay 
+                :model="model" 
+                :version="version" 
+                :collections="collections"
+                @addCollection="openCollectionModal"
+            />
 
             <div class="my-4 border-top border-secondary opacity-25"></div>
 
@@ -117,11 +126,17 @@
         />
       </div>
     </div>
+
+    <AddToCollectionModal 
+        v-if="showCollectionModal" 
+        :versionId="parseInt(route.params.versionId)" 
+        @close="onCollectionModalClose" 
+    />
   </div>
 </template>
 
 <script setup>
-import { onMounted } from "vue";
+import { onMounted, ref } from "vue";
 import { Icon } from "@iconify/vue";
 import { useRouter, useRoute } from "vue-router";
 import axios from "axios";
@@ -130,6 +145,7 @@ import { useModelDetail } from "../composables/useModelDetail";
 import MetadataDisplay from "./MetadataDisplay.vue";
 import MetadataEditor from "./MetadataEditor.vue";
 import ImageGallery from "./ImageGallery.vue";
+import AddToCollectionModal from "./AddToCollectionModal.vue";
 
 const router = useRouter();
 const route = useRoute();
@@ -145,6 +161,27 @@ const {
   saveEdit,
   refreshVersion,
 } = useModelDetail();
+
+const collections = ref([]);
+const showCollectionModal = ref(false);
+
+const fetchCollections = async () => {
+    try {
+        const res = await axios.get(`/api/versions/${route.params.versionId}/collections`);
+        collections.value = res.data || [];
+    } catch (err) {
+        console.error("Failed to fetch collections", err);
+    }
+};
+
+const openCollectionModal = () => {
+    showCollectionModal.value = true;
+};
+
+const onCollectionModalClose = () => {
+    showCollectionModal.value = false;
+    fetchCollections();
+};
 
 const modelTypes = [
   "Checkpoint",
@@ -167,6 +204,7 @@ const modelTypes = [
 
 onMounted(async () => {
   await fetchData(route.params.versionId);
+  await fetchCollections();
   if (route.query.edit === "1") {
     isEditing.value = true;
   }
@@ -217,7 +255,11 @@ const updateAll = async () => {
 };
 
 const goBack = () => {
-  router.push({ path: "/", query: { scrollTo: version.value.ID } });
+  if (route.query.returnPath) {
+    router.push(route.query.returnPath);
+  } else {
+    router.push({ path: "/", query: { scrollTo: version.value.ID } });
+  }
 };
 
 const setMainImage = async (img) => {
