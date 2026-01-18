@@ -45,10 +45,12 @@
                     <span class="d-none d-md-inline">Bulk Add</span>
                 </button>
                 <button 
-                    class="btn btn-dark d-md-none" 
-                    @click="showSidebar = !showSidebar"
+                  class="btn btn-outline-secondary d-flex align-items-center gap-2" 
+                  @click="openRenameModal" 
+                  title="Rename Collection"
                 >
-                    <Icon icon="mdi:filter" />
+                    <Icon icon="mdi:pencil" width="20" height="20" />
+                    <span class="d-none d-md-inline">Edit</span>
                 </button>
             </div>
         </div>
@@ -123,11 +125,51 @@
         </div>
       </div>
     </div>
+
+    <!-- Rename Modal -->
+    <div v-if="showRenameModal" class="modal d-block" tabindex="-1" style="background: rgba(0,0,0,0.5); backdrop-filter: blur(2px);" @click.self="showRenameModal = false">
+      <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content bg-dark text-white border-0 shadow-lg">
+          <div class="modal-header border-0">
+            <h5 class="modal-title fw-bold">Edit Collection</h5>
+            <button type="button" class="btn-close btn-close-white" @click="showRenameModal = false"></button>
+          </div>
+          <div class="modal-body pt-0">
+            <div class="mb-3">
+              <label class="form-label text-secondary small fw-bold text-uppercase">Name</label>
+              <input 
+                type="text" 
+                class="form-control bg-dark-subtle text-light border-0 shadow-none" 
+                v-model="renameForm.name" 
+                ref="renameInput"
+                @keyup.enter="updateCollection"
+                placeholder="Collection name..."
+              >
+            </div>
+            <div class="mb-3">
+              <label class="form-label text-secondary small fw-bold text-uppercase">Description (Optional)</label>
+              <textarea 
+                class="form-control bg-dark-subtle text-light border-0 shadow-none" 
+                v-model="renameForm.description"
+                rows="3"
+                placeholder="Add a description..."
+              ></textarea>
+            </div>
+          </div>
+          <div class="modal-footer border-0 pt-0">
+            <button type="button" class="btn btn-outline-secondary border-0" @click="showRenameModal = false">Cancel</button>
+            <button type="button" class="btn btn-primary shadow-sm" @click="updateCollection" :disabled="!renameForm.name">
+                Save Changes
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
 <script setup>
-import { ref, onMounted, watch } from 'vue';
+import { ref, onMounted, watch, nextTick } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import axios from 'axios';
 import { Icon } from "@iconify/vue";
@@ -137,6 +179,7 @@ import FilterSidebar from './FilterSidebar.vue';
 import AppPagination from './AppPagination.vue';
 import AddToCollectionModal from './AddToCollectionModal.vue';
 import debounce from '../utils/debounce';
+import { useModels } from '../composables/useModels';
 
 const route = useRoute();
 const router = useRouter();
@@ -145,7 +188,7 @@ const router = useRouter();
 const collection = ref({});
 const models = ref([]); // These are actually Versions
 const loading = ref(true);
-const showSidebar = ref(false);
+const { showSidebar } = useModels();
 const showCollectionModal = ref(false);
 const selectedVersionId = ref(0);
 
@@ -153,6 +196,33 @@ const selectedVersionId = ref(0);
 const showBulkModal = ref(false);
 const bulkTag = ref("");
 const bulkInput = ref(null);
+
+// Rename
+const showRenameModal = ref(false);
+const renameForm = ref({ name: "", description: "" });
+const renameInput = ref(null);
+
+const openRenameModal = () => {
+    renameForm.value = { 
+        name: collection.value.name, 
+        description: collection.value.description 
+    };
+    showRenameModal.value = true;
+    nextTick(() => renameInput.value?.focus());
+};
+
+const updateCollection = async () => {
+    if (!renameForm.value.name) return;
+    try {
+        await axios.put(`/api/collections/${route.params.id}`, renameForm.value);
+        showToast("Collection updated", "success");
+        showRenameModal.value = false;
+        fetchCollection(); // Refresh details
+    } catch (err) {
+        console.error(err);
+        showToast("Failed to update collection", "danger");
+    }
+};
 
 const openBulkModal = () => {
     bulkTag.value = "";

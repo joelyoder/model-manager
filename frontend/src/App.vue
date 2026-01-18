@@ -4,7 +4,7 @@
       <!-- Left: Filter Button (Mobile Only) -->
       <div class="d-flex align-items-center d-md-none z-1">
         <button
-          v-if="isModelList"
+          v-if="showFilterButton"
           class="btn btn-dark bg-opacity-25 btn-sm d-inline-flex align-items-center justify-content-center text-secondary-emphasis"
           @click="showSidebar = !showSidebar"
           aria-label="Toggle Filters"
@@ -144,6 +144,7 @@ const router = useRouter();
 const { showSidebar, showAddPanel, fetchModels } = useModels();
 
 const isModelList = computed(() => route.name === "ModelList" || route.path === "/");
+const showFilterButton = computed(() => isModelList.value || route.name === "CollectionDetail");
 
 const onModelAdded = async () => {
     await fetchModels();

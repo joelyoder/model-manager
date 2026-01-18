@@ -11,7 +11,7 @@ const routes = [
   { path: "/settings", component: AppSettings },
   { path: "/utilities", component: Utilities },
   { path: "/collections", component: CollectionsPage },
-  { path: "/collections/:id", component: CollectionDetail },
+  { path: "/collections/:id", name: "CollectionDetail", component: CollectionDetail },
   {
     path: "/model/:modelId/version/:versionId",
     name: "ModelDetail",

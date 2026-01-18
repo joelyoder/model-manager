@@ -66,6 +66,7 @@
 <script setup>
 import { ref, onMounted } from 'vue';
 import axios from 'axios';
+import { Icon } from "@iconify/vue";
 import { showToast } from '../utils/ui';
 
 const props = defineProps({
