@@ -4,7 +4,7 @@
       <!-- Left: Filter Button (Mobile Only) -->
       <div class="d-flex align-items-center d-md-none z-1">
         <button
-          v-if="isModelList"
+          v-if="showFilterButton"
           class="btn btn-dark bg-opacity-25 btn-sm d-inline-flex align-items-center justify-content-center text-secondary-emphasis"
           @click="showSidebar = !showSidebar"
           aria-label="Toggle Filters"
@@ -68,6 +68,15 @@
 
       <!-- Right: Actions -->
       <div class="d-flex gap-2 flex-grow-1 justify-content-end ms-auto z-1">
+        <router-link
+          to="/collections"
+          class="btn btn-dark bg-opacity-25 btn-sm d-inline-flex align-items-center justify-content-center text-secondary-emphasis"
+          aria-label="Collections"
+          title="Collections"
+          style="width: 32px; height: 32px;"
+        >
+          <Icon icon="mdi:folder-multiple" width="20" height="20" />
+        </router-link>
         <router-link
           to="/utilities"
           class="btn btn-dark bg-opacity-25 btn-sm d-inline-flex align-items-center justify-content-center text-secondary-emphasis"
@@ -135,6 +144,7 @@ const router = useRouter();
 const { showSidebar, showAddPanel, fetchModels } = useModels();
 
 const isModelList = computed(() => route.name === "ModelList" || route.path === "/");
+const showFilterButton = computed(() => isModelList.value || route.name === "CollectionDetail");
 
 const onModelAdded = async () => {
     await fetchModels();

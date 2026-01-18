@@ -51,6 +51,7 @@
                 @click="goToModel"
                 @delete="deleteVersion"
                 @toggleNsfw="toggleVersionNsfw"
+                @addToCollection="openCollectionModal"
             />
         </div>
 
@@ -58,6 +59,12 @@
             :page="page"
             :totalPages="totalPages"
             @changePage="changePage"
+        />
+
+        <AddToCollectionModal 
+            v-if="showCollectionModal" 
+            :versionId="selectedVersionId" 
+            @close="showCollectionModal = false" 
         />
     </main>
   </div>
@@ -73,10 +80,13 @@ import { useModels } from "../composables/useModels";
 import FilterSidebar from "./FilterSidebar.vue";
 import AppPagination from "./AppPagination.vue";
 import ModelCard from "./ModelCard.vue";
+import AddToCollectionModal from "./AddToCollectionModal.vue";
 
 const router = useRouter();
 const route = useRoute();
 const showAddPanel = ref(false); // remove this
+const showCollectionModal = ref(false);
+const selectedVersionId = ref(0);
 
 const {
   models,
@@ -123,6 +133,11 @@ const deleteVersion = async (versionId) => {
     console.error(err);
     showToast("Failed to delete version", "danger");
   }
+};
+
+const openCollectionModal = (versionId) => {
+    selectedVersionId.value = versionId;
+    showCollectionModal.value = true;
 };
 
 const toggleVersionNsfw = async (version) => {

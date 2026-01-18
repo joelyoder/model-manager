@@ -102,6 +102,11 @@
                 </button>
                 <ul class="dropdown-menu dropdown-menu-end shadow">
                     <li>
+                        <button class="dropdown-item d-flex align-items-center" @click.stop="$emit('addToCollection', version.ID)">
+                             <Icon icon="mdi:folder-plus" class="me-2" /> Add to Collection
+                        </button>
+                    </li>
+                    <li>
                         <button class="dropdown-item text-danger d-flex align-items-center" @click.stop="$emit('delete', version.ID)">
                              <Icon icon="mdi:trash-can-outline" class="me-2" /> Delete Version
                         </button>
@@ -128,7 +133,7 @@ const props = defineProps({
   imageUrl: String,
 });
 
-const emit = defineEmits(["click", "delete", "toggleNsfw"]);
+const emit = defineEmits(["click", "delete", "toggleNsfw", "addToCollection"]);
 
 const { dispatchAction, isDispatching } = useRemote();
 const dispatch = (action) => {

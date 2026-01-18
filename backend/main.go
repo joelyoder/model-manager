@@ -2,7 +2,9 @@ package main
 
 import (
 	"log"
+	"net/http"
 	"os"
+	"strings"
 
 	"model-manager/backend/api"
 	"model-manager/backend/database"
@@ -82,6 +84,18 @@ func main() {
 
 		// Remote Management
 		apiGroup.POST("/remote/dispatch", api.DispatchRemote)
+
+		// Collections
+		apiGroup.GET("/collections", api.GetCollections)
+		apiGroup.GET("/collections/:id", api.GetCollection)
+		apiGroup.POST("/collections", api.CreateCollection)
+		apiGroup.PUT("/collections/:id", api.UpdateCollection)
+		apiGroup.DELETE("/collections/:id", api.DeleteCollection)
+		apiGroup.GET("/collections/:id/versions", api.GetCollectionVersions)
+		apiGroup.POST("/collections/:id/versions", api.AddVersionToCollection)
+		apiGroup.DELETE("/collections/:id/versions/:versionId", api.RemoveVersionFromCollection)
+		apiGroup.GET("/versions/:id/collections", api.GetVersionCollections)
+		apiGroup.POST("/collections/:id/add-by-tag", api.AddVersionsByTag)
 	}
 
 	// WebSocket
@@ -89,6 +103,10 @@ func main() {
 
 	// Vue SPA fallback for all other routes (no wildcard)
 	r.NoRoute(func(c *gin.Context) {
+		if strings.HasPrefix(c.Request.URL.Path, "/api") {
+			c.JSON(http.StatusNotFound, gin.H{"error": "API route not found"})
+			return
+		}
 		c.File("./frontend/dist/index.html")
 	})
 

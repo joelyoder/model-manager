@@ -27,6 +27,8 @@ type Version struct {
 
 	Images []VersionImage `json:"images"`
 
+	Collections []Collection `json:"collections" gorm:"many2many:collection_versions;"`
+
 	// ClientStatus is a calculated field for the default client, not stored in DB
 	ClientStatus string `gorm:"-" json:"clientStatus"`
 }

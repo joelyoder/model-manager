@@ -20,6 +20,7 @@ Model Manager combines a Go backend and a Vue 3 single-page application to provi
 - Integration with the Civitai API for synchronizing models and refreshing version information.
 - **Smart Remote Management**: Interactive controls for seamless downloading, syncing, and removal of models on remote clients with real-time status updates.
 - **Image Archiving**: Automated tools to archive external descriptive images to local storage, ensuring content remains available even if the source disappears.
+- **Custom Collections**: Effortlessly organize models into custom groups with support for bulk adding versions by tag and quick-access management.
 
 ## Prerequisites
 
