@@ -101,6 +101,11 @@
                     <Icon icon="mdi:dots-vertical" width="20" height="20" />
                 </button>
                 <ul class="dropdown-menu dropdown-menu-end shadow">
+                    <li v-if="showCollectionRemove">
+                        <button class="dropdown-item text-danger d-flex align-items-center" @click.stop="$emit('removeFromCollection', version.ID)">
+                             <Icon icon="mdi:folder-remove-outline" class="me-2" /> Remove from Collection
+                        </button>
+                    </li>
                     <li>
                         <button class="dropdown-item d-flex align-items-center" @click.stop="$emit('addToCollection', version.ID)">
                              <Icon icon="mdi:folder-plus" class="me-2" /> Add to Collection
@@ -131,9 +136,13 @@ const props = defineProps({
   model: Object,
   version: Object,
   imageUrl: String,
+  showCollectionRemove: {
+    type: Boolean,
+    default: false
+  }
 });
 
-const emit = defineEmits(["click", "delete", "toggleNsfw", "addToCollection"]);
+const emit = defineEmits(["click", "delete", "toggleNsfw", "addToCollection", "removeFromCollection"]);
 
 const { dispatchAction, isDispatching } = useRemote();
 const dispatch = (action) => {

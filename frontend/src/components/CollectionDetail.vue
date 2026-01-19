@@ -59,6 +59,14 @@
              <div class="spinner-border text-primary" role="status"></div>
         </div>
 
+        <AppPagination
+            v-if="!loading && totalPages > 1"
+            :page="page"
+            :totalPages="totalPages"
+            @changePage="changePage"
+            class="px-4"
+        />
+
         <div class="m-4 text-center" v-else-if="models.length === 0">
             No models in this collection found matching your filters.
         </div>
@@ -72,7 +80,10 @@
                 :imageUrl="version.imageUrl"
                 @click="goToModel(version.ParentModel.ID, version.ID)"
                 @addToCollection="openCollectionModal"
-                @delete="deleteVersionFromCollection"
+                @delete="deleteVersionGlobal"
+                :showCollectionRemove="true"
+                @removeFromCollection="removeVersionFromCollection"
+                @toggleNsfw="toggleVersionNsfw"
             />
         </div>
 
@@ -173,7 +184,7 @@ import { ref, onMounted, watch, nextTick } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import axios from 'axios';
 import { Icon } from "@iconify/vue";
-import { showToast, showDeleteConfirm } from '../utils/ui';
+import { showToast, showDeleteConfirm, showConfirm } from '../utils/ui';
 import ModelCard from './ModelCard.vue';
 import FilterSidebar from './FilterSidebar.vue';
 import AppPagination from './AppPagination.vue';
@@ -230,6 +241,19 @@ const updateCollection = async () => {
         console.error(err);
         showToast("Failed to update collection", "danger");
     }
+};
+
+const deleteVersionGlobal = async (versionId) => {
+      const choice = await showDeleteConfirm("Delete this version globally?");
+      if (!choice) return;
+      const files = choice === "deleteFiles" ? 1 : 0;
+      try {
+        await axios.delete(`/api/versions/${versionId}?files=${files}`);
+        showToast("Version deleted", "success");
+        fetchVersions();
+      } catch (err) {
+        showToast("Failed to delete version", "danger");
+      }
 };
 
 const openBulkModal = () => {
@@ -368,6 +392,20 @@ const fetchVersions = async () => {
     } finally {
         loading.value = false;
         updateUrl();
+        
+        // Handle Scroll Restoration
+        if (route.query.scrollTo) {
+            nextTick(() => {
+                const el = document.getElementById(`model-${route.query.scrollTo}`);
+                if (el) {
+                    el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    // Remove scrollTo from URL
+                    const query = { ...route.query };
+                    delete query.scrollTo;
+                    router.replace({ query }); 
+                }
+            });
+        }
     }
 };
 
@@ -415,38 +453,45 @@ const openCollectionModal = (versionId) => {
     showCollectionModal.value = true;
 };
 
-const deleteVersionFromCollection = async (versionId) => {
-    // Override default delete behavior: Remove from collection instead of deleting version
-    // But ModelCard emits "delete" which implies permanent delete?
-    // The user said "a button on each collection to delete it".
-    // "Delete version" in kebab menu usually means delete from disk.
-    // I should add "Remove from Collection" to kebab menu in ModelCard BUT ModelCard is generic.
-    // I can't easily change ModelCard menu based on context without props.
-    // I'll use the existing "delete" event but ask user "Remove from collection or Delete from Disk?"
-    // Or simpler: ModelCard doesn't know context.
-    // If I want "Remove from Collection", I should add it to ModelCard as an option controlled by prop `showRemoveFromCollection`.
-    
-    // For now, "Delete" on card means Delete Version globally.
-    // Users might expect "Remove from Collection" contextually.
-    // I'll add `excludeId` prop or similar?
-    // Let's implement global delete for now as per ModelList.
-    
-    // Actually, "Collections... option to name it... button to delete it" refers to the collection itself.
-    // Being inside a collection view, one might want to remove items.
-    // I'll stick to standard behavior for now.
-    
-    // Re-using deleteVersion from ModelList logic
-     const choice = await showDeleteConfirm("Delete this version globally?");
-      if (!choice) return;
-      const files = choice === "deleteFiles" ? 1 : 0;
-      try {
-        await axios.delete(`/api/versions/${versionId}?files=${files}`);
-        showToast("Version deleted", "success");
+
+
+const removeVersionFromCollection = async (versionId) => {
+    if(!(await showConfirm("Remove this version from this collection?"))) return;
+
+    try {
+        await axios.delete(`/api/collections/${route.params.id}/versions/${versionId}`);
+        showToast("Removed from collection", "success");
         fetchVersions();
-      } catch (err) {
-        showToast("Failed to delete version", "danger");
-      }
+    } catch (err) {
+        console.error(err);
+        showToast("Failed to remove from collection", "danger");
+    }
 };
+
+const toggleVersionNsfw = async (version) => {
+  const updated = { ...version, nsfw: !version.nsfw };
+  try {
+    // Determine the ID to update. Collection versions list often has ID as the join ID?
+    // Wait, in fetchVersions mapper:
+    // models.value = res.data.map(v => return { ...v, ParentModel... })
+    // So 'version' passed here is the version object from models array.
+    // 'version.ID' should be the Version ID.
+    
+    await axios.put(`/api/versions/${version.ID}`, updated);
+    
+    // Update local state to reflect change immediately
+    const v = models.value.find(v => v.ID === version.ID);
+    if (v) {
+        v.nsfw = updated.nsfw;
+    }
+    showToast("NSFW status updated", "success");
+  } catch (err) {
+    console.error(err);
+    showToast("Failed to update NSFW status", "danger");
+  }
+};
+
+// Renamed from deleteVersionFromCollection to avoid confusion with global delete
 
 const changePage = (p) => page.value = p;
 

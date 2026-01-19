@@ -203,6 +203,7 @@ const modelTypes = [
 ];
 
 onMounted(async () => {
+  window.scrollTo(0, 0);
   await fetchData(route.params.versionId);
   await fetchCollections();
   if (route.query.edit === "1") {
@@ -256,7 +257,12 @@ const updateAll = async () => {
 
 const goBack = () => {
   if (route.query.returnPath) {
-    router.push(route.query.returnPath);
+        const returnPath = route.query.returnPath;
+        if (returnPath.includes('?')) {
+            router.push(`${returnPath}&scrollTo=${version.value.ID}`);
+        } else {
+            router.push(`${returnPath}?scrollTo=${version.value.ID}`);
+        }
   } else {
     router.push({ path: "/", query: { scrollTo: version.value.ID } });
   }
