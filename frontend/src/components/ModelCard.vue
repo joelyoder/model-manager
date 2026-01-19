@@ -120,6 +120,21 @@
             </div>
         </div>
       </div>
+      
+      <!-- Collections Badges -->
+      <div v-if="version.collections && version.collections.length > 0" class="mt-2 d-flex gap-1 flex-wrap">
+          <span 
+              v-for="col in version.collections.slice(0, 3)" 
+              :key="col.id" 
+              class="badge bg-secondary bg-opacity-25 text-body-secondary border border-secondary-subtle fw-normal"
+              style="font-size: 0.7rem;"
+          >
+              {{ col.name }}
+          </span>
+          <span v-if="version.collections.length > 3" class="badge bg-secondary bg-opacity-25 text-body-secondary border border-secondary-subtle fw-normal" style="font-size: 0.7rem;">
+              +{{ version.collections.length - 3 }}
+          </span>
+      </div>
     </div>
   </div>
 </template>

@@ -127,7 +127,7 @@ func GetModels(c *gin.Context) {
 			if synced {
 				db = db.Joins("JOIN client_files ON client_files.model_version_id = versions.id").Where("client_files.status = ?", "installed")
 			}
-			return db.Order("versions.id DESC")
+			return db.Preload("Collections").Order("versions.id DESC")
 		})
 	}
 
