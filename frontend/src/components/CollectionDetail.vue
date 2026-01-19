@@ -184,7 +184,15 @@ import { useModels } from '../composables/useModels';
 const route = useRoute();
 const router = useRouter();
 
-// State
+// Filters - Initialize from query params
+const search = ref(route.query.search || "");
+const tagsSearch = ref(route.query.tags || "");
+const selectedCategory = ref(route.query.category || "");
+const selectedBaseModel = ref(route.query.baseModel || "");
+const selectedModelType = ref(route.query.modelType || "");
+const nsfwFilter = ref(route.query.nsfw || "no");
+const syncedFilter = ref(route.query.synced === "true");
+const page = ref(parseInt(route.query.page) || 1);
 const collection = ref({});
 const models = ref([]); // These are actually Versions
 const loading = ref(true);
@@ -246,17 +254,28 @@ const performBulkAdd = async () => {
     }
 };
 
-// Filters
-const search = ref("");
-const tagsSearch = ref("");
-const selectedCategory = ref("");
-const selectedBaseModel = ref("");
-const selectedModelType = ref("");
-const nsfwFilter = ref("no");
-const syncedFilter = ref(false);
-const page = ref(1);
 const total = ref(0);
 const totalPages = ref(1);
+
+// Sync filters to URL
+const updateUrl = () => {
+    const query = {
+        ...route.query,
+        page: page.value,
+        search: search.value || undefined,
+        tags: tagsSearch.value || undefined,
+        category: selectedCategory.value || undefined,
+        baseModel: selectedBaseModel.value || undefined,
+        modelType: selectedModelType.value || undefined,
+        nsfw: nsfwFilter.value !== 'no' ? nsfwFilter.value : undefined,
+        synced: syncedFilter.value ? 'true' : undefined
+    };
+    
+    // Remove undefined keys
+    Object.keys(query).forEach(key => query[key] === undefined && delete query[key]);
+    
+    router.replace({ query });
+};
 
 // Static data (could be fetched or shared)
 const baseModels = ref([]);
@@ -306,6 +325,13 @@ const fetchVersions = async () => {
         };
         
         const res = await axios.get(`/api/collections/${route.params.id}/versions`, { params });
+        
+        // Handle pagination from header
+        if (res.headers['x-total-count']) {
+            total.value = parseInt(res.headers['x-total-count']);
+            totalPages.value = Math.ceil(total.value / 50);
+        }
+
         if (Array.isArray(res.data)) {
             models.value = res.data.map(v => {
                 // Determine model name: use v.model.name if available, otherwise "Unknown"
@@ -341,6 +367,7 @@ const fetchVersions = async () => {
         showToast("Failed to load versions", "danger");
     } finally {
         loading.value = false;
+        updateUrl();
     }
 };
 
@@ -379,7 +406,7 @@ const goToModel = (modelId, versionId) => {
   router.push({
     name: "ModelDetail",
     params: { modelId, versionId },
-    query: { returnPath: `/collections/${route.params.id}` }
+    query: { returnPath: route.fullPath }
   });
 };
 

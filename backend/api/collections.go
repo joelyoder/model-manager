@@ -237,6 +237,43 @@ func GetCollectionVersions(c *gin.Context) {
 		q = q.Joins("JOIN client_files ON client_files.model_version_id = versions.id").Where("client_files.status = ?", "installed")
 	}
 
+	// Count total results before pagination
+	var total int64
+	countQ := database.DB.Model(&models.Version{}).
+		Joins("JOIN collection_versions ON collection_versions.version_id = versions.id").
+		Where("collection_versions.collection_id = ?", collectionID)
+
+	// Apply same filters for count
+	if search != "" {
+		like := "%" + strings.ToLower(search) + "%"
+		countQ = countQ.Joins("JOIN models ON models.id = versions.model_id").
+			Where("LOWER(models.name) LIKE ? OR LOWER(versions.name) LIKE ? OR LOWER(versions.trained_words) LIKE ?", like, like, like)
+	}
+	if baseModel != "" {
+		countQ = countQ.Where("versions.base_model = ?", baseModel)
+	}
+	if modelType != "" {
+		countQ = countQ.Where("versions.type = ?", modelType)
+	}
+	if onlySafe {
+		countQ = countQ.Where("versions.nsfw = 0")
+	} else if onlyNSFW {
+		countQ = countQ.Where("versions.nsfw = 1")
+	}
+	if tags != "" {
+		for _, t := range strings.Split(tags, ",") {
+			t = strings.TrimSpace(strings.ToLower(t))
+			if t != "" {
+				countQ = countQ.Where("LOWER(versions.tags) LIKE ?", "%"+t+"%")
+			}
+		}
+	}
+	if synced {
+		countQ = countQ.Joins("JOIN client_files ON client_files.model_version_id = versions.id").Where("client_files.status = ?", "installed")
+	}
+	countQ.Count(&total)
+	c.Header("X-Total-Count", strconv.FormatInt(total, 10))
+
 	q.Order("versions.id DESC").Limit(limit).Offset((page - 1) * limit).Find(&versions)
 
 	// Populate ClientStatus for versions
