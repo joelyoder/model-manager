@@ -59,42 +59,44 @@
              <div class="spinner-border text-primary" role="status"></div>
         </div>
 
-        <AppPagination
-            v-if="!loading && totalPages > 1"
-            :page="page"
-            :totalPages="totalPages"
-            @changePage="changePage"
-            class="px-4"
-        />
-
-        <div class="m-4 text-center" v-else-if="models.length === 0">
-            No models in this collection found matching your filters.
-        </div>
-
-        <div class="model-grid p-4" v-else>
-            <ModelCard
-                v-for="version in models"
-                :key="version.ID"
-                :model="version.ParentModel"
-                :version="version"
-                :imageUrl="version.imageUrl"
-                @click="goToModel(version.ParentModel.ID, version.ID)"
-                @addToCollection="openCollectionModal"
-                @delete="deleteVersionGlobal"
-                :showCollectionRemove="true"
-                @removeFromCollection="removeVersionFromCollection"
-                @toggleNsfw="toggleVersionNsfw"
+        <template v-else>
+            <AppPagination
+                v-if="totalPages > 1"
+                :page="page"
+                :totalPages="totalPages"
+                @changePage="changePage"
+                class="px-4"
             />
-        </div>
 
-         <!-- Pagination (Basic for now, can implement server-side if needed) -->
-         <!-- Since API supports pagination, we should use it -->
-        <AppPagination
-            v-if="totalPages > 1"
-            :page="page"
-            :totalPages="totalPages"
-            @changePage="changePage"
-        />
+            <div class="m-4 text-center" v-if="models.length === 0">
+                No models in this collection found matching your filters.
+            </div>
+
+            <div class="model-grid p-4" v-else>
+                <ModelCard
+                    v-for="version in models"
+                    :key="version.ID"
+                    :model="version.ParentModel"
+                    :version="version"
+                    :imageUrl="version.imageUrl"
+                    @click="goToModel(version.ParentModel.ID, version.ID)"
+                    @addToCollection="openCollectionModal"
+                    @delete="deleteVersionGlobal"
+                    :showCollectionRemove="true"
+                    @removeFromCollection="removeVersionFromCollection"
+                    @toggleNsfw="toggleVersionNsfw"
+                />
+            </div>
+
+            <!-- Pagination (Basic for now, can implement server-side if needed) -->
+            <!-- Since API supports pagination, we should use it -->
+            <AppPagination
+                v-if="totalPages > 1"
+                :page="page"
+                :totalPages="totalPages"
+                @changePage="changePage"
+            />
+        </template>
 
         <AddToCollectionModal 
             v-if="showCollectionModal" 
