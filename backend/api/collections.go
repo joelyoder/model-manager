@@ -9,6 +9,7 @@ import (
 	"model-manager/backend/models"
 
 	"github.com/gin-gonic/gin"
+	"gorm.io/gorm"
 )
 
 // GetCollections returns a list of collections, optionally filtered by name
@@ -22,7 +23,7 @@ func GetCollections(c *gin.Context) {
 		q = q.Where("LOWER(name) LIKE ?", like)
 	}
 
-	if err := q.Preload("Versions").Find(&collections).Error; err != nil {
+	if err := q.Order("LOWER(name) ASC").Preload("Versions").Find(&collections).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch collections"})
 		return
 	}
@@ -311,7 +312,9 @@ func GetVersionCollections(c *gin.Context) {
 	versionID := c.Param("id")
 
 	var version models.Version
-	if err := database.DB.Preload("Collections").First(&version, versionID).Error; err != nil {
+	if err := database.DB.Preload("Collections", func(db *gorm.DB) *gorm.DB {
+		return db.Order("LOWER(collections.name) ASC")
+	}).First(&version, versionID).Error; err != nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": "Version not found"})
 		return
 	}

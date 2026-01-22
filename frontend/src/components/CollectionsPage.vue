@@ -49,7 +49,7 @@
     </div>
 
     <div v-else class="row row-cols-1 row-cols-md-2 row-cols-lg-3 row-cols-xl-4 g-4">
-      <div class="col" v-for="collection in collections" :key="collection.ID">
+      <div class="col" v-for="collection in sortedCollections" :key="collection.ID">
         <CollectionCard 
             :collection="collection" 
             @click="viewCollection" 
@@ -102,7 +102,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted, nextTick } from 'vue';
+import { ref, computed, onMounted, nextTick } from 'vue';
 import { useRouter } from 'vue-router';
 import { Icon } from "@iconify/vue";
 import CollectionCard from './CollectionCard.vue';
@@ -117,6 +117,10 @@ const showModal = ref(false);
 const isEditing = ref(false);
 const modalForm = ref({ id: null, name: "", description: "" });
 const nameInput = ref(null);
+
+const sortedCollections = computed(() => {
+    return [...collections.value].sort((a, b) => a.name.localeCompare(b.name, undefined, { sensitivity: 'base' }));
+});
 
 let searchTimeout;
 

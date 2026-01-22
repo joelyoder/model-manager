@@ -36,7 +36,7 @@
                     <div>No collections found</div>
                 </div>
                 <label 
-                    v-for="col in collections" 
+                    v-for="col in sortedCollections" 
                     :key="col.ID" 
                     class="list-group-item bg-transparent text-light border-0 px-2 py-2 d-flex justify-content-between align-items-center cursor-pointer rounded-2 hover-bg-subtle transition-all"
                 >
@@ -64,7 +64,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue';
+import { ref, computed, onMounted } from 'vue';
 import axios from 'axios';
 import { Icon } from "@iconify/vue";
 import { showToast } from '../utils/ui';
@@ -82,6 +82,10 @@ const collections = ref([]);
 const versionCollections = ref([]); // IDs of collections this version is in
 const loading = ref(true);
 const newCollectionName = ref("");
+
+const sortedCollections = computed(() => {
+    return [...collections.value].sort((a, b) => a.name.localeCompare(b.name, undefined, { sensitivity: 'base' }));
+});
 
 const fetchCollections = async () => {
     loading.value = true;
