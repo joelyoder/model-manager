@@ -795,7 +795,6 @@ func GetVersion(c *gin.Context) {
 		return
 	}
 
-	// Populate ClientStatus for the single version
 	var cf models.ClientFile
 	if err := database.DB.Where("model_version_id = ?", version.ID).First(&cf).Error; err == nil {
 		version.ClientStatus = cf.Status
@@ -1331,4 +1330,14 @@ func populateClientStatus(modelsList []models.Model) {
 			}
 		}
 	}
+}
+
+// ResetPendingStatus deletes all ClientFile records with 'pending' status.
+// This is used as a manual tool to clear stuck models.
+func ResetPendingStatus(c *gin.Context) {
+	if err := database.ResetAllPendingClientFiles(); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to reset pending status"})
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"message": "Reset successful"})
 }

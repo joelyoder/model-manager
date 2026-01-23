@@ -18,6 +18,11 @@ func main() {
 	godotenv.Load()
 	database.ConnectDatabase()
 
+	// Reset any pending client files from previous runs
+	if err := database.ResetAllPendingClientFiles(); err != nil {
+		log.Printf("Warning: Failed to reset pending client files on startup: %v", err)
+	}
+
 	r := gin.Default()
 	r.SetTrustedProxies(nil) // safe for local dev
 
@@ -81,6 +86,7 @@ func main() {
 
 		apiGroup.POST("/tools/migrate-paths", api.MigratePaths)
 		apiGroup.POST("/tools/archive-images", api.ArchiveImages)
+		apiGroup.POST("/tools/reset-pending", api.ResetPendingStatus)
 
 		// Remote Management
 		apiGroup.POST("/remote/dispatch", api.DispatchRemote)

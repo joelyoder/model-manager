@@ -205,6 +205,7 @@
                 {{ migrating ? "Migrating..." : "Migrate Paths to Relative" }}
                 </button>
             </div>
+
              <div class="col-md-6 border-start border-secondary border-opacity-10">
                 <h4 class="h6 fw-bold">Archive Description Images</h4>
                 <p class="text-secondary small mb-3">
@@ -221,6 +222,21 @@
                  <p v-if="archiveResult" class="mt-2 mb-0 small text-success">
                     {{ archiveResult }}
                 </p>
+                
+                <hr class="border-secondary opacity-25 my-4" />
+                
+                <h4 class="h6 fw-bold">Reset Stuck Models</h4>
+                <p class="text-secondary small mb-3">
+                    If models are stuck in a "synching" state due to connection interruptions,
+                    use this to reset their status to try again.
+                </p>
+                <button
+                @click="resetPendingStatus"
+                class="btn btn-danger btn-sm"
+                :disabled="isResetting"
+                >
+                {{ isResetting ? "Resetting..." : "Reset Stuck Models" }}
+                </button>
             </div>
         </div>
       </div>
@@ -523,6 +539,23 @@ const dupSearchDone = ref(false);
 const migrating = ref(false);
 const isArchiving = ref(false);
 const archiveResult = ref("");
+const isResetting = ref(false);
+
+const resetPendingStatus = async () => {
+  if (!confirm("This will reset the status of all models currently stuck in 'synching'. Continue?")) {
+    return;
+  }
+  isResetting.value = true;
+  try {
+    await axios.post("/api/tools/reset-pending");
+    showToast("Status reset successful", "success");
+  } catch (err) {
+    console.error(err);
+    showToast("Failed to reset status", "danger");
+  } finally {
+    isResetting.value = false;
+  }
+};
 
 const archiveImages = async () => {
   if (!confirm("This will download external images and modify model descriptions. Continue?")) {

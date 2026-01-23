@@ -88,6 +88,11 @@ func HandleWebSocket(c *gin.Context) {
 		delete(Clients, clientID)
 		ClientsMutex.Unlock()
 		log.Printf("Client disconnected: %s", clientID)
+
+		// Reset any pending downloads for this client to prevent stuck state
+		if err := database.ResetPendingClientFilesForClient(clientID); err != nil {
+			log.Printf("Error resetting pending files for disconnected client %s: %v", clientID, err)
+		}
 	}()
 
 	// Listen loop

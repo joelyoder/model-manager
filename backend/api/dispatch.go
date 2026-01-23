@@ -103,6 +103,12 @@ func DispatchRemote(c *gin.Context) {
 	// Send to WebSocket
 	err := SendToClient(req.ClientID, req)
 	if err != nil {
+		// If sending fails, rollback the pending status to avoid stuck model
+		if req.Action == "download" {
+			database.DB.Delete(&models.ClientFile{}, "client_id = ? AND model_version_id = ? AND status = ?", req.ClientID, req.ModelVersionID, "pending")
+			log.Printf("Rolled back pending status for model %d due to connection error", req.ModelVersionID)
+		}
+
 		c.JSON(http.StatusServiceUnavailable, gin.H{"error": "Client not connected", "details": err.Error()})
 		return
 	}
