@@ -9,7 +9,7 @@ const tagsSearch = ref("");
 const selectedCategory = ref("");
 const selectedBaseModel = ref("");
 const selectedModelType = ref("");
-const nsfwFilter = ref("no");
+const nsfwFilter = ref("both");
 const syncedFilter = ref(false);
 const page = ref(1);
 const total = ref(0);
@@ -180,7 +180,7 @@ const clearFilters = () => {
   selectedCategory.value = "";
   selectedBaseModel.value = "";
   selectedModelType.value = "";
-  nsfwFilter.value = "no";
+  nsfwFilter.value = "both";
   syncedFilter.value = false;
   page.value = 1;
 };

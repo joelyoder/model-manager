@@ -203,7 +203,7 @@ const tagsSearch = ref(route.query.tags || "");
 const selectedCategory = ref(route.query.category || "");
 const selectedBaseModel = ref(route.query.baseModel || "");
 const selectedModelType = ref(route.query.modelType || "");
-const nsfwFilter = ref(route.query.nsfw || "no");
+const nsfwFilter = ref(route.query.nsfw || "both");
 const syncedFilter = ref(route.query.synced === "true");
 const page = ref(parseInt(route.query.page) || 1);
 const collection = ref({});
@@ -293,7 +293,7 @@ const updateUrl = () => {
         category: selectedCategory.value || undefined,
         baseModel: selectedBaseModel.value || undefined,
         modelType: selectedModelType.value || undefined,
-        nsfw: nsfwFilter.value !== 'no' ? nsfwFilter.value : undefined,
+        nsfw: nsfwFilter.value !== 'both' ? nsfwFilter.value : undefined,
         synced: syncedFilter.value ? 'true' : undefined
     };
     
@@ -437,7 +437,7 @@ const clearFilters = () => {
   selectedCategory.value = "";
   selectedBaseModel.value = "";
   selectedModelType.value = "";
-  nsfwFilter.value = "no";
+  nsfwFilter.value = "both";
   syncedFilter.value = false;
   page.value = 1;
 };
