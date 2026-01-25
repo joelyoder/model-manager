@@ -76,7 +76,7 @@ const props = defineProps({
     }
 });
 
-const emit = defineEmits(['close']);
+const emit = defineEmits(['close', 'update']);
 
 const collections = ref([]);
 const versionCollections = ref([]); // IDs of collections this version is in
@@ -111,6 +111,11 @@ const isInCollection = (collectionId) => {
     return versionCollections.value.includes(collectionId);
 };
 
+const emitUpdate = () => {
+    const currentList = collections.value.filter(c => versionCollections.value.includes(c.ID));
+    emit('update', currentList);
+};
+
 const toggleCollection = async (collection, isChecked) => {
     try {
         if (isChecked) {
@@ -122,6 +127,7 @@ const toggleCollection = async (collection, isChecked) => {
             versionCollections.value = versionCollections.value.filter(id => id !== collection.ID);
             showToast(`Removed from "${collection.name}"`, "info");
         }
+        emitUpdate();
     } catch (err) {
         console.error(err);
         showToast("Failed to update collection", "danger");

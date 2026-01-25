@@ -102,6 +102,7 @@
             v-if="showCollectionModal" 
             :versionId="selectedVersionId" 
             @close="showCollectionModal = false" 
+            @update="handleCollectionUpdate"
         />
     </main>
 
@@ -498,6 +499,13 @@ const goToModel = (modelId, versionId) => {
 const openCollectionModal = (versionId) => {
     selectedVersionId.value = versionId;
     showCollectionModal.value = true;
+};
+
+const handleCollectionUpdate = (updatedCollections) => {
+    const v = models.value.find(v => v.ID === selectedVersionId.value);
+    if (v) {
+        v.collections = updatedCollections;
+    }
 };
 
 

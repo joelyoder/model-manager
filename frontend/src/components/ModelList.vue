@@ -65,6 +65,7 @@
             v-if="showCollectionModal" 
             :versionId="selectedVersionId" 
             @close="showCollectionModal = false" 
+            @update="handleCollectionUpdate"
         />
     </main>
   </div>
@@ -138,6 +139,17 @@ const deleteVersion = async (versionId) => {
 const openCollectionModal = (versionId) => {
     selectedVersionId.value = versionId;
     showCollectionModal.value = true;
+};
+
+const handleCollectionUpdate = (updatedCollections) => {
+    // Find the model that contains the version
+    for (const model of models.value) {
+        const v = (model.versions || []).find(v => v.ID === selectedVersionId.value);
+        if (v) {
+            v.collections = updatedCollections;
+            break;
+        }
+    }
 };
 
 const toggleVersionNsfw = async (version) => {

@@ -208,7 +208,8 @@ func GetCollectionVersions(c *gin.Context) {
 		Joins("JOIN collection_versions ON collection_versions.version_id = versions.id").
 		Where("collection_versions.collection_id = ?", collectionID).
 		Preload("ParentModel").
-		Preload("Images")
+		Preload("Images").
+		Preload("Collections")
 
 	// Apply filters to the versions or parent model
 	if search != "" {
