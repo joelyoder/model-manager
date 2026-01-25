@@ -110,7 +110,7 @@
       <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content bg-dark text-white border-0 shadow-lg">
           <div class="modal-header border-0">
-            <h5 class="modal-title fw-bold">Bulk Add by Tag</h5>
+            <h5 class="modal-title fw-bold">Bulk Add Models</h5>
             <button type="button" class="btn-close btn-close-white" @click="showBulkModal = false"></button>
           </div>
           <div class="modal-body pt-0">
@@ -118,20 +118,48 @@
                 Enter a tag to find all matching model versions and add them to this collection.
             </p>
             <div class="mb-3">
-              <label class="form-label text-secondary small fw-bold text-uppercase">Tag</label>
+              <label class="form-label text-secondary small fw-bold text-uppercase">Search Term</label>
               <input 
                 type="text" 
                 class="form-control bg-dark-subtle text-light border-0 shadow-none" 
                 v-model="bulkTag" 
                 ref="bulkInput"
                 @keyup.enter="performBulkAdd"
-                placeholder="e.g. anime, realistic..."
+                placeholder="e.g. anime, realistic, Pony..."
               >
+            </div>
+            
+            <div class="mb-3">
+                <label class="form-label text-secondary small fw-bold text-uppercase d-block mb-2">Search In</label>
+                <div class="d-flex gap-3 flex-wrap">
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" v-model="bulkSearchTags" id="searchTags">
+                        <label class="form-check-label text-light" for="searchTags">Tags</label>
+                    </div>
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" v-model="bulkSearchName" id="searchName">
+                        <label class="form-check-label text-light" for="searchName">Model Name</label>
+                    </div>
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" v-model="bulkSearchTrainedWords" id="searchTrainedWords">
+                        <label class="form-check-label text-light" for="searchTrainedWords">Trained Words</label>
+                    </div>
+                </div>
+            </div>
+
+            <div class="mb-3">
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" v-model="bulkExactMatch" id="exactMatch">
+                    <label class="form-check-label text-light" for="exactMatch">
+                        Exact Match 
+                        <span class="text-white-50 small ms-1">(Whole word/phrase only)</span>
+                    </label>
+                </div>
             </div>
           </div>
           <div class="modal-footer border-0 pt-0">
             <button type="button" class="btn btn-outline-secondary border-0" @click="showBulkModal = false">Cancel</button>
-            <button type="button" class="btn btn-primary shadow-sm" @click="performBulkAdd" :disabled="!bulkTag">
+            <button type="button" class="btn btn-primary shadow-sm" @click="performBulkAdd" :disabled="!bulkTag || (!bulkSearchTags && !bulkSearchName && !bulkSearchTrainedWords)">
                 <Icon icon="mdi:plus-circle-multiple-outline" class="me-1"/> Add Models
             </button>
           </div>
@@ -217,6 +245,10 @@ const selectedVersionId = ref(0);
 const showBulkModal = ref(false);
 const bulkTag = ref("");
 const bulkInput = ref(null);
+const bulkSearchTags = ref(true);
+const bulkSearchName = ref(false);
+const bulkSearchTrainedWords = ref(false);
+const bulkExactMatch = ref(false);
 
 // Rename
 const showRenameModal = ref(false);
@@ -260,6 +292,10 @@ const deleteVersionGlobal = async (versionId) => {
 
 const openBulkModal = () => {
     bulkTag.value = "";
+    bulkSearchTags.value = true;
+    bulkSearchName.value = false;
+    bulkSearchTrainedWords.value = false;
+    bulkExactMatch.value = false;
     showBulkModal.value = true;
     // Focus next tick
     setTimeout(() => bulkInput.value?.focus(), 100);
@@ -267,9 +303,18 @@ const openBulkModal = () => {
 
 const performBulkAdd = async () => {
     if (!bulkTag.value) return;
+    if (!bulkSearchTags.value && !bulkSearchName.value && !bulkSearchTrainedWords.value) {
+        showToast("Select at least one search type", "warning");
+        return;
+    }
+    
     try {
-        const res = await axios.post(`/api/collections/${route.params.id}/add-by-tag`, {
-            tag: bulkTag.value
+        const res = await axios.post(`/api/collections/${route.params.id}/bulk-add`, {
+            query: bulkTag.value,
+            searchTags: bulkSearchTags.value,
+            searchModelName: bulkSearchName.value,
+            searchTrainedWords: bulkSearchTrainedWords.value,
+            exactMatch: bulkExactMatch.value
         });
         showToast(`Added ${res.data.added} versions to collection`, "success");
         showBulkModal.value = false;

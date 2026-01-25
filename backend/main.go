@@ -101,7 +101,7 @@ func main() {
 		apiGroup.POST("/collections/:id/versions", api.AddVersionToCollection)
 		apiGroup.DELETE("/collections/:id/versions/:versionId", api.RemoveVersionFromCollection)
 		apiGroup.GET("/versions/:id/collections", api.GetVersionCollections)
-		apiGroup.POST("/collections/:id/add-by-tag", api.AddVersionsByTag)
+		apiGroup.POST("/collections/:id/bulk-add", api.BulkAddVersions)
 	}
 
 	// WebSocket

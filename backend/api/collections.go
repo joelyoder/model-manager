@@ -1,6 +1,8 @@
 package api
 
 import (
+	"fmt"
+	"log"
 	"net/http"
 	"strconv"
 	"strings"
@@ -325,8 +327,8 @@ func GetVersionCollections(c *gin.Context) {
 	c.JSON(http.StatusOK, version.Collections)
 }
 
-// AddVersionsByTag adds all model versions matching a tag to a collection
-func AddVersionsByTag(c *gin.Context) {
+// BulkAddVersions adds all model versions matching criteria to a collection
+func BulkAddVersions(c *gin.Context) {
 	id := c.Param("id")
 	collectionID, err := strconv.ParseUint(id, 10, 64)
 	if err != nil {
@@ -335,36 +337,122 @@ func AddVersionsByTag(c *gin.Context) {
 	}
 
 	var input struct {
-		Tag string `json:"tag" binding:"required"`
+		Query              string `json:"query"`
+		SearchTags         bool   `json:"searchTags"`
+		SearchModelName    bool   `json:"searchModelName"`
+		SearchTrainedWords bool   `json:"searchTrainedWords"`
+		ExactMatch         bool   `json:"exactMatch"`
 	}
 
 	if err := c.ShouldBindJSON(&input); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Tag is required"})
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
-	tag := strings.ToLower(strings.TrimSpace(input.Tag))
-	if tag == "" {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Tag cannot be empty"})
+	log.Printf("[BulkAdd] Received: Query='%s', Tags=%v, Name=%v, Words=%v, Exact=%v", input.Query, input.SearchTags, input.SearchModelName, input.SearchTrainedWords, input.ExactMatch)
+
+	queryStr := strings.ToLower(strings.TrimSpace(input.Query))
+	if queryStr == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Search query cannot be empty"})
 		return
 	}
-	likeTag := "%" + tag + "%"
 
-	// Use raw SQL for performance: INSERT OR IGNORE INTO ... SELECT ...
-	// This avoids loading thousands of records into memory.
+	if !input.SearchTags && !input.SearchModelName && !input.SearchTrainedWords {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "At least one search criteria must be selected"})
+		return
+	}
+
+	// Build the WHERE clause
+	var conditions []string
+	var args []interface{}
+
+	// Helper to generate SQL for a specific column
+	addCondition := func(col string, isList bool) {
+		if input.ExactMatch {
+			if isList {
+				// Comma separated list (Tags, TrainedWords)
+				// We need to match the token exactly, bounded by start/end or commas.
+				// We support optional spaces after commas.
+				// 1. Exact match: col = 'q'
+				// 2. Start: col LIKE 'q,%' OR col LIKE 'q, %'
+				// 3. End: col LIKE '%,q' OR col LIKE '%, q'
+				// 4. Middle: col LIKE '%,q,%' OR col LIKE '%, q,%' OR col LIKE '%,q, %' OR col LIKE '%, q, %'
+
+				// Simplified approach:
+				// "q"
+				// "q,%"
+				// "%,q"
+				// "%,q,%"
+				// "%, q"
+				// "%, q,%"
+
+				cond := fmt.Sprintf(`(
+					LOWER(%s) = ? 
+					OR LOWER(%s) LIKE ? 
+					OR LOWER(%s) LIKE ? 
+					OR LOWER(%s) LIKE ? 
+					OR LOWER(%s) LIKE ? 
+					OR LOWER(%s) LIKE ?
+				)`, col, col, col, col, col, col)
+
+				conditions = append(conditions, cond)
+				args = append(args,
+					queryStr,
+					queryStr+",%",
+					"%, "+queryStr,
+					"%, "+queryStr+",%",
+					"%,"+queryStr,      // No space after comma (end)
+					"%,"+queryStr+",%", // No space after comma (middle)
+				)
+			} else {
+				// Space separated (Model Name)
+				cond := fmt.Sprintf("(LOWER(%s) = ? OR LOWER(%s) LIKE ? OR LOWER(%s) LIKE ? OR LOWER(%s) LIKE ?)", col, col, col, col)
+				conditions = append(conditions, cond)
+				args = append(args, queryStr, queryStr+" %", "% "+queryStr, "% "+queryStr+" %")
+			}
+		} else {
+			// Partial match
+			conditions = append(conditions, fmt.Sprintf("LOWER(%s) LIKE ?", col))
+			args = append(args, "%"+queryStr+"%")
+		}
+	}
+
+	if input.SearchTags {
+		addCondition("versions.tags", true)
+		addCondition("models.tags", true)
+	}
+
+	if input.SearchModelName {
+		addCondition("models.name", false)
+		addCondition("versions.name", false)
+	}
+
+	if input.SearchTrainedWords {
+		addCondition("versions.trained_words", true)
+	}
+
+	whereClause := strings.Join(conditions, " OR ")
+
 	query := `
 		INSERT OR IGNORE INTO collection_versions (collection_id, version_id)
 		SELECT ?, versions.id
 		FROM versions
 		JOIN models ON models.id = versions.model_id
-		WHERE LOWER(versions.tags) LIKE ? OR LOWER(models.tags) LIKE ?
-	`
+		WHERE ` + whereClause
 
-	result := database.DB.Exec(query, collectionID, likeTag, likeTag)
+	// Prepend collectionID to args
+	finalArgs := append([]interface{}{collectionID}, args...)
+
+	log.Printf("[BulkAdd] Executing Query: %s", query)
+	log.Printf("[BulkAdd] Args: %v", args) // Don't log collectionID for brevity
+
+	result := database.DB.Exec(query, finalArgs...)
 	if result.Error != nil {
+		log.Printf("[BulkAdd] Error: %v", result.Error)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to add versions to collection"})
 		return
 	}
 
+	log.Printf("[BulkAdd] Rows Affected: %d", result.RowsAffected)
 	c.JSON(http.StatusOK, gin.H{"added": result.RowsAffected})
 }
