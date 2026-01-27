@@ -312,3 +312,14 @@ const copyLoraTag = async () => {
 
 // Local getBadgeColor removed in favor of utility
 </script>
+
+<style scoped>
+/* Target images within the v-html description */
+.model-description :deep(img) {
+  max-width: 100%;
+  height: auto;
+  display: block;
+  margin: 1rem auto;
+  border-radius: 0.5rem;
+}
+</style>
