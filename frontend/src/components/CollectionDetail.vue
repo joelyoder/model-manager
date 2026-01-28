@@ -382,8 +382,12 @@ const fetchCollection = async () => {
     }
 };
 
-const fetchVersions = async () => {
-    loading.value = true;
+const fetchVersions = async (refreshOnly = false) => {
+    // Only show loading spinner if not a background refresh
+    // Handle watcher args (numbers/events) by checking precise type
+    const showLoading = typeof refreshOnly === 'boolean' ? !refreshOnly : true;
+    
+    if (showLoading) loading.value = true;
     try {
         const params = {
             page: page.value,
@@ -422,27 +426,19 @@ const fetchVersions = async () => {
              models.value = [];
              console.error("Invalid versions response", res.data);
         }
-        // We assume backend returns ALL for pagination if we don't have separate count endpoint for filtered versions?
-        // Wait, I implemented handlers.go GetModelsCount but not GetCollectionVersionsCount.
-        // For MVP, if pagination is needed, we need count. 
-        // My handlers.go implementation for GetCollectionVersions uses Limit/Offset.
-        // But it doesn't return count.
-        // For now, simplified pagination or just load more?
-        // I'll assume infinite scroll or just standard pagination without knowing total (Prev/Next only)?
-        // Or I can add a count header or simple total.
-        // Let's assume one page for MVP or add count to response later. 
-        // Actually, without total count, AppPagination breaks?
-        // I'll set totalPages to 1 or implement load more if needed.
-        // Let's check AppPagination.
     } catch (err) {
         console.error(err);
         showToast("Failed to load versions", "danger");
     } finally {
-        loading.value = false;
+        if (showLoading) loading.value = false;
+        
+        // ONLY update URL if it was a navigation/filter change (loading shown)
+        // Background refresh shouldn't mess with URL params unnecessarily, 
+        // though updateUrl mostly just syncs state to URL so it should be fine.
         updateUrl();
         
-        // Handle Scroll Restoration
-        if (route.query.scrollTo) {
+        // Handle Scroll Restoration (only on full loads)
+        if (showLoading && route.query.scrollTo) {
             nextTick(() => {
                 const el = document.getElementById(`model-${route.query.scrollTo}`);
                 if (el) {
@@ -516,7 +512,8 @@ const removeVersionFromCollection = async (versionId) => {
     try {
         await axios.delete(`/api/collections/${route.params.id}/versions/${versionId}`);
         showToast("Removed from collection", "success");
-        fetchVersions();
+        // Pass true to indicate 'refreshOnly' (background fetch) to preserve scroll
+        fetchVersions(true);
     } catch (err) {
         console.error(err);
         showToast("Failed to remove from collection", "danger");
