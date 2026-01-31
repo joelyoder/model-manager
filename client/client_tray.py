@@ -133,16 +133,23 @@ def handle_download(ws_app, data):
             else:
                  base_thumb_url = thumbnail_url
 
-            # Determine thumbnail path: same as target_path but with .webp extension
-            thumb_path = os.path.splitext(target_path)[0] + ".webp"
+            # Determine thumbnail path: same as target_path but with .jpg extension
+            thumb_path = os.path.splitext(target_path)[0] + ".jpg"
             print(f"Downloading thumbnail to {thumb_path}...")
             
             try:
-                with requests.get(base_thumb_url, stream=True) as r:
-                    r.raise_for_status()
-                    with open(thumb_path, 'wb') as f:
-                        for chunk in r.iter_content(chunk_size=8192):
-                            f.write(chunk)
+                # Download into memory first
+                resp = requests.get(base_thumb_url, stream=True)
+                resp.raise_for_status()
+                
+                from io import BytesIO
+                image_data = BytesIO(resp.content)
+                
+                # Open image, convert to RGB (drop alpha if any), saves as JPEG
+                with Image.open(image_data) as img:
+                    img = img.convert("RGB")
+                    img.save(thumb_path, "JPEG", quality=90)
+                    
             except Exception as te:
                 print(f"Thumbnail download failed: {te}")
         
@@ -177,14 +184,16 @@ def handle_delete(ws_app, data):
             os.remove(target_path)
             print(f"Deleted {target_path}")
 
-            # Delete thumbnail if exists
-            thumb_path = os.path.splitext(target_path)[0] + ".webp"
-            if os.path.exists(thumb_path):
-                try:
-                    os.remove(thumb_path)
-                    print(f"Deleted thumbnail {thumb_path}")
-                except Exception as te:
-                    print(f"Failed to delete thumbnail: {te}")
+            # Delete thumbnail if exists (check jpg and webp for legacy)
+            base_thumb = os.path.splitext(target_path)[0]
+            for ext in ['.jpg', '.webp']:
+                thumb_path = base_thumb + ext
+                if os.path.exists(thumb_path):
+                    try:
+                        os.remove(thumb_path)
+                        print(f"Deleted thumbnail {thumb_path}")
+                    except Exception as te:
+                        print(f"Failed to delete thumbnail: {te}")
             
             
             response = {
