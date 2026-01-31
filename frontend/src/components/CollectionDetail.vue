@@ -79,6 +79,7 @@
                     :model="version.ParentModel"
                     :version="version"
                     :imageUrl="version.imageUrl"
+                    :thumbnailUrl="version.thumbnailUrl"
                     @click="goToModel(version.ParentModel.ID, version.ID)"
                     @addToCollection="openCollectionModal"
                     @delete="deleteVersionGlobal"
@@ -241,6 +242,7 @@ const loading = ref(true);
 const { showSidebar } = useModels();
 const showCollectionModal = ref(false);
 const selectedVersionId = ref(0);
+const timestamp = ref(Date.now());
 
 // Bulk Add
 const showBulkModal = ref(false);
@@ -389,6 +391,9 @@ const fetchVersions = async (refreshOnly = false) => {
     
     if (showLoading) loading.value = true;
     try {
+        // Refresh timestamp on every fetch
+        timestamp.value = Date.now();
+
         const params = {
             page: page.value,
             limit: 50,
@@ -415,11 +420,16 @@ const fetchVersions = async (refreshOnly = false) => {
                 
                 // Construct a model object compatible with ModelCard
                 const parentModel = v.model || { name: 'Unknown Model', ID: v.modelId };
+                const imageUrl = normalizeImagePath(v.imagePath);
                 
+                // Always use version thumbnail with cache buster
+                const thumbnailUrl = `/images/thumbnails/v_${v.ID}.webp?t=${timestamp.value}`;
+
                 return {
                     ...v,
                     ParentModel: parentModel, // Store consistently for template
-                    imageUrl: normalizeImagePath(v.imagePath)
+                    imageUrl,
+                    thumbnailUrl
                 };
             });
         } else {

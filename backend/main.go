@@ -87,6 +87,7 @@ func main() {
 		apiGroup.POST("/tools/migrate-paths", api.MigratePaths)
 		apiGroup.POST("/tools/archive-images", api.ArchiveImages)
 		apiGroup.POST("/tools/reset-pending", api.ResetPendingStatus)
+		apiGroup.POST("/tools/generate-thumbnails", api.GenerateMissingThumbnails)
 
 		// Remote Management
 		apiGroup.POST("/remote/dispatch", api.DispatchRemote)

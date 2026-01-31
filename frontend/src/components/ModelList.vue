@@ -48,6 +48,7 @@
                 :model="card.model"
                 :version="card.version"
                 :imageUrl="card.imageUrl"
+                :thumbnailUrl="card.thumbnailUrl"
                 @click="goToModel"
                 @delete="deleteVersion"
                 @toggleNsfw="toggleVersionNsfw"
@@ -211,59 +212,66 @@ const filteredModels = computed(() => {
   });
 });
 
+const timestamp = ref(Date.now());
+
 const versionCards = computed(() => {
-  const sortedModels = filteredModels.value.slice().sort((a, b) => b.ID - a.ID);
+  return filteredModels.value
+    .slice() // Create a shallow copy to sort
+    .sort((a, b) => b.ID - a.ID) // Sort models by ID descending
+    .flatMap((model) => {
+      const versionsSorted = (model.versions || [])
+        .slice() // Create a shallow copy to sort
+        .sort((a, b) => b.ID - a.ID); // Sort versions by ID descending
+      return versionsSorted.map((v) => ({ model, v }));
+    })
+    .filter(({ model, v }) => {
+      if (selectedBaseModel.value && v.baseModel !== selectedBaseModel.value)
+        return false;
+      if (selectedModelType.value && v.type !== selectedModelType.value)
+        return false;
+      if (!matchesNsfwFilter(v.nsfw)) return false;
+      if (syncedFilter.value && v.clientStatus !== 'installed') return false;
 
-  return sortedModels.flatMap((model) => {
-    const versionsSorted = (model.versions || [])
-      .slice()
-      .sort((a, b) => b.ID - a.ID);
+      if (search.value) {
+        const s = search.value.toLowerCase();
+        const matchModel = model.name.toLowerCase().includes(s);
+        const matchVersion = v.name.toLowerCase().includes(s);
+        const matchTrained = (v.trainedWords || "").toLowerCase().includes(s);
+        if (!(matchModel || matchVersion || matchTrained)) return false;
+      }
 
-    return versionsSorted
-      .filter((v) => {
-        if (selectedBaseModel.value && v.baseModel !== selectedBaseModel.value)
+      if (selectedCategory.value) {
+        const tags = (v.tags || "")
+          .split(",")
+          .map((t) => t.trim().toLowerCase());
+        if (!tags.includes(selectedCategory.value.toLowerCase()))
           return false;
-        if (selectedModelType.value && v.type !== selectedModelType.value)
-          return false;
-        if (!matchesNsfwFilter(v.nsfw)) return false;
-        if (syncedFilter.value && v.clientStatus !== 'installed') return false;
+      }
 
-        if (search.value) {
-          const s = search.value.toLowerCase();
-          const matchModel = model.name.toLowerCase().includes(s);
-          const matchVersion = v.name.toLowerCase().includes(s);
-          const matchTrained = (v.trainedWords || "").toLowerCase().includes(s);
-          if (!(matchModel || matchVersion || matchTrained)) return false;
-        }
+      if (tagsSearch.value.trim()) {
+        const tags = (v.tags || "")
+          .split(",")
+          .map((t) => t.trim().toLowerCase());
+        const searchTags = tagsSearch.value
+          .split(/[, ]+/)
+          .map((t) => t.trim().toLowerCase())
+          .filter(Boolean);
+        if (!searchTags.every((t) => tags.includes(t))) return false;
+      }
+      return true;
+    })
+    .map(({ model, v }) => { // Destructure correctly here as flatMap returns objects
+      const imageUrl = v.imageUrl || model.imageUrl;
+      // Always use version thumbnail with cache buster
+      const thumbnailUrl = `/images/thumbnails/v_${v.ID}.webp?t=${timestamp.value}`;
 
-        if (selectedCategory.value) {
-          const tags = (v.tags || "")
-            .split(",")
-            .map((t) => t.trim().toLowerCase());
-          if (!tags.includes(selectedCategory.value.toLowerCase()))
-            return false;
-        }
-
-        if (tagsSearch.value.trim()) {
-          const tags = (v.tags || "")
-            .split(",")
-            .map((t) => t.trim().toLowerCase());
-          const searchTags = tagsSearch.value
-            .split(/[, ]+/)
-            .map((t) => t.trim().toLowerCase())
-            .filter(Boolean);
-          if (!searchTags.every((t) => tags.includes(t))) return false;
-        }
-        return true;
-      })
-      .map((v) => {
-        return {
-          model,
-          version: v, 
-          imageUrl: v.imageUrl || model.imageUrl,
-        };
-      });
-  });
+      return {
+        model,
+        version: v,
+        imageUrl,
+        thumbnailUrl,
+      };
+    });
 });
 
 onMounted(async () => {

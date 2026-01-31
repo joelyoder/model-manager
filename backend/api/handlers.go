@@ -541,6 +541,13 @@ func SyncVersionByID(c *gin.Context) {
 	versionRecord.ImagePath = MakeRelativePath(imagePath, database.GetImagePath())
 	database.DB.Save(&versionRecord)
 
+	// Generate thumbnail for version image
+	if versionRecord.ImagePath != "" {
+		if err := EnsureVersionThumbnail(versionRecord.ID, versionRecord.ImagePath); err != nil {
+			log.Printf("Failed to generate version thumbnail: %v", err)
+		}
+	}
+
 	if model.ImagePath == "" && imagePath != "" {
 		model.ImagePath = MakeRelativePath(imagePath, database.GetImagePath())
 		model.ImageWidth = imgW
@@ -550,6 +557,11 @@ func SyncVersionByID(c *gin.Context) {
 		model.FilePath = MakeRelativePath(filePath, database.GetModelPath())
 	}
 	database.DB.Save(&model)
+
+	// Ensure thumbnail exists
+	if model.ID > 0 && model.ImagePath != "" {
+		// No longer generating model thumbnails (id.webp), only version thumbnails (v_id.webp)
+	}
 
 	c.JSON(200, gin.H{"message": "Version synced", "versionId": verData.ID})
 }
@@ -691,10 +703,23 @@ func processModel(item CivitModel, apiKey string) {
 		versionRec.ImagePath = MakeRelativePath(imagePath, database.GetImagePath())
 		database.DB.Save(&versionRec)
 
+		// Generate thumbnail for version image
+		if versionRec.ImagePath != "" {
+			if err := EnsureVersionThumbnail(versionRec.ID, versionRec.ImagePath); err != nil {
+				log.Printf("Failed to generate thumbnail for version %d (path: %s): %v", versionRec.ID, versionRec.ImagePath, err)
+			} else {
+				log.Printf("Successfully generated thumbnail for version %d", versionRec.ID)
+			}
+		} else {
+			log.Printf("Skipping thumbnail for version %d: no image path (imagePath was: %s)", versionRec.ID, imagePath)
+		}
+
 		if existing.ImagePath == "" && imagePath != "" {
 			existing.ImagePath = MakeRelativePath(imagePath, database.GetImagePath())
 			existing.ImageWidth = imgW
 			existing.ImageHeight = imgH
+			// Generate thumbnail for main model image
+			// No longer using model thumbnails
 		}
 		if existing.FilePath == "" && filePath != "" {
 			existing.FilePath = MakeRelativePath(filePath, database.GetModelPath())
@@ -768,6 +793,9 @@ func DeleteModel(c *gin.Context) {
 
 	database.DB.Unscoped().Where("model_id = ?", model.ID).Delete(&models.Version{})
 	database.DB.Unscoped().Delete(&model)
+
+	// Delete thumbnail
+	// DeleteModelThumbnail(model.ID) // deprecated
 
 	c.JSON(http.StatusOK, gin.H{"message": "Model deleted"})
 }
@@ -860,14 +888,23 @@ func DeleteVersion(c *gin.Context) {
 					moveToTrash(model.FilePath)
 					model.FilePath = ""
 				}
-				if model.ImagePath != "" && model.ImagePath == version.ImagePath {
-					moveToTrash(model.ImagePath)
+				if model.ImagePath != "" {
+					if model.ImagePath == version.ImagePath {
+						moveToTrash(model.ImagePath)
+					}
 					model.ImagePath = ""
 				}
+				// Always try to cleanup thumbnail when last version is deleted
+				// No longer deleting model thumbnail manually, it is deprecated
+				// DeleteModelThumbnail(model.ID)
+
 				database.DB.Save(&model)
 			}
 		}
 	}
+
+	// Always delete the version's own thumbnail
+	DeleteVersionThumbnail(version.ID)
 
 	c.JSON(http.StatusOK, gin.H{"message": "Version deleted"})
 }
@@ -935,6 +972,11 @@ func UpdateModel(c *gin.Context) {
 	if err := database.DB.Save(&model).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update model"})
 		return
+	}
+
+	// Update thumbnail if image path changed
+	if model.ImagePath != "" {
+		// No longer using model thumbnails
 	}
 
 	c.JSON(http.StatusOK, model)
@@ -1062,6 +1104,11 @@ func SetVersionMainImage(c *gin.Context) {
 		return
 	}
 
+	// Regenerate version thumbnail
+	if err := EnsureVersionThumbnail(version.ID, version.ImagePath); err != nil {
+		log.Printf("Failed to regenerate thumbnail for version %d: %v", version.ID, err)
+	}
+
 	var model models.Model
 	if err := database.DB.First(&model, version.ModelID).Error; err == nil {
 		if model.ImagePath == oldPath {
@@ -1069,6 +1116,9 @@ func SetVersionMainImage(c *gin.Context) {
 			model.ImageWidth = image.Width
 			model.ImageHeight = image.Height
 			database.DB.Save(&model)
+
+			// Update thumbnail
+			// No longer using model thumbnails
 		}
 	}
 
@@ -1145,12 +1195,20 @@ func UploadVersionFile(c *gin.Context) {
 
 	if kind == "image" {
 		version.ImagePath = MakeRelativePath(absPath, database.GetImagePath())
+
+		// Regenerate version thumbnail
+		if err := EnsureVersionThumbnail(version.ID, version.ImagePath); err != nil {
+			log.Printf("Failed to generate thumbnail for version %d: %v", version.ID, err)
+		}
+
 		if model.ImagePath == "" {
 			model.ImagePath = version.ImagePath
 			if w, h, err := GetImageDimensions(absPath); err == nil {
 				model.ImageWidth = w
 				model.ImageHeight = h
 			}
+			database.DB.Save(&model) // Save explicitly to get ID if needed, though usually exists
+			// No longer using model thumbnails
 		}
 	} else {
 		version.FilePath = MakeRelativePath(absPath, database.GetModelPath())
@@ -1290,6 +1348,7 @@ func DeleteVersionImage(c *gin.Context) {
 			if model.ImagePath == oldPath {
 				model.ImagePath = ""
 				database.DB.Save(&model)
+				// DeleteModelThumbnail(model.ID) // deprecated
 			}
 		}
 	}

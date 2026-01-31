@@ -1,8 +1,10 @@
 package api
 
 import (
+	"fmt"
 	"log"
 	"net/http"
+	"os"
 	"path/filepath"
 
 	"model-manager/backend/database"
@@ -18,6 +20,7 @@ type DispatchRequest struct {
 	Subdirectory   string `json:"subdirectory"`
 	ModelVersionID uint   `json:"model_version_id"`
 	ClientID       string `json:"client_id"`
+	ThumbnailURL   string `json:"thumbnail_url,omitempty"`
 }
 
 func DispatchRemote(c *gin.Context) {
@@ -47,7 +50,8 @@ func DispatchRemote(c *gin.Context) {
 	}
 
 	// Update DB state
-	if req.Action == "download" {
+	switch req.Action {
+	case "download":
 		var cf models.ClientFile
 		// Check if exists using Find to avoid RecordNotFound log
 		result := database.DB.Where("client_id = ? AND model_version_id = ?", req.ClientID, req.ModelVersionID).Limit(1).Find(&cf)
@@ -74,8 +78,18 @@ func DispatchRemote(c *gin.Context) {
 		relativePath := filepath.ToSlash(filepath.Join(subdir, filename))
 		req.URL = "/downloads/" + relativePath
 
+		// Check for thumbnail
+		if version.ParentModel.ID > 0 {
+			thumbFilename := fmt.Sprintf("%d.webp", version.ParentModel.ID)
+			thumbRelPath := filepath.Join("thumbnails", thumbFilename)
+			if _, err := os.Stat(ResolveImagePath(thumbRelPath)); err == nil {
+				req.ThumbnailURL = "/images/thumbnails/" + thumbFilename
+			}
+		}
+
 		log.Printf("Dispatching download for model %d to client %s (local_url=%s)", req.ModelVersionID, req.ClientID, req.URL)
-	} else if req.Action == "delete" {
+
+	case "delete":
 		// Maybe set to "removing"? Or just let client confirm deletion?
 		// Prompt says: If Action is "delete": Update ClientFile record to remove the entry (or set to "removed").
 		// I'll wait for confirmation to remove, but maybe set status to 'pending_delete' if I wanted to be fancy.

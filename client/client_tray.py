@@ -118,7 +118,34 @@ def handle_download(ws_app, data):
                 for chunk in r.iter_content(chunk_size=8192): 
                     f.write(chunk)
                     
+                    f.write(chunk)
+                    
         print("Download complete.")
+
+        # Download thumbnail if present
+        thumbnail_url = data.get('thumbnail_url')
+        if thumbnail_url:
+            if thumbnail_url.startswith('/'):
+                 # Resolve relative URL
+                 u = urlparse(SERVER_URL)
+                 scheme = 'https' if u.scheme == 'wss' else 'http'
+                 base_thumb_url = f"{scheme}://{u.netloc}" + thumbnail_url
+            else:
+                 base_thumb_url = thumbnail_url
+
+            # Determine thumbnail path: same as target_path but with .webp extension
+            thumb_path = os.path.splitext(target_path)[0] + ".webp"
+            print(f"Downloading thumbnail to {thumb_path}...")
+            
+            try:
+                with requests.get(base_thumb_url, stream=True) as r:
+                    r.raise_for_status()
+                    with open(thumb_path, 'wb') as f:
+                        for chunk in r.iter_content(chunk_size=8192):
+                            f.write(chunk)
+            except Exception as te:
+                print(f"Thumbnail download failed: {te}")
+        
         
         # Send confirmation
         response = {
@@ -147,7 +174,18 @@ def handle_delete(ws_app, data):
 
         if os.path.exists(target_path):
             os.remove(target_path)
+            os.remove(target_path)
             print(f"Deleted {target_path}")
+
+            # Delete thumbnail if exists
+            thumb_path = os.path.splitext(target_path)[0] + ".webp"
+            if os.path.exists(thumb_path):
+                try:
+                    os.remove(thumb_path)
+                    print(f"Deleted thumbnail {thumb_path}")
+                except Exception as te:
+                    print(f"Failed to delete thumbnail: {te}")
+            
             
             response = {
                 "type": "deleted",

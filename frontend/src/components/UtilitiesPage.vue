@@ -237,6 +237,21 @@
                 >
                 {{ isResetting ? "Resetting..." : "Reset Stuck Models" }}
                 </button>
+                
+                <hr class="border-secondary opacity-25 my-4" />
+
+                <h4 class="h6 fw-bold">Generate Thumbnails</h4>
+                <p class="text-secondary small mb-3">
+                    Generate WebP thumbnails for all models to improve performance. 
+                    This will process any models missing thumbnails.
+                </p>
+                 <button
+                @click="generateThumbnails"
+                class="btn btn-primary btn-sm"
+                :disabled="isGeneratingThumbs"
+                >
+                {{ isGeneratingThumbs ? "Generating..." : "Generate Missing Thumbnails" }}
+                </button>
             </div>
         </div>
       </div>
@@ -555,6 +570,21 @@ const resetPendingStatus = async () => {
   } finally {
     isResetting.value = false;
   }
+};
+
+const isGeneratingThumbs = ref(false);
+
+const generateThumbnails = async () => {
+    isGeneratingThumbs.value = true;
+    try {
+        await axios.post("/api/tools/generate-thumbnails");
+        showToast("Thumbnail generation started in background", "success");
+    } catch (err) {
+        console.error(err);
+        showToast("Failed to start thumbnail generation", "danger");
+    } finally {
+        isGeneratingThumbs.value = false;
+    }
 };
 
 const archiveImages = async () => {

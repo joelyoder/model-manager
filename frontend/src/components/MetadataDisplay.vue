@@ -2,7 +2,7 @@
   <div>
     <div class="row">
       <div class="col-md-4">
-        <img v-if="imageUrl" :src="imageUrl" class="img-fluid rounded-3 shadow-sm mb-4" />
+        <img v-if="currentSrc" :src="currentSrc" @error="handleImageError" class="img-fluid rounded-3 shadow-sm mb-4" />
       </div>
       <div class="col-md-8">
         <h3 class="fw-bold text-white mb-1">{{ model.name }}</h3>
@@ -154,7 +154,7 @@
 </template>
 
 <script setup>
-import { computed } from "vue";
+import { computed, ref, watch } from "vue";
 import { Icon } from "@iconify/vue";
 import { showToast } from "../utils/ui";
 import { getBadgeColor } from "../utils/colors";
@@ -167,11 +167,38 @@ const props = defineProps({
 
 const emit = defineEmits(["addCollection"]);
 
+const currentSrc = ref("");
+
 const imageUrl = computed(() => {
   const path = props.version.imagePath || props.model.imagePath;
   if (!path) return null;
   return path.replace(/^.*[\\/]backend[\\/]images/, "/images");
 });
+
+const handleImageError = () => {
+    if (currentSrc.value !== imageUrl.value) {
+        currentSrc.value = imageUrl.value;
+    }
+};
+
+const timestamp = ref(Date.now());
+
+watch(imageUrl, (newVal) => {
+    if (!newVal) {
+        currentSrc.value = "";
+        return;
+    }
+    
+    // Update timestamp on change to bust cache
+    timestamp.value = Date.now();
+
+    // Always try to use the version thumbnail
+    if (props.version && props.version.ID) {
+         currentSrc.value = `/images/thumbnails/v_${props.version.ID}.webp?t=${timestamp.value}`;
+    } else {
+        currentSrc.value = newVal;
+    }
+}, { immediate: true });
 
 const normalizeWeight = (weight) => {
   const num = Number(weight);
