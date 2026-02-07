@@ -7,8 +7,9 @@
     <!-- Image & Overlays -->
     <div class="position-relative overflow-hidden rounded-top-2">
       <img
-        v-if="imageUrl"
-        :src="imageUrl"
+        v-if="currentSrc"
+        :src="currentSrc"
+        @error="handleImageError"
         class="card-img-top object-fit-cover transition-zoom"
         style="height: 450px; width: 100%"
         loading="lazy"
@@ -141,21 +142,37 @@
 
 <script setup>
 import { useRemote } from '../composables/useRemote';
-import { ref } from 'vue';
+import { ref, watch } from 'vue';
 import { Icon } from "@iconify/vue";
 import { getBadgeColor } from "../utils/colors";
 
 const isHovering = ref(false);
+const currentSrc = ref("");
 
 const props = defineProps({
   model: Object,
   version: Object,
   imageUrl: String,
+  thumbnailUrl: String,
   showCollectionRemove: {
     type: Boolean,
     default: false
   }
 });
+
+watch(() => [props.imageUrl, props.thumbnailUrl], () => {
+    if (props.thumbnailUrl) {
+        currentSrc.value = props.thumbnailUrl;
+    } else {
+        currentSrc.value = props.imageUrl;
+    }
+}, { immediate: true });
+
+const handleImageError = () => {
+    if (currentSrc.value !== props.imageUrl) {
+        currentSrc.value = props.imageUrl;
+    }
+};
 
 const emit = defineEmits(["click", "delete", "toggleNsfw", "addToCollection", "removeFromCollection"]);
 

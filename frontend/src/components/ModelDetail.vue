@@ -13,6 +13,46 @@
       </button>
       
       <div class="ms-auto d-flex gap-2">
+         <!-- Sync/Remote Button -->
+        <button
+            v-if="version.clientStatus === 'installed'"
+            @click="dispatch('delete')"
+            @mouseenter="isHoveringRemote = true"
+            @mouseleave="isHoveringRemote = false"
+            :disabled="isDispatching"
+            class="btn btn-sm d-flex align-items-center justify-content-center border-0"
+            :class="isHoveringRemote ? 'btn-danger' : 'btn-success'"
+            :title="isHoveringRemote ? 'Remove from Client' : 'Installed on Client'"
+            style="width: 40px; height: 40px;"
+        >
+            <Icon 
+            :icon="isHoveringRemote ? 'mdi:trash-can' : 'mdi:check'" 
+            width="24" 
+            height="24" 
+            />
+        </button>
+        <button
+            v-else-if="version.clientStatus === 'pending'"
+            disabled
+            class="btn btn-warning btn-sm d-flex align-items-center justify-content-center border-0"
+            style="width: 40px; height: 40px;"
+            title="Syncing..."
+        >
+            <span class="spinner-border spinner-border-sm" style="width:1.2rem;height:1.2rem;" aria-hidden="true"></span>
+        </button>
+        <button
+            v-else
+            @click="dispatch('download')"
+            :disabled="isDispatching"
+            class="btn btn-outline-secondary btn-sm d-flex align-items-center justify-content-center border-0"
+            style="width: 40px; height: 40px;"
+            title="Push to Client"
+        >
+            <Icon icon="mdi:cloud-download" width="24" height="24" />
+        </button>
+
+        <div class="vr bg-secondary opacity-25 mx-1"></div>
+
         <button 
             @click="isEditing = true" 
             class="btn btn-outline-primary btn-sm d-flex align-items-center justify-content-center border-0"
@@ -146,8 +186,18 @@ import MetadataDisplay from "./MetadataDisplay.vue";
 import MetadataEditor from "./MetadataEditor.vue";
 import ImageGallery from "./ImageGallery.vue";
 import AddToCollectionModal from "./AddToCollectionModal.vue";
+import { useRemote } from "../composables/useRemote";
 
 const router = useRouter();
+const isHoveringRemote = ref(false);
+
+const { dispatchAction, isDispatching } = useRemote();
+const dispatch = (action) => {
+  dispatchAction(action, model.value, version.value, (updatedV) => {
+      // Callback to update local version status if needed
+      version.value.clientStatus = updatedV.clientStatus;
+  });
+};
 const route = useRoute();
 
 const {

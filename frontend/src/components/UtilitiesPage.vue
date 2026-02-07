@@ -190,53 +190,76 @@
       <div class="card-body p-4">
         <h3 class="h6 fw-bold text-uppercase text-secondary mb-3">Database Maintenance</h3>
         
-        <div class="row g-4">
-            <div class="col-md-6">
-                 <h4 class="h6 fw-bold">Migrate Paths</h4>
-                <p class="text-secondary small mb-3">
-                    Convert absolute paths in the database to relative paths based on the current
-                    configured Model and Image paths. This is useful for making your library portable.
-                </p>
-                <button
-                @click="migratePaths"
-                class="btn btn-warning btn-sm"
-                :disabled="migrating"
-                >
-                {{ migrating ? "Migrating..." : "Migrate Paths to Relative" }}
-                </button>
+        <div class="row row-cols-1 row-cols-md-2 g-4">
+            <div class="col">
+                 <div class="h-100 p-3 bg-dark bg-opacity-25 rounded-3">
+                    <h4 class="h6 fw-bold">Migrate Paths</h4>
+                    <p class="text-secondary small mb-3">
+                        Convert absolute paths in the database to relative paths based on the current
+                        configured Model and Image paths. This is useful for making your library portable.
+                    </p>
+                    <button
+                        @click="migratePaths"
+                        class="btn btn-warning btn-sm w-100 mt-auto"
+                        :disabled="migrating"
+                    >
+                        {{ migrating ? "Migrating..." : "Migrate Paths to Relative" }}
+                    </button>
+                 </div>
             </div>
 
-             <div class="col-md-6 border-start border-secondary border-opacity-10">
-                <h4 class="h6 fw-bold">Archive Description Images</h4>
-                <p class="text-secondary small mb-3">
-                    Download external images found in model descriptions and store them locally
-                    to prevent broken links. This operation modifies model descriptions.
-                </p>
-                <button
-                @click="archiveImages"
-                class="btn btn-warning btn-sm"
-                :disabled="isArchiving"
-                >
-                {{ isArchiving ? "Archiving..." : "Archive Images" }}
-                </button>
-                 <p v-if="archiveResult" class="mt-2 mb-0 small text-success">
-                    {{ archiveResult }}
-                </p>
-                
-                <hr class="border-secondary opacity-25 my-4" />
-                
-                <h4 class="h6 fw-bold">Reset Stuck Models</h4>
-                <p class="text-secondary small mb-3">
-                    If models are stuck in a "synching" state due to connection interruptions,
-                    use this to reset their status to try again.
-                </p>
-                <button
-                @click="resetPendingStatus"
-                class="btn btn-danger btn-sm"
-                :disabled="isResetting"
-                >
-                {{ isResetting ? "Resetting..." : "Reset Stuck Models" }}
-                </button>
+            <div class="col">
+                <div class="h-100 p-3 bg-dark bg-opacity-25 rounded-3">
+                    <h4 class="h6 fw-bold">Archive Description Images</h4>
+                    <p class="text-secondary small mb-3">
+                        Download external images found in descriptions and store them locally
+                        to prevent broken links. Modifies model descriptions.
+                    </p>
+                    <button
+                        @click="archiveImages"
+                        class="btn btn-warning btn-sm w-100 mt-auto"
+                        :disabled="isArchiving"
+                    >
+                        {{ isArchiving ? "Archiving..." : "Archive Images" }}
+                    </button>
+                     <p v-if="archiveResult" class="mt-2 mb-0 small text-success text-center">
+                        {{ archiveResult }}
+                    </p>
+                </div>
+            </div>
+
+            <div class="col">
+                 <div class="h-100 p-3 bg-dark bg-opacity-25 rounded-3">
+                    <h4 class="h6 fw-bold">Generate Thumbnails</h4>
+                    <p class="text-secondary small mb-3">
+                        Generate WebP thumbnails for all models to improve performance. 
+                        Process any models missing thumbnails.
+                    </p>
+                     <button
+                        @click="generateThumbnails"
+                        class="btn btn-primary btn-sm w-100 mt-auto"
+                        :disabled="isGeneratingThumbs"
+                    >
+                        {{ isGeneratingThumbs ? "Generating..." : "Generate Missing Thumbnails" }}
+                    </button>
+                </div>
+            </div>
+
+            <div class="col">
+                 <div class="h-100 p-3 bg-dark bg-opacity-25 rounded-3">
+                    <h4 class="h6 fw-bold">Reset Stuck Models</h4>
+                    <p class="text-secondary small mb-3">
+                        If models are stuck in a "synching" state due to connection interruptions,
+                        reset their status to try again.
+                    </p>
+                    <button
+                        @click="resetPendingStatus"
+                        class="btn btn-danger btn-sm w-100 mt-auto"
+                        :disabled="isResetting"
+                    >
+                        {{ isResetting ? "Resetting..." : "Reset Stuck Models" }}
+                    </button>
+                </div>
             </div>
         </div>
       </div>
@@ -555,6 +578,21 @@ const resetPendingStatus = async () => {
   } finally {
     isResetting.value = false;
   }
+};
+
+const isGeneratingThumbs = ref(false);
+
+const generateThumbnails = async () => {
+    isGeneratingThumbs.value = true;
+    try {
+        await axios.post("/api/tools/generate-thumbnails");
+        showToast("Thumbnail generation started in background", "success");
+    } catch (err) {
+        console.error(err);
+        showToast("Failed to start thumbnail generation", "danger");
+    } finally {
+        isGeneratingThumbs.value = false;
+    }
 };
 
 const archiveImages = async () => {

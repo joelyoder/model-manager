@@ -118,7 +118,8 @@ func handleClientMessage(msg ClientMessage) {
 		return
 	}
 
-	if msg.Type == "complete" {
+	switch msg.Type {
+	case "complete":
 		// Update/Create ClientFile record
 		var cf models.ClientFile
 		result := database.DB.Where("client_id = ? AND model_version_id = ?", msg.ClientID, msg.ModelVersionID).First(&cf)
@@ -132,7 +133,7 @@ func handleClientMessage(msg ClientMessage) {
 		database.DB.Save(&cf)
 		log.Printf("Updated status 'installed' for model %d on client %s", msg.ModelVersionID, msg.ClientID)
 
-	} else if msg.Type == "deleted" {
+	case "deleted":
 		// Remove record or set to something else? Requirement says "Delete Update ClientFile record to remove the entry"
 		database.DB.Delete(&models.ClientFile{}, "client_id = ? AND model_version_id = ?", msg.ClientID, msg.ModelVersionID)
 		log.Printf("Removed record for model %d on client %s", msg.ModelVersionID, msg.ClientID)
