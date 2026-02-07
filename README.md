@@ -157,6 +157,9 @@ Use the model detail page to upload additional images or remove existing gallery
 - `POST /api/versions/:id/images` – upload a gallery image. Form field `file` should contain the image. Returns the created `VersionImage` record.
 - `DELETE /api/versions/:id/images/:imgId` – remove a gallery image.
 
+## Known Issues
+- Model images are not delivered to the desktop client
+
 ## Todo
 - Library management
     - Add a tag to multiple models at once
