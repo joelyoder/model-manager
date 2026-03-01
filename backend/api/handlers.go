@@ -66,12 +66,13 @@ func GetModels(c *gin.Context) {
 	onlySafe, onlyNSFW := resolveNSFWFilter(c)
 	tags := c.Query("tags")
 	synced := c.Query("synced") == "1"
+	uncollected := c.Query("uncollected") == "1"
 
 	var modelsList []models.Model
 	q := database.DB.Model(&models.Model{})
 
 	// Filter models by versions when filters are provided or when searching
-	needJoin := search != "" || baseModel != "" || modelType != "" || onlySafe || onlyNSFW || tags != "" || synced
+	needJoin := search != "" || baseModel != "" || modelType != "" || onlySafe || onlyNSFW || tags != "" || synced || uncollected
 	if needJoin {
 		q = q.Joins("JOIN versions ON versions.model_id = models.id")
 	}
@@ -101,6 +102,9 @@ func GetModels(c *gin.Context) {
 	}
 	if synced {
 		q = q.Joins("JOIN client_files ON client_files.model_version_id = versions.id").Where("client_files.status = ?", "installed")
+	}
+	if uncollected {
+		q = q.Where("NOT EXISTS (SELECT 1 FROM collection_versions WHERE collection_versions.version_id = versions.id)")
 	}
 
 	if c.DefaultQuery("includeVersions", "1") == "1" {
@@ -127,6 +131,9 @@ func GetModels(c *gin.Context) {
 			if synced {
 				db = db.Joins("JOIN client_files ON client_files.model_version_id = versions.id").Where("client_files.status = ?", "installed")
 			}
+			if uncollected {
+				db = db.Where("NOT EXISTS (SELECT 1 FROM collection_versions WHERE collection_versions.version_id = versions.id)")
+			}
 			return db.Preload("Collections").Order("versions.id DESC")
 		})
 	}
@@ -150,10 +157,11 @@ func GetModelsCount(c *gin.Context) {
 	onlySafe, onlyNSFW := resolveNSFWFilter(c)
 	tags := c.Query("tags")
 	synced := c.Query("synced") == "1"
+	uncollected := c.Query("uncollected") == "1"
 
 	var count int64
 	q := database.DB.Model(&models.Model{})
-	needJoin := search != "" || baseModel != "" || modelType != "" || onlySafe || onlyNSFW || tags != "" || synced
+	needJoin := search != "" || baseModel != "" || modelType != "" || onlySafe || onlyNSFW || tags != "" || synced || uncollected
 	if needJoin {
 		q = q.Joins("JOIN versions ON versions.model_id = models.id")
 	}
@@ -182,6 +190,9 @@ func GetModelsCount(c *gin.Context) {
 	}
 	if synced {
 		q = q.Joins("JOIN client_files ON client_files.model_version_id = versions.id").Where("client_files.status = ?", "installed")
+	}
+	if uncollected {
+		q = q.Where("NOT EXISTS (SELECT 1 FROM collection_versions WHERE collection_versions.version_id = versions.id)")
 	}
 	if needJoin {
 		q = q.Group("models.id")

@@ -88,7 +88,7 @@
         </div>
 
         <!-- Synced Toggle -->
-        <div class="form-check form-switch ps-0 mt-2 py-2 border-top border-dark-subtle">
+        <div class="form-check form-switch ps-0 mt-2 pt-2 border-top border-dark-subtle">
             <div class="d-flex justify-content-between align-items-center w-100">
                  <label class="form-check-label text-secondary" for="syncedFilter">Installed Only</label>
                  <input 
@@ -98,6 +98,22 @@
                     id="syncedFilter" 
                     :checked="syncedFilter"
                     @change="$emit('update:syncedFilter', $event.target.checked)"
+                    style="cursor: pointer;"
+                >
+            </div>
+        </div>
+
+        <!-- Uncollected Toggle -->
+        <div class="form-check form-switch ps-0">
+            <div class="d-flex justify-content-between align-items-center w-100">
+                 <label class="form-check-label text-secondary" for="uncollectedFilter">Not in a Collection</label>
+                 <input 
+                    class="form-check-input ms-2 mt-0" 
+                    type="checkbox" 
+                    role="switch" 
+                    id="uncollectedFilter" 
+                    :checked="uncollectedFilter"
+                    @change="$emit('update:uncollectedFilter', $event.target.checked)"
                     style="cursor: pointer;"
                 >
             </div>
@@ -129,6 +145,7 @@ defineProps({
   selectedModelType: String,
   nsfwFilter: String,
   syncedFilter: Boolean,
+  uncollectedFilter: Boolean,
   categories: Array,
   baseModels: Array,
   modelTypes: Array,
@@ -142,6 +159,7 @@ defineEmits([
   "update:selectedModelType",
   "update:nsfwFilter",
   "update:syncedFilter",
+  "update:uncollectedFilter",
   "clear",
   "close",
 ]);

@@ -11,6 +11,7 @@ const selectedBaseModel = ref("");
 const selectedModelType = ref("");
 const nsfwFilter = ref("both");
 const syncedFilter = ref(false);
+const uncollectedFilter = ref(false);
 const page = ref(1);
 const total = ref(0);
 const initialized = ref(false);
@@ -97,6 +98,7 @@ const fetchModels = async () => {
   if (selectedModelType.value) params.modelType = selectedModelType.value;
   if (nsfwFilter.value) params.nsfwFilter = nsfwFilter.value;
   if (syncedFilter.value) params.synced = "1";
+  if (uncollectedFilter.value) params.uncollected = "1";
   const tagParts = [];
   if (selectedCategory.value) tagParts.push(selectedCategory.value);
   if (tagsSearch.value.trim()) tagParts.push(tagsSearch.value);
@@ -112,6 +114,7 @@ const fetchTotal = async () => {
   if (selectedModelType.value) params.modelType = selectedModelType.value;
   if (nsfwFilter.value) params.nsfwFilter = nsfwFilter.value;
   if (syncedFilter.value) params.synced = "1";
+  if (uncollectedFilter.value) params.uncollected = "1";
   const tagParts = [];
   if (selectedCategory.value) tagParts.push(selectedCategory.value);
   if (tagsSearch.value.trim()) tagParts.push(tagsSearch.value);
@@ -140,6 +143,7 @@ const saveState = () => {
       selectedModelType: selectedModelType.value,
       nsfwFilter: nsfwFilter.value,
       syncedFilter: syncedFilter.value,
+      uncollectedFilter: uncollectedFilter.value,
       page: page.value,
     })
   );
@@ -166,6 +170,7 @@ const init = async () => {
   else if (saved.hideNsfw !== undefined)
     nsfwFilter.value = saved.hideNsfw ? "no" : "both";
   if (saved.syncedFilter !== undefined) syncedFilter.value = saved.syncedFilter;
+  if (saved.uncollectedFilter !== undefined) uncollectedFilter.value = saved.uncollectedFilter;
   if (saved.page !== undefined) page.value = saved.page;
 
   await fetchBaseModels();
@@ -182,12 +187,13 @@ const clearFilters = () => {
   selectedModelType.value = "";
   nsfwFilter.value = "both";
   syncedFilter.value = false;
+  uncollectedFilter.value = false;
   page.value = 1;
 };
 
 // Set up watcher only once
 if (!window._useModelsWatcherSet) {
-  watch([search, tagsSearch, selectedCategory, selectedBaseModel, selectedModelType, nsfwFilter, syncedFilter], () => {
+  watch([search, tagsSearch, selectedCategory, selectedBaseModel, selectedModelType, nsfwFilter, syncedFilter, uncollectedFilter], () => {
     if (initialized.value) {
       debouncedUpdate();
       debouncedSave();
@@ -215,6 +221,7 @@ export function useModels() {
     selectedModelType,
     nsfwFilter,
     syncedFilter,
+    uncollectedFilter,
     page,
     total,
     totalPages,

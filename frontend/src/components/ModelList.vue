@@ -13,6 +13,7 @@
         v-model:selectedModelType="selectedModelType"
         v-model:nsfwFilter="nsfwFilter"
         v-model:syncedFilter="syncedFilter"
+        v-model:uncollectedFilter="uncollectedFilter"
         :categories="categories"
         :baseModels="baseModels"
         :modelTypes="modelTypes"
@@ -65,8 +66,7 @@
         <AddToCollectionModal 
             v-if="showCollectionModal" 
             :versionId="selectedVersionId" 
-            @close="showCollectionModal = false" 
-            @update="handleCollectionUpdate"
+            @close="closeCollectionModal" 
         />
     </main>
   </div>
@@ -99,6 +99,7 @@ const {
   selectedModelType,
   nsfwFilter,
   syncedFilter,
+  uncollectedFilter,
   page,
   totalPages,
   baseModels,
@@ -142,15 +143,21 @@ const openCollectionModal = (versionId) => {
     showCollectionModal.value = true;
 };
 
-const handleCollectionUpdate = (updatedCollections) => {
-    // Find the model that contains the version
-    for (const model of models.value) {
-        const v = (model.versions || []).find(v => v.ID === selectedVersionId.value);
-        if (v) {
-            v.collections = updatedCollections;
-            break;
-        }
-    }
+const closeCollectionModal = async () => {
+    showCollectionModal.value = false;
+    
+    // Save current scroll position
+    const currentScroll = window.scrollY || document.documentElement.scrollTop;
+    
+    // Refresh the list to pull the correct models for the page
+    await fetchModels();
+    await nextTick();
+    
+    // Restore scroll position
+    window.scrollTo({
+      top: currentScroll,
+      behavior: 'instant'
+    });
 };
 
 const toggleVersionNsfw = async (version) => {
@@ -231,6 +238,7 @@ const versionCards = computed(() => {
         return false;
       if (!matchesNsfwFilter(v.nsfw)) return false;
       if (syncedFilter.value && v.clientStatus !== 'installed') return false;
+      if (uncollectedFilter.value && v.collections && v.collections.length > 0) return false;
 
       if (search.value) {
         const s = search.value.toLowerCase();
