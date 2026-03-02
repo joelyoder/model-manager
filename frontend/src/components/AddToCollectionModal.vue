@@ -7,18 +7,17 @@
           <button type="button" class="btn-close btn-close-white" @click="$emit('close')"></button>
         </div>
         <div class="modal-body pt-0">
-            <!-- New Collection Input -->
+            <!-- Search Input -->
             <div class="input-group mb-4">
+                <span class="input-group-text bg-dark-subtle border-0 text-secondary">
+                    <Icon icon="mdi:magnify" width="18" height="18" />
+                </span>
                 <input 
                     type="text" 
                     class="form-control bg-dark-subtle text-light border-0 shadow-none" 
-                    placeholder="New collection name..." 
-                    v-model="newCollectionName"
-                    @keyup.enter="createCollection"
+                    placeholder="Search collections..." 
+                    v-model="collectionSearch"
                 >
-                <button class="btn btn-primary shadow-sm" type="button" @click="createCollection" :disabled="!newCollectionName">
-                    <Icon icon="mdi:plus" /> Create
-                </button>
             </div>
 
             <div class="d-flex align-items-center mb-2">
@@ -54,6 +53,29 @@
                     </div>
                 </label>
             </div>
+
+            <!-- Add New Collection Form -->
+            <div class="mt-3 border-top border-secondary pt-3 border-opacity-25">
+                <button v-if="!showAddForm" class="btn btn-outline-secondary btn-sm w-100 border-0" @click="openAddForm">
+                    <Icon icon="mdi:plus" /> Add New Collection
+                </button>
+                <div v-else class="input-group input-group-sm">
+                    <input 
+                        type="text" 
+                        class="form-control bg-dark-subtle text-light border-0 shadow-none" 
+                        placeholder="Collection name..." 
+                        v-model="newCollectionName"
+                        @keyup.enter="createCollection"
+                        ref="newCollectionInput"
+                    >
+                    <button class="btn btn-primary shadow-sm px-3" type="button" @click="createCollection" :disabled="!newCollectionName">
+                        Create
+                    </button>
+                    <button class="btn btn-outline-secondary border-0 text-white-50 bg-dark-subtle" type="button" @click="showAddForm = false" title="Cancel">
+                        <Icon icon="mdi:close" />
+                    </button>
+                </div>
+            </div>
         </div>
         <div class="modal-footer border-0 pt-0">
             <button type="button" class="btn btn-outline-secondary border-0" @click="$emit('close')">Done</button>
@@ -64,7 +86,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue';
+import { ref, computed, onMounted, nextTick } from 'vue';
 import axios from 'axios';
 import { Icon } from "@iconify/vue";
 import { showToast } from '../utils/ui';
@@ -82,10 +104,25 @@ const collections = ref([]);
 const versionCollections = ref([]); // IDs of collections this version is in
 const loading = ref(true);
 const newCollectionName = ref("");
+const collectionSearch = ref("");
+const showAddForm = ref(false);
+const newCollectionInput = ref(null);
 
 const sortedCollections = computed(() => {
-    return [...collections.value].sort((a, b) => a.name.localeCompare(b.name, undefined, { sensitivity: 'base' }));
+    let list = [...collections.value].sort((a, b) => a.name.localeCompare(b.name, undefined, { sensitivity: 'base' }));
+    if (collectionSearch.value) {
+        const term = collectionSearch.value.toLowerCase();
+        list = list.filter(c => c.name.toLowerCase().includes(term));
+    }
+    return list;
 });
+
+const openAddForm = () => {
+    showAddForm.value = true;
+    nextTick(() => {
+        if (newCollectionInput.value) newCollectionInput.value.focus();
+    });
+};
 
 const fetchCollections = async () => {
     loading.value = true;
@@ -143,6 +180,8 @@ const createCollection = async () => {
         const newCol = res.data;
         collections.value.push(newCol);
         newCollectionName.value = "";
+        showAddForm.value = false;
+        collectionSearch.value = ""; // Clear search so they can see it
         
         // Auto-add to the new collection
         await toggleCollection(newCol, true);

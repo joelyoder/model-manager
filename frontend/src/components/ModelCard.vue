@@ -123,18 +123,23 @@
       </div>
       
       <!-- Collections Badges -->
-      <div v-if="version.collections && version.collections.length > 0" class="mt-2 d-flex gap-1 flex-wrap">
-          <span 
-              v-for="col in version.collections.slice(0, 3)" 
-              :key="col.id" 
-              class="badge bg-secondary bg-opacity-25 text-body-secondary border border-secondary-subtle fw-normal"
-              style="font-size: 0.7rem;"
-          >
-              {{ col.name }}
-          </span>
-          <span v-if="version.collections.length > 3" class="badge bg-secondary bg-opacity-25 text-body-secondary border border-secondary-subtle fw-normal" style="font-size: 0.7rem;">
-              +{{ version.collections.length - 3 }}
-          </span>
+      <div class="mt-2 d-flex gap-1 flex-wrap align-items-center">
+          <template v-if="version.collections && version.collections.length > 0">
+              <span 
+                  v-for="col in version.collections.slice(0, 3)" 
+                  :key="col.ID" 
+                  class="badge bg-secondary bg-opacity-25 text-body-secondary border border-secondary-subtle fw-normal"
+                  style="font-size: 0.7rem;"
+              >
+                  {{ col.name }}
+              </span>
+              <span v-if="version.collections.length > 3" class="badge bg-secondary bg-opacity-25 text-body-secondary border border-secondary-subtle fw-normal" style="font-size: 0.7rem;">
+                  +{{ version.collections.length - 3 }}
+              </span>
+          </template>
+          <button @click.stop="$emit('addToCollection', version.ID)" class="btn btn-outline-secondary p-0 rounded-pill border-secondary border-opacity-25 text-body-secondary d-flex align-items-center justify-content-center transition-hover" style="width: 20px; height: 20px;" title="Add to Collection">
+              <Icon icon="mdi:plus" width="14" height="14"/>
+          </button>
       </div>
     </div>
   </div>
