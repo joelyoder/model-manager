@@ -197,7 +197,6 @@
 
 <script setup>
 import { ref, onMounted, watch } from "vue";
-import Quill from "quill";
 import axios from "axios";
 import { showToast } from "../utils/ui";
 
@@ -222,7 +221,9 @@ const updateVersion = (key, value) => {
   emit("update:version", { ...props.version, [key]: value });
 };
 
-onMounted(() => {
+onMounted(async () => {
+  await import("quill/dist/quill.snow.css");
+  const { default: Quill } = await import("quill");
   quill = new Quill(editor.value, { theme: "snow" });
   quill.clipboard.dangerouslyPasteHTML(props.version.description || "");
   quill.on("text-change", () => {
